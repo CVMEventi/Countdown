@@ -1,0 +1,65 @@
+{
+  "name": "countdown",
+  "version": "0.0.1",
+  "description": "Another CVM Countdown",
+  "main": "./dist/main/index.js",
+  "scripts": {
+    "dev": "node .electron-nuxt/dev.js",
+    "build": "node .electron-nuxt/build.js",
+    "test:unit": "cross-env NODE_ENV=test TEST_TYPE=unit ava",
+    "test:e2e": "cross-env NODE_ENV=test TEST_TYPE=e2e ava",
+    "test": "yarn run test:unit && yarn run test:e2e",
+    "lint": "node_modules/.bin/eslint --ext .js,.vue -f ./node_modules/eslint-friendly-formatter ./src",
+    "lint:fix": "yarn run lint -- --fix",
+    "preinstall": "node .electron-nuxt/check-engines.js",
+    "postinstall": "electron-builder install-app-deps & yarn run lint:fix"
+  },
+  "keywords": [],
+  "author": "Matteo Piccina <matteo.piccina@cvm.it>",
+  "license": "MIT",
+  "homepage": "https://github.com/michalzaq12/electron-nuxt/blob/master/README.md",
+  "engines": {
+    "node": ">=14.18.0"
+  },
+  "resolutions": {
+    "@types/node": "14.17.32"
+  },
+  "devDependencies": {
+    "@mdi/font": "6.4.95",
+    "@nuxtjs/eslint-config": "6.0.0",
+    "@vue/test-utils": "1.2.0",
+    "@xpda-dev/core": "^0.1.6",
+    "@xpda-dev/electron-builder": "^0.2.1",
+    "@xpda-dev/electron-launcher": "^0.3.0",
+    "@xpda-dev/webpack-step": "^0.1.2",
+    "autoprefixer": "^10.4.0",
+    "ava": "2.4.0",
+    "babel-eslint": "10.1.0",
+    "babel-plugin-webpack-alias-7": "0.1.1",
+    "browser-env": "3.3.0",
+    "cross-env": "7.0.3",
+    "deepmerge": "4.2.2",
+    "electron": "^15.3.0",
+    "electron-builder": "22.13.1",
+    "electron-devtools-installer": "3.2.0",
+    "eslint": "7.25.0",
+    "eslint-friendly-formatter": "4.0.1",
+    "eslint-loader": "4.0.2",
+    "node-sass": "4.14.1",
+    "nuxt": "2.15.6",
+    "postcss": "^8.3.11",
+    "require-extension-hooks": "0.3.3",
+    "require-extension-hooks-babel": "1.0.0",
+    "require-extension-hooks-vue": "0.4.2",
+    "sass-loader": "10.0.2",
+    "webpack": "4.44.2",
+    "webpack-node-externals": "2.5.2"
+  },
+  "dependencies": {
+    "@nuxt/postcss8": "^1.1.3",
+    "dayjs": "^1.10.7",
+    "electron-store": "^8.0.1",
+    "tailwindcss": "^3.0.7",
+    "vuedraggable": "^2.24.3"
+  }
+}
