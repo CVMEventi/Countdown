@@ -2,7 +2,7 @@ import { app, ipcMain, screen } from 'electron'
 import Store from 'electron-store'
 import countdownWindowHandler from './countdownWindow'
 
-Store({
+const store = new Store({
   defaults: {
     settings: {
       backgroundColor: '#000000',
