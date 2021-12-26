@@ -16,6 +16,7 @@ const store = new Store({
     }
   }
 })
+store.set('test', true)
 
 // Quit when all windows are closed.
 app.on('window-all-closed', function () {
