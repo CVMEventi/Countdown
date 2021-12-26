@@ -23,21 +23,6 @@ function checkNodeVersion(){
   }
 }
 
-//https://github.com/yarnpkg/yarn/issues/5063
-function disallowNpm() {
-  const execPath = process.env.npm_execpath;
-  if(!execPath.includes('yarn')){
-
-    console.log(FG_RED);
-    console.log(`\tElectron-nuxt supports only Yarn package manager.`);
-    console.log(RESET);
-    console.log('\n\tPlease visit https://legacy.yarnpkg.com/en/docs/install to find instructions on how to install Yarn.\n')
-
-    throw new Error('Invalid package manager');
-  }
-}
-
-
 //https://stackoverflow.com/questions/6832596/how-to-compare-software-version-number-using-js-only-number
 // Return 1 if a > b
 // Return -1 if a < b
@@ -80,7 +65,6 @@ function compare(a, b) {
 
 try{
   checkNodeVersion();
-  disallowNpm();
   // https://stackoverflow.com/questions/6398196/detect-if-called-through-require-or-directly-by-command-line
   if (require.main === module) process.exit(0);
 }catch (e) {

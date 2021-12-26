@@ -16,7 +16,7 @@ module.exports = {
     { ssr: true, src: '@/plugins/icons.js' }
   ],
   css: [
-    '~/assets/css/main.css',
+    '~/assets/css/main.css'
   ],
   buildModules: [
     '@nuxt/postcss8'
@@ -25,7 +25,7 @@ module.exports = {
     postcss: {
       plugins: {
         tailwindcss: {},
-        autoprefixer: {},
+        autoprefixer: {}
       }
     }
   },

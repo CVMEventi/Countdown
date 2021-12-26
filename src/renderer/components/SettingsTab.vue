@@ -69,8 +69,14 @@ export default {
     draggable
   },
   props: {
-    screens: Array,
-    selectedScreen: Object
+    screens: {
+      type: Array,
+      default: () => []
+    },
+    selectedScreen: {
+      type: Object,
+      default: null
+    }
   },
   data () {
     return {
