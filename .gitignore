@@ -4,3 +4,4 @@ build/*
 !build/icons
 node_modules
 .idea
+.DS_Store
