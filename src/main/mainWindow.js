@@ -1,14 +1,17 @@
 import BrowserWinHandler from './BrowserWinHandler'
 
-const winHandler = new BrowserWinHandler({
+export default function createMainWindow(options = {
   height: 800,
   width: 1400
-})
+}) {
 
-winHandler.onCreated(_browserWindow => {
-  winHandler.loadPage('/')
-  // Or load custom url
-  // _browserWindow.loadURL('https://google.com')
-})
+  const winHandler = new BrowserWinHandler(options)
 
-export default winHandler
+  winHandler.onCreated(_browserWindow => {
+    winHandler.loadPage('/')
+    // Or load custom url
+    // _browserWindow.loadURL('https://google.com')
+  })
+
+  return winHandler
+}

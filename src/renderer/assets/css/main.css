@@ -27,3 +27,12 @@
   -webkit-appearance: none;
   margin: 0;
 }
+
+@font-face {
+  font-family: digital-7;
+  src: url("../fonts/digital-7.ttf");
+}
+
+.font-digital-clock {
+  font-family: digital-7, monospace;
+}

@@ -3,9 +3,9 @@
     :disabled="disabled"
     class="px-4 py-2 rounded text-white ring-transparent"
     :class="{
-      'bg-emerald-500': type === 'success',
-      'bg-emerald-300': type === 'success' && disabled,
-      'hover:bg-emerald-600': type === 'success' && !disabled,
+      'bg-green-500': type === 'success',
+      'bg-green-300': type === 'success' && disabled,
+      'hover:bg-green-600': type === 'success' && !disabled,
 
       'bg-yellow-400': type === 'warning',
       'bg-yellow-200': type === 'warning' && disabled,

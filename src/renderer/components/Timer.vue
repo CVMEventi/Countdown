@@ -32,7 +32,8 @@ export default {
 
       this.resume()
     },
-    resume () {
+    resume() {
+      if (this.timerId) return;
       this.timerId = setInterval(this.timerTick, 1000)
       this.$emit('timer-status-change', 'started')
     },
@@ -61,7 +62,7 @@ export default {
       this.seconds = this.seconds - 1
       this.$emit('timer-tick', this.seconds)
 
-      if (this.seconds === 0) {
+      if (this.seconds === 0 && this.stopsAtZero) {
         this.stop()
       }
     }

@@ -63,7 +63,7 @@ export default class BrowserWinHandler {
    * @param {BrowserWindow}
    */
 
-  /**
+  /**x
    *
    * @param callback {onReadyCallback}
    */

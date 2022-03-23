@@ -1,22 +1,15 @@
-import { app, ipcMain, screen } from 'electron'
-import Store from 'electron-store'
-import countdownWindowHandler from './countdownWindow'
+import { app, ipcMain, screen } from 'electron';
+import Store from 'electron-store';
+import createMainWindow from "./mainWindow";
+import createCountdownWindow from './countdownWindow';
+import WebServer from "./WebServer";
+import { STORE_DEFAULTS } from "./constants";
 
-const store = new Store({
-  defaults: {
-    settings: {
-      backgroundColor: '#000000',
-      textColor: '#ffffff',
-      timerFinishedTextColor: '',
-      clockColor: '#ffffff',
-      clockTextColor: '#ffffff',
-      presets: [
-        5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60
-      ]
-    }
-  }
-})
-store.set('test', true)
+let countdownWindowHandler = null;
+
+// Init key value storage
+const store = new Store(STORE_DEFAULTS)
+Store.initRenderer()
 
 // Quit when all windows are closed.
 app.on('window-all-closed', function () {
@@ -25,10 +18,21 @@ app.on('window-all-closed', function () {
   if (process.platform !== 'darwin') app.quit()
 })
 
-Store.initRenderer()
+countdownWindowHandler = createCountdownWindow({
+  x: store.get('window.x') ?? 100,
+  y: store.get('window.y') ?? 100,
+  height: store.get('window.height') ?? 720,
+  width: store.get('window.width') ?? 1280,
+  // fullscreen: true
+  frame: false,
+  enableLargerThanScreen: true
+})
 
-// Load here all startup windows
-require('./mainWindow')
+countdownWindowHandler.onCreated(() => {
+  countdownWindowHandler.browserWindow.on('resize', () => {
+    console.log(countdownWindowHandler.browserWindow.getBounds())
+  })
+})
 
 ipcMain.on('send-to-countdown-window', (event, arg) => {
   /**
@@ -41,6 +45,16 @@ ipcMain.on('send-to-countdown-window', (event, arg) => {
 ipcMain.on('settings-updated', (event, arg) => {
   const browserWindow = countdownWindowHandler.browserWindow
   browserWindow.webContents.send('settings-updated')
+})
+
+ipcMain.on('window-updated', (event, arg) => {
+  const browserWindow = countdownWindowHandler.browserWindow
+  browserWindow.setBounds({
+    x: store.get('window.x') ?? 100,
+    y: store.get('window.y') ?? 100,
+    height: store.get('window.height') ?? 720,
+    width: store.get('window.width') ?? 1280,
+  })
 })
 
 ipcMain.handle('get-screens', (event, ...args) => {
@@ -67,4 +81,37 @@ ipcMain.on('manage-countdown-window', async (event, command, arg) => {
   default:
     break
   }
+})
+
+
+
+const webServerEnabled = store.get('settings.webServerEnabled') === null ? false : store.get('settings.webServerEnabled')
+const port = store.get('settings.webServerPort') === null ? 6565 : store.get('settings.webServerPort')
+let webServer = null
+
+const mainWindowHandler = createMainWindow()
+mainWindowHandler.onCreated(() => {
+  webServer = new WebServer(mainWindowHandler.browserWindow)
+  webServer.port = port
+
+  ipcMain.on('webserver-manager', (event, command, arg) => {
+    switch (command) {
+      case 'stop':
+        webServer.stop()
+        break
+      case 'start':
+        const port = store.get('settings.webServerPort') === null ? 6565 : store.get('settings.webServerPort')
+        webServer.port = port
+        webServer.start()
+        break
+    }
+  })
+
+  if (webServerEnabled) {
+    webServer.start()
+  }
+})
+
+ipcMain.handle('server-running', (event, ...args) => {
+  return webServer.isRunning
 })

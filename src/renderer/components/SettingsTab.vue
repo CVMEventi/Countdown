@@ -1,30 +1,28 @@
 <template>
   <card class="flex flex-1 gap-2 min-h-0">
     <card class="inline-block border flex flex-col">
-      <p class="text-2xl">Screen</p>
-      <select v-model="currentScreen" class="border rounded p-2">
-        <option :value="null">-</option>
-        <option
-          v-for="(screen, index) in screens"
-          :key="screen.id"
-          :value="screen"
-        >
-          Screen {{ index }}
-          ({{ screen.size.width }}x{{ screen.size.height }}{{ screen.internal ? " Internal" : "" }})
-        </option>
-      </select>
-      <hr class="my-3">
-      <p class="text-2xl">Colors</p>
-      <p class="text-base">Background</p>
-      <input v-model="backgroundColor" type="color" placeholder="#000000">
-      <p class="text-base">Text</p>
-      <input v-model="textColor" type="color" placeholder="#000000">
-      <p class="text-base">Text on timer finished</p>
-      <input v-model="timerFinishedTextColor" type="color" placeholder="#000000">
-      <p class="text-base">Clock</p>
-      <input v-model="clockColor" type="color" placeholder="#000000">
-      <p class="text-base">Clock Text</p>
-      <input v-model="clockTextColor" type="color" placeholder="#000000">
+      <div class="flex flex-col overflow-y-scroll">
+        <p class="text-2xl">Screen</p>
+        <select v-model="currentScreen" class="border rounded p-2">
+          <option :value="null">-</option>
+          <option
+            v-for="(screen, index) in screens"
+            :key="screen.id"
+            :value="screen"
+          >
+            Screen {{ index }}
+            ({{ screen.size.width }}x{{ screen.size.height }}{{ screen.internal ? " Internal" : "" }})
+          </option>
+        </select>
+        <p class="text-base">X</p>
+        <input type="number" class="input" v-model="window.x">
+        <p class="text-base">Y</p>
+        <input type="number" class="input" v-model="window.y">
+        <p class="text-base">Width</p>
+        <input type="number" class="input" v-model="window.width">
+        <p class="text-base">Height</p>
+        <input type="number" class="input" v-model="window.height">
+      </div>
     </card>
     <card class="inline-block border flex flex-col">
       <p class="text-2xl">Presets</p>
@@ -37,18 +35,32 @@
       </draggable>
       <s-button type="info" @click.native="addPreset">Add</s-button>
     </card>
-    <card>
+    <card class="inline-block border flex flex-col">
       <p class="text-2xl">Timer</p>
       <div>
         <input id="stopTimerAtZero" v-model="stopTimerAtZero" type="checkbox">
         <label for="stopTimerAtZero">Stop timer at 0</label>
       </div>
-    </card>
-    <div class="flex-1 flex justify-end content-end">
-      <div class="flex flex-col justify-end">
-        <s-button type="warning" @click.native="save">Save</s-button>
+      <div>
+        <input id="showHours" v-model="showHours" type="checkbox">
+        <label for="showHours">Show hours</label>
       </div>
-    </div>
+    </card>
+    <card class="inline-block border flex flex-col">
+      <div class="flex flex-col overflow-y-scroll">
+        <p class="text-2xl">Colors</p>
+        <p class="text-base">Background</p>
+        <color-input v-model="backgroundColor" default-value="#000000"></color-input>
+        <p class="text-base">Text</p>
+        <color-input v-model="textColor" default-value="#ffffff"></color-input>
+        <p class="text-base">Text on timer finished</p>
+        <color-input v-model="timerFinishedTextColor" default-value="#ff0000" />
+        <p class="text-base">Clock</p>
+        <color-input v-model="clockColor" default-value="#ffffff" />
+        <p class="text-base">Clock Text</p>
+        <color-input v-model="clockTextColor" default-value="#ffffff" />
+      </div>
+    </card>
   </card>
 </template>
 
@@ -58,12 +70,14 @@ import { ipcRenderer } from 'electron'
 import draggable from 'vuedraggable'
 import Card from '../components/Card'
 import SButton from './SButton'
+import ColorInput from "../components/ColorInput";
 
 const store = new Store()
 
 export default {
   name: 'SettingsTab',
   components: {
+    ColorInput,
     SButton,
     Card,
     draggable
@@ -78,7 +92,7 @@ export default {
       default: null
     }
   },
-  data () {
+  data() {
     return {
       backgroundColor: store.get('settings.backgroundColor'),
       textColor: store.get('settings.textColor'),
@@ -86,7 +100,14 @@ export default {
       clockColor: store.get('settings.clockColor'),
       clockTextColor: store.get('settings.clockTextColor'),
       presets: store.get('settings.presets'),
-      stopTimerAtZero: store.get('settings.stopTimerAtZero')
+      stopTimerAtZero: store.get('settings.stopTimerAtZero') ?? false,
+      showHours: store.get('settings.showHours') ?? true,
+      window: {
+        x: store.get('window.x') ?? 0,
+        y: store.get('window.y') ?? 0,
+        width: store.get('window.width') ?? 1280,
+        height: store.get('window.height') ?? 720
+      }
     }
   },
   computed: {
@@ -123,9 +144,16 @@ export default {
 
       store.set('settings.presets', this.presets)
       store.set('settings.stopTimerAtZero', this.stopTimerAtZero)
+      store.set('settings.showHours', this.showHours)
+
+      store.set('window.x', parseInt(this.window.x))
+      store.set('window.y', parseInt(this.window.y))
+      store.set('window.width', parseInt(this.window.width))
+      store.set('window.height', parseInt(this.window.height))
 
       this.$emit('settings-updated')
       ipcRenderer.send('settings-updated')
+      ipcRenderer.send('window-updated')
     },
     addPreset () {
       this.presets.push(0)
@@ -138,5 +166,7 @@ export default {
 </script>
 
 <style scoped>
-
+  .min-h-color {
+    min-height: 27px;
+  }
 </style>

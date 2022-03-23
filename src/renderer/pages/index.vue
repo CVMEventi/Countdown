@@ -1,19 +1,24 @@
 <template>
   <div class="main-container flex flex-col">
     <timer ref="timer" @timer-tick="timerTick" @timer-status-change="timerStatusChange" />
-    <div class="top-menu flex flex-row justify-center p-1 gap-2">
-      <tab-button
-        :selected="selectedTab === 'countdown'"
-        @click.native="selectedTab = 'countdown'"
-      >
-        Countdown
-      </tab-button>
-      <tab-button
-        :selected="selectedTab === 'settings'"
-        @click.native="selectedTab = 'settings'"
-      >
-        Settings
-      </tab-button>
+    <div class=" flex flex-row justify-between p-1 gap-2">
+      <nav class="relative z-0 rounded-lg shadow flex divide-x divide-gray-200" aria-label="Tabs">
+        <tab-button
+          first
+          :selected="selectedTab === 'countdown'"
+          @click.native="selectedTab = 'countdown'"
+        >
+          Countdown
+        </tab-button>
+        <tab-button
+          last
+          :selected="selectedTab === 'settings'"
+          @click.native="selectedTab = 'settings'"
+        >
+          Settings
+        </tab-button>
+      </nav>
+      <s-button v-if="selectedTab === 'settings'" @click.native="$refs.settingsTab.save()" class="self-end">Save</s-button>
     </div>
     <div v-if="selectedTab === 'countdown'" class="countdown-tab min-h-0">
       <card class="clock-setup overflow-y-scroll">
@@ -26,7 +31,7 @@
         <div class="flex-1" />
         <s-button class="text-4xl mt-5 mb-2 font-mono uppercase" @click.native="start">Start</s-button>
         <s-button
-          :disabled="secondsSetOnCurrentTimer === 0"
+          :disabled="!timerIsRunning && countSeconds === 0"
           class="text-4xl mb-2 font-mono uppercase"
           type="warning"
           @click.native="toggleTimer"
@@ -34,13 +39,26 @@
           {{ timerIsRunning ? "Pause" : "Resume" }}
         </s-button>
         <s-button
-          :disabled="secondsSetOnCurrentTimer === 0 && totalSeconds === 0"
           class="text-4xl mb-2 font-mono uppercase"
           type="danger"
           @click.native="reset"
         >
           Reset
         </s-button>
+        <!--<s-button
+          class="text-4xl mb-2 font-mono uppercase"
+          type="danger"
+          @click.native="startServer"
+        >
+          Start
+        </s-button>
+        <s-button
+          class="text-4xl mb-2 font-mono uppercase"
+          type="danger"
+          @click.native="stopServer"
+        >
+          Stop
+        </s-button>-->
       </card>
       <card class="presets inline-flex flex-col gap-2 overflow-scroll">
         <s-button
@@ -58,6 +76,7 @@
       :selected-screen="selectedScreen"
       @screen-set="setScreen"
       @settings-updated="settingsUpdated"
+      ref="settingsTab"
     />
   </div>
 </template>
@@ -116,41 +135,76 @@ export default {
   },
   async mounted () {
     this.screens = await ipcRenderer.invoke('get-screens')
+    ipcRenderer.on('remote-command', (event, ...args) => {
+      switch (args[0]) {
+        case 'start':
+          if (args[1] !== undefined) {
+            this.totalSeconds = parseInt(args[1]) * 60
+          }
+          this.start()
+          break;
+        case 'set':
+          this.totalSeconds = parseInt(args[1]) * 60
+          break;
+        case 'togglePause':
+          this.toggleTimer()
+          break;
+        case 'pause':
+          this.$refs.timer.stop()
+          break;
+        case 'resume':
+          this.$refs.timer.resume()
+          break;
+        case 'reset':
+          this.reset()
+          break;
+      }
+
+      console.log(args)
+    })
   },
   methods: {
-    setScreen (screen) {
+    setScreen(screen) {
       this.selectedScreen = screen
       ipcRenderer.send('manage-countdown-window', 'fullscreen-on', this.selectedScreen)
     },
-    start () {
+    start() {
       this.secondsSetOnCurrentTimer = this.totalSeconds
       this.$refs.timer.start(this.totalSeconds, store.get('settings.stopTimerAtZero') ?? false)
     },
-    toggleTimer () {
+    toggleTimer() {
       this.$refs.timer.toggle()
     },
-    timerTick (seconds) {
+    timerTick(seconds) {
       this.currentSeconds = seconds
       ipcRenderer.send('send-to-countdown-window', {
         current: this.currentSeconds,
         of: this.$refs.timer.secondsSet
       })
     },
-    timerStatusChange () {
+    timerStatusChange() {
       this.timerIsRunning = this.$refs.timer.isRunning
     },
-    reset () {
+    reset() {
       this.$refs.timer.reset()
       this.totalSeconds = 0
       this.secondsSetOnCurrentTimer = 0
     },
-    setPresetTime (minutes) {
+    setPresetTime(minutes) {
       const secondsPerMinute = 60
       this.totalSeconds = minutes * secondsPerMinute
     },
-    settingsUpdated () {
+    settingsUpdated() {
       store = new Store()
       this.settings = store.get('settings')
+    },
+    async startServer() {
+      ipcRenderer.send('webserver-manager', 'start')
+      console.log(await ipcRenderer.invoke('server-running'))
+    },
+    async stopServer() {
+      ipcRenderer.send('webserver-manager', 'stop')
+      console.log(await ipcRenderer.invoke('server-running'))
     }
   }
 }
