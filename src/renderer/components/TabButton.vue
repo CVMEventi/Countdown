@@ -6,7 +6,7 @@
       first ? 'rounded-l-lg' : '',
       last ? 'rounded-r-lg' : '',
     ]"
-    class="tab-button"
+    class="tab-button group"
     :aria-current="selected ? 'page' : undefined"
   >
     <span>
@@ -41,7 +41,7 @@ export default {
 
 <style scoped>
   .tab-button {
-    @apply group relative min-w-0 flex-1 overflow-hidden;
+    @apply relative min-w-0 flex-1 overflow-hidden;
     @apply bg-white py-4 px-4 text-sm font-medium text-center hover:bg-gray-50 focus:z-10;
   }
 </style>
