@@ -1,18 +1,30 @@
 <template>
   <div class="flex">
-    <input class="min-h-color" @input="$emit('input', $event.target.value)" :value="value" type="color" placeholder="#000000">
-    <button @click="$emit('input', defaultValue)" v-if="value !== defaultValue">
-      <i class="mdi-set mdi-reload"></i>
+    <input
+      class="min-h-color"
+      :value="value"
+      type="color"
+      placeholder="#000000"
+      @input="$emit('input', $event.target.value)"
+    >
+    <button v-if="value !== defaultValue" @click="$emit('input', defaultValue)">
+      <i class="mdi-set mdi-reload" />
     </button>
   </div>
 </template>
 
 <script>
 export default {
-  name: "ColorInput",
+  name: 'ColorInput',
   props: {
-    value: String,
-    defaultValue: String
+    value: {
+      type: String,
+      default: ''
+    },
+    defaultValue: {
+      type: String,
+      default: ''
+    }
   }
 }
 </script>

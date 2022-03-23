@@ -10,7 +10,7 @@ const STORE_DEFAULTS = {
         5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60
       ],
       webServerEnabled: true,
-      webServerPort: 6565,
+      webServerPort: 6565
     },
     window: {
       x: 0,
@@ -19,8 +19,8 @@ const STORE_DEFAULTS = {
       height: 720
     }
   }
-};
+}
 
 export {
-  STORE_DEFAULTS,
+  STORE_DEFAULTS
 }

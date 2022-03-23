@@ -62,7 +62,7 @@ export default {
   },
   computed: {
     time () {
-      let currentTimeInSeconds = dayjs.duration(Math.abs(this.update.current), 'seconds')
+      const currentTimeInSeconds = dayjs.duration(Math.abs(this.update.current), 'seconds')
 
       if (this.settings.showHours ?? true) {
         return currentTimeInSeconds.format('HH:mm:ss')

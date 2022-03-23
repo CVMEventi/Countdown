@@ -1,11 +1,11 @@
-import { app, ipcMain, screen } from 'electron';
-import Store from 'electron-store';
-import createMainWindow from "./mainWindow";
-import createCountdownWindow from './countdownWindow';
-import WebServer from "./WebServer";
-import { STORE_DEFAULTS } from "./constants";
+import { app, ipcMain, screen } from 'electron'
+import Store from 'electron-store'
+import createMainWindow from './mainWindow'
+import createCountdownWindow from './countdownWindow'
+import WebServer from './WebServer'
+import { STORE_DEFAULTS } from './constants'
 
-let countdownWindowHandler = null;
+let countdownWindowHandler = null
 
 // Init key value storage
 const store = new Store(STORE_DEFAULTS)
@@ -53,7 +53,7 @@ ipcMain.on('window-updated', (event, arg) => {
     x: store.get('window.x') ?? 100,
     y: store.get('window.y') ?? 100,
     height: store.get('window.height') ?? 720,
-    width: store.get('window.width') ?? 1280,
+    width: store.get('window.width') ?? 1280
   })
 })
 
@@ -83,9 +83,9 @@ ipcMain.on('manage-countdown-window', async (event, command, arg) => {
   }
 })
 
-
-
-const webServerEnabled = store.get('settings.webServerEnabled') === null ? false : store.get('settings.webServerEnabled')
+const webServerEnabled = store.get('settings.webServerEnabled') === null
+  ? false
+  : store.get('settings.webServerEnabled')
 const port = store.get('settings.webServerPort') === null ? 6565 : store.get('settings.webServerPort')
 let webServer = null
 
@@ -96,14 +96,15 @@ mainWindowHandler.onCreated(() => {
 
   ipcMain.on('webserver-manager', (event, command, arg) => {
     switch (command) {
-      case 'stop':
-        webServer.stop()
-        break
-      case 'start':
-        const port = store.get('settings.webServerPort') === null ? 6565 : store.get('settings.webServerPort')
-        webServer.port = port
-        webServer.start()
-        break
+    case 'stop':
+      webServer.stop()
+      break
+    case 'start':
+      webServer.port = store.get('settings.webServerPort') === null
+        ? 6565
+        : store.get('settings.webServerPort')
+      webServer.start()
+      break
     }
   })
 

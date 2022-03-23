@@ -1,10 +1,9 @@
 import BrowserWinHandler from './BrowserWinHandler'
 
-export default function createMainWindow(options = {
+export default function createMainWindow (options = {
   height: 800,
   width: 1400
 }) {
-
   const winHandler = new BrowserWinHandler(options)
 
   winHandler.onCreated(_browserWindow => {

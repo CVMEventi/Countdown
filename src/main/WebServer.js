@@ -1,4 +1,4 @@
-import express from "express";
+import express from 'express'
 
 export default class WebServer {
   /**
@@ -16,18 +16,18 @@ export default class WebServer {
   httpServer = null
   port = null
 
-  constructor(mainWindow) {
+  constructor (mainWindow) {
     this.mainWindow = mainWindow
     this.expressServer = express()
     this.expressServer.get('/', (req, res) => {
       res.send('Countdown')
     })
     this.expressServer.get('/set/:minutes', (req, res) => {
-      this.mainWindow.webContents.send('remote-command', 'set', req.params['minutes'])
+      this.mainWindow.webContents.send('remote-command', 'set', req.params.minutes)
       res.send(200)
     })
     this.expressServer.get('/start/:minutes', (req, res) => {
-      this.mainWindow.webContents.send('remote-command', 'start', req.params['minutes'])
+      this.mainWindow.webContents.send('remote-command', 'start', req.params.minutes)
       res.send(200)
     })
     this.expressServer.get('/start', (req, res) => {
@@ -52,15 +52,15 @@ export default class WebServer {
     })
   }
 
-  start() {
+  start () {
     this.httpServer = this.expressServer.listen(this.port, () => {
-      this.isRunning = true;
+      this.isRunning = true
     })
   }
 
-  stop() {
+  stop () {
     this.httpServer.close(() => {
-      this.isRunning = false;
+      this.isRunning = false
     })
   }
 }

@@ -18,7 +18,13 @@
           Settings
         </tab-button>
       </nav>
-      <s-button v-if="selectedTab === 'settings'" @click.native="$refs.settingsTab.save()" class="self-end">Save</s-button>
+      <s-button
+        v-if="selectedTab === 'settings'"
+        class="self-end"
+        @click.native="$refs.settingsTab.save()"
+      >
+        Save
+      </s-button>
     </div>
     <div v-if="selectedTab === 'countdown'" class="countdown-tab min-h-0">
       <card class="clock-setup overflow-y-scroll">
@@ -72,11 +78,11 @@
     </div>
     <settings-tab
       v-if="selectedTab === 'settings'"
+      ref="settingsTab"
       :screens="screens"
       :selected-screen="selectedScreen"
       @screen-set="setScreen"
       @settings-updated="settingsUpdated"
-      ref="settingsTab"
     />
   </div>
 </template>
@@ -137,72 +143,72 @@ export default {
     this.screens = await ipcRenderer.invoke('get-screens')
     ipcRenderer.on('remote-command', (event, ...args) => {
       switch (args[0]) {
-        case 'start':
-          if (args[1] !== undefined) {
-            this.totalSeconds = parseInt(args[1]) * 60
-          }
-          this.start()
-          break;
-        case 'set':
+      case 'start':
+        if (args[1] !== undefined) {
           this.totalSeconds = parseInt(args[1]) * 60
-          break;
-        case 'togglePause':
-          this.toggleTimer()
-          break;
-        case 'pause':
-          this.$refs.timer.stop()
-          break;
-        case 'resume':
-          this.$refs.timer.resume()
-          break;
-        case 'reset':
-          this.reset()
-          break;
+        }
+        this.start()
+        break
+      case 'set':
+        this.totalSeconds = parseInt(args[1]) * 60
+        break
+      case 'togglePause':
+        this.toggleTimer()
+        break
+      case 'pause':
+        this.$refs.timer.stop()
+        break
+      case 'resume':
+        this.$refs.timer.resume()
+        break
+      case 'reset':
+        this.reset()
+        break
       }
 
       console.log(args)
     })
   },
   methods: {
-    setScreen(screen) {
+    setScreen (screen) {
       this.selectedScreen = screen
       ipcRenderer.send('manage-countdown-window', 'fullscreen-on', this.selectedScreen)
     },
-    start() {
+    start () {
       this.secondsSetOnCurrentTimer = this.totalSeconds
       this.$refs.timer.start(this.totalSeconds, store.get('settings.stopTimerAtZero') ?? false)
     },
-    toggleTimer() {
+    toggleTimer () {
       this.$refs.timer.toggle()
     },
-    timerTick(seconds) {
+    timerTick (seconds) {
       this.currentSeconds = seconds
       ipcRenderer.send('send-to-countdown-window', {
         current: this.currentSeconds,
         of: this.$refs.timer.secondsSet
       })
     },
-    timerStatusChange() {
+    timerStatusChange () {
       this.timerIsRunning = this.$refs.timer.isRunning
     },
-    reset() {
+    reset () {
       this.$refs.timer.reset()
       this.totalSeconds = 0
       this.secondsSetOnCurrentTimer = 0
     },
-    setPresetTime(minutes) {
+    setPresetTime (minutes) {
       const secondsPerMinute = 60
       this.totalSeconds = minutes * secondsPerMinute
     },
-    settingsUpdated() {
+    settingsUpdated () {
       store = new Store()
       this.settings = store.get('settings')
     },
-    async startServer() {
+    async startServer () {
       ipcRenderer.send('webserver-manager', 'start')
       console.log(await ipcRenderer.invoke('server-running'))
     },
-    async stopServer() {
+    async stopServer () {
       ipcRenderer.send('webserver-manager', 'stop')
       console.log(await ipcRenderer.invoke('server-running'))
     }

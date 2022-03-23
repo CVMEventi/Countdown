@@ -15,13 +15,13 @@
           </option>
         </select>
         <p class="text-base">X</p>
-        <input type="number" class="input" v-model="window.x">
+        <input v-model="window.x" type="number" class="input">
         <p class="text-base">Y</p>
-        <input type="number" class="input" v-model="window.y">
+        <input v-model="window.y" type="number" class="input">
         <p class="text-base">Width</p>
-        <input type="number" class="input" v-model="window.width">
+        <input v-model="window.width" type="number" class="input">
         <p class="text-base">Height</p>
-        <input type="number" class="input" v-model="window.height">
+        <input v-model="window.height" type="number" class="input">
       </div>
     </card>
     <card class="inline-block border flex flex-col">
@@ -50,9 +50,9 @@
       <div class="flex flex-col overflow-y-scroll">
         <p class="text-2xl">Colors</p>
         <p class="text-base">Background</p>
-        <color-input v-model="backgroundColor" default-value="#000000"></color-input>
+        <color-input v-model="backgroundColor" default-value="#000000" />
         <p class="text-base">Text</p>
-        <color-input v-model="textColor" default-value="#ffffff"></color-input>
+        <color-input v-model="textColor" default-value="#ffffff" />
         <p class="text-base">Text on timer finished</p>
         <color-input v-model="timerFinishedTextColor" default-value="#ff0000" />
         <p class="text-base">Clock</p>
@@ -69,8 +69,8 @@ import Store from 'electron-store'
 import { ipcRenderer } from 'electron'
 import draggable from 'vuedraggable'
 import Card from '../components/Card'
+import ColorInput from '../components/ColorInput'
 import SButton from './SButton'
-import ColorInput from "../components/ColorInput";
 
 const store = new Store()
 
@@ -92,7 +92,7 @@ export default {
       default: null
     }
   },
-  data() {
+  data () {
     return {
       backgroundColor: store.get('settings.backgroundColor'),
       textColor: store.get('settings.textColor'),
