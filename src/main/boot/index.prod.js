@@ -2,6 +2,8 @@
 import { app, protocol } from 'electron'
 import * as path from 'path'
 import { URL } from 'url'
+import "core-js/stable";
+import "regenerator-runtime/runtime";
 
 const PRODUCTION_APP_PROTOCOL = 'app'
 const PRODUCTION_APP_PATH = path.join(__dirname, '..', 'renderer')

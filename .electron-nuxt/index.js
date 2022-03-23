@@ -46,7 +46,21 @@ const webpackConfig = Webpack.getBaseConfig({
       'process.resourcesPath': resourcesPath.mainProcess(),
       'process.env.DEV_SERVER_URL': `'${SERVER_HOST}:${SERVER_PORT}'`
     })
-  ]
+  ],
+  module: {
+    rules: [
+      {
+        test: /\.m?js$/,
+        exclude: /(node_modules|bower_components)/,
+        use: {
+          loader: 'babel-loader',
+          options: {
+            presets: ['@babel/preset-env']
+          }
+        }
+      }
+    ]
+  }
 })
 
 const webpackMain = new Webpack({
