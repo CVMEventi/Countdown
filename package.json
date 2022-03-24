@@ -1,6 +1,6 @@
 {
   "name": "countdown",
-  "productName": "Countdown",
+  "productName": "countdown",
   "version": "0.0.3",
   "description": "CVM Countdown",
   "main": ".webpack/main",
@@ -24,7 +24,7 @@
         {
           "name": "@electron-forge/maker-squirrel",
           "config": {
-            "name": "countdown_new"
+            "name": "countdown"
           }
         },
         {
