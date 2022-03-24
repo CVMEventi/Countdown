@@ -26,12 +26,14 @@
     </card>
     <card class="inline-block border flex flex-col">
       <p class="text-2xl">Presets</p>
-      <draggable v-model="presets" handle=".handle" class="flex flex-col my-3 gap-2 overflow-y-scroll items-center">
-        <div v-for="(preset, index) in presets" :key="index" class="inline-block" style="max-width: 140px">
-          <i class="mdi mdi-menu-swap cursor-pointer handle" />
-          <input v-model="presets[index]" class="input text-center" style="max-width: 80px">
-          <i class="mdi mdi-trash-can cursor-pointer" @click="deletePreset(index)" />
-        </div>
+      <draggable item-key="index" v-model="presets" handle=".handle" class="flex flex-col my-3 gap-2 overflow-y-scroll items-center">
+        <template #item="{element, index}" >
+          <div :key="index" class="inline-block" style="max-width: 140px">
+            <i class="mdi mdi-menu-swap cursor-pointer handle" />
+            <input v-model="presets[index]" class="input text-center" style="max-width: 80px">
+            <i class="mdi mdi-trash-can cursor-pointer" @click="deletePreset(index)" />
+          </div>
+        </template>
       </draggable>
       <s-button type="info" @click.native="addPreset">Add</s-button>
     </card>

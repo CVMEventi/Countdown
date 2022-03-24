@@ -2,12 +2,12 @@
   <div class="flex">
     <input
       class="min-h-color"
-      :value="value"
+      :value="modelValue"
       type="color"
       placeholder="#000000"
-      @input="$emit('input', $event.target.value)"
+      @input="$emit('update:modelValue', $event.target.value)"
     >
-    <button v-if="value !== defaultValue" @click="$emit('input', defaultValue)">
+    <button v-if="modelValue !== defaultValue" @click="$emit('update:modelValue', defaultValue)">
       <i class="mdi-set mdi-reload" />
     </button>
   </div>
@@ -17,7 +17,7 @@
 export default {
   name: 'ColorInput',
   props: {
-    value: {
+    modelValue: {
       type: String,
       default: ''
     },

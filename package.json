@@ -1,70 +1,97 @@
 {
   "name": "countdown",
-  "version": "0.0.2",
-  "description": "Another CVM Countdown",
-  "main": "./dist/main/index.js",
+  "productName": "Countdown",
+  "version": "0.0.3",
+  "description": "CVM Countdown",
+  "main": ".webpack/main",
   "scripts": {
-    "dev": "node .electron-nuxt/dev.js",
-    "build": "node .electron-nuxt/build.js",
-    "test:unit": "cross-env NODE_ENV=test TEST_TYPE=unit ava",
-    "test:e2e": "cross-env NODE_ENV=test TEST_TYPE=e2e ava",
-    "test": "yarn run test:unit && yarn run test:e2e",
-    "lint": "node_modules/.bin/eslint --ext .js,.vue -f ./node_modules/eslint-friendly-formatter ./src",
-    "lint:fix": "yarn run lint -- --fix",
-    "preinstall": "node .electron-nuxt/check-engines.js",
-    "postinstall": "electron-builder install-app-deps & yarn run lint:fix"
+    "start": "electron-forge start",
+    "package": "electron-forge package",
+    "make": "electron-forge make",
+    "publish": "electron-forge publish",
+    "lint": "echo \"No linting configured\""
   },
   "keywords": [],
-  "author": "Matteo Piccina <matteo.piccina@cvm.it>",
-  "license": "MIT",
-  "homepage": "https://github.com/michalzaq12/electron-nuxt/blob/master/README.md",
-  "engines": {
-    "node": ">=14.18.0"
+  "author": {
+    "name": "Matteo Piccina",
+    "email": "matteo.piccina@cvm.it"
   },
-  "resolutions": {
-    "@types/node": "14.17.32"
+  "license": "MIT",
+  "config": {
+    "forge": {
+      "packagerConfig": {},
+      "makers": [
+        {
+          "name": "@electron-forge/maker-squirrel",
+          "config": {
+            "name": "countdown_new"
+          }
+        },
+        {
+          "name": "@electron-forge/maker-zip",
+          "platforms": [
+            "darwin"
+          ]
+        },
+        {
+          "name": "@electron-forge/maker-deb",
+          "config": {}
+        },
+        {
+          "name": "@electron-forge/maker-rpm",
+          "config": {}
+        }
+      ],
+      "plugins": [
+        [
+          "@electron-forge/plugin-webpack",
+          {
+            "mainConfig": "./webpack.main.config.js",
+            "renderer": {
+              "config": "./webpack.renderer.config.js",
+              "entryPoints": [
+                {
+                  "html": "./src/renderer/index.html",
+                  "js": "./src/renderer/index.js",
+                  "name": "main_window"
+                }
+              ]
+            },
+            "loggerPort": 9050
+          }
+        ]
+      ]
+    }
   },
   "devDependencies": {
-    "@babel/core": "^7.17.8",
-    "@babel/preset-env": "^7.16.11",
-    "@mdi/font": "6.4.95",
-    "@nuxtjs/eslint-config": "6.0.0",
-    "@vue/test-utils": "1.2.0",
-    "@xpda-dev/core": "^0.1.6",
-    "@xpda-dev/electron-builder": "^0.2.1",
-    "@xpda-dev/electron-launcher": "^0.3.0",
-    "@xpda-dev/webpack-step": "^0.1.2",
-    "autoprefixer": "^10.4.0",
-    "ava": "2.4.0",
-    "babel-eslint": "10.1.0",
-    "babel-loader": "^8.2.3",
-    "babel-plugin-webpack-alias-7": "0.1.1",
-    "browser-env": "3.3.0",
-    "cross-env": "7.0.3",
-    "deepmerge": "4.2.2",
-    "electron": "^15.3.0",
-    "electron-builder": "22.13.1",
-    "electron-devtools-installer": "3.2.0",
-    "eslint": "7.25.0",
-    "eslint-friendly-formatter": "4.0.1",
-    "eslint-loader": "4.0.2",
-    "node-sass": "npm:sass@^1.49.9",
-    "nuxt": "2.15.6",
-    "postcss": "^8.3.11",
-    "require-extension-hooks": "0.3.3",
-    "require-extension-hooks-babel": "1.0.0",
-    "require-extension-hooks-vue": "0.4.2",
-    "sass-loader": "10.0.2",
-    "webpack": "4.44.2",
-    "webpack-node-externals": "2.5.2"
+    "@electron-forge/cli": "^6.0.0-beta.63",
+    "@electron-forge/maker-deb": "^6.0.0-beta.63",
+    "@electron-forge/maker-rpm": "^6.0.0-beta.63",
+    "@electron-forge/maker-squirrel": "^6.0.0-beta.63",
+    "@electron-forge/maker-zip": "^6.0.0-beta.63",
+    "@electron-forge/plugin-webpack": "^6.0.0-beta.63",
+    "@electron-forge/publisher-github": "^6.0.0-beta.63",
+    "@vercel/webpack-asset-relocator-loader": "^1.7.0",
+    "@vue/compiler-sfc": "^3.2.31",
+    "autoprefixer": "^10.4.4",
+    "css-loader": "^6.7.1",
+    "electron": "17.1.2",
+    "electron-devtools-installer": "^3.2.0",
+    "node-loader": "^2.0.0",
+    "postcss": "^8.4.12",
+    "postcss-loader": "^6.2.1",
+    "style-loader": "^3.3.1",
+    "tailwindcss": "^3.0.23",
+    "vue-loader": "^17.0.0"
   },
   "dependencies": {
-    "@nuxt/postcss8": "^1.1.3",
-    "core-js": "^3.21.1",
-    "dayjs": "^1.10.7",
+    "@mdi/font": "^6.6.95",
+    "dayjs": "^1.11.0",
+    "electron-squirrel-startup": "^1.0.0",
     "electron-store": "^8.0.1",
-    "express": "^4.17.2",
-    "tailwindcss": "^3.0.7",
-    "vuedraggable": "^2.24.3"
+    "express": "^4.17.3",
+    "vue": "^3.2.31",
+    "vue-router": "^4.0.14",
+    "vuedraggable": "^4.1.0"
   }
 }

@@ -1,4 +1,4 @@
-import BrowserWinHandler from './BrowserWinHandler'
+import BrowserWinHandler from './Utilities/BrowserWinHandler'
 
 export default function createCountdownWindow (options) {
   const winHandler = new BrowserWinHandler(options)

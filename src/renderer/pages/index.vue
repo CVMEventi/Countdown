@@ -66,11 +66,11 @@
           Stop
         </s-button>-->
       </card>
-      <card class="presets inline-flex flex-col gap-2 overflow-scroll">
+      <card class="presets inline-flex flex-col gap-2 overflow-y-scroll">
         <s-button
           v-for="(preset, index) in settings.presets"
           :key="index" type="info"
-          @click.native="setPresetTime(preset)"
+          @click="setPresetTime(preset)"
         >
           {{ preset }}
         </s-button>
@@ -89,7 +89,7 @@
 
 <script>
 import { ipcRenderer } from 'electron'
-import Store from 'electron-store'
+import Store from "electron-store"
 import Card from '../components/Card'
 import SButton from '../components/SButton'
 import Timer from '../components/Timer'
@@ -109,7 +109,7 @@ export default {
     TabButton
   },
   layout: 'default',
-  data () {
+  data() {
     return {
       externalContent: '',
       countdownWindow: window,

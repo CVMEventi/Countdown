@@ -43,9 +43,9 @@ dayjs.extend(duration)
 export default {
   name: 'TimeInput',
   props: {
-    value: {
+    modelValue: {
       type: Number,
-      default: 0
+      default: 0,
     },
     disabled: {
       type: Boolean,
@@ -66,29 +66,29 @@ export default {
       }
     },
     seconds: {
-      get () {
-        const duration = dayjs.duration(this.value, 'seconds')
+      get() {
+        const duration = dayjs.duration(this.modelValue, 'seconds')
         return this.padNumber(duration.seconds())
       },
-      set (newValue) {
+      set(newValue) {
         this.updateTime('seconds', newValue)
       }
     },
     minutes: {
-      get () {
-        const duration = dayjs.duration(this.value, 'seconds')
+      get() {
+        const duration = dayjs.duration(this.modelValue, 'seconds')
         return this.padNumber(duration.minutes())
       },
-      set (newValue) {
+      set(newValue) {
         this.updateTime('minutes', newValue)
       }
     },
     hours: {
-      get () {
-        const duration = dayjs.duration(this.value, 'seconds')
+      get() {
+        const duration = dayjs.duration(this.modelValue, 'seconds')
         return this.padNumber(duration.hours())
       },
-      set (newValue) {
+      set(newValue) {
         this.updateTime('hours', newValue)
       }
     }
@@ -101,7 +101,7 @@ export default {
       return ('00' + number).slice(-2)
     },
     updateTime (unit, value) {
-      const oldDuration = dayjs.duration(this.value, 'seconds')
+      const oldDuration = dayjs.duration(this.modelValue, 'seconds')
 
       const duration = dayjs.duration({
         seconds: unit === 'seconds' ? parseFloat(value) : oldDuration.seconds(),
@@ -109,7 +109,7 @@ export default {
         hours: unit === 'hours' ? parseFloat(value) : oldDuration.hours()
       })
 
-      this.$emit('input', duration.asSeconds())
+      this.$emit('update:modelValue', duration.asSeconds())
     }
   }
 }

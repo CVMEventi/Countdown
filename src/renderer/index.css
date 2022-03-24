@@ -1,0 +1,45 @@
+@import "~@mdi/font/css/materialdesignicons.min.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.input {
+  @apply border rounded px-3 py-1;
+}
+
+.input-big {
+  @apply text-5xl
+}
+
+.text-clock, .text-time {
+  line-height: 1;
+}
+
+.disabled {
+  @apply text-gray-700
+}
+
+.input-number-fixed {
+  @apply w-24 text-center border-0 font-mono
+}
+
+.input::-webkit-outer-spin-button,
+.input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+@font-face {
+  font-family: digital-7;
+  src: url("./fonts/digital-7.ttf");
+}
+
+.font-digital-clock {
+  font-family: digital-7, monospace;
+}
+
+html, body, #app, #app > div {
+  height: 100%;
+  width: 100%;
+}

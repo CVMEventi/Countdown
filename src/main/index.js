@@ -1,22 +1,25 @@
-import { app, ipcMain, screen } from 'electron'
-import Store from 'electron-store'
-import createMainWindow from './mainWindow'
-import createCountdownWindow from './countdownWindow'
-import WebServer from './WebServer'
-import { STORE_DEFAULTS } from './constants'
+import {app, BrowserWindow, ipcMain} from "electron";
+import addDefaultEvents from "./Utilities/addDefaultEvents";
+import { isDev, enableDevMode } from "./Utilities/dev";
+import Store from "electron-store";
+import { STORE_DEFAULTS } from './Utilities/constants'
+import { sleep } from "./Utilities/utilities";
+import addIpcHandles from "./Utilities/addIpcHandles"
+import createCountdownWindow from "./countdownWindow";
+import createMainWindow from "./mainWindow";
+import WebServer from "./WebServer";
 
+let store = new Store(STORE_DEFAULTS);
 let countdownWindowHandler = null
+let mainWindowHandler = null
 
-// Init key value storage
-const store = new Store(STORE_DEFAULTS)
-Store.initRenderer()
+addDefaultEvents();
+addIpcHandles();
+if (isDev) {
+  enableDevMode();
+}
 
-// Quit when all windows are closed.
-app.on('window-all-closed', function () {
-  // On macOS it is common for applications and their menu bar
-  // to stay active until the user quits explicitly with Cmd + Q
-  if (process.platform !== 'darwin') app.quit()
-})
+mainWindowHandler = createMainWindow();
 
 countdownWindowHandler = createCountdownWindow({
   x: store.get('window.x') ?? 100,
@@ -26,13 +29,7 @@ countdownWindowHandler = createCountdownWindow({
   // fullscreen: true
   frame: false,
   enableLargerThanScreen: true
-})
-
-countdownWindowHandler.onCreated(() => {
-  countdownWindowHandler.browserWindow.on('resize', () => {
-    console.log(countdownWindowHandler.browserWindow.getBounds())
-  })
-})
+});
 
 ipcMain.on('send-to-countdown-window', (event, arg) => {
   /**
@@ -57,31 +54,22 @@ ipcMain.on('window-updated', (event, arg) => {
   })
 })
 
-ipcMain.handle('get-screens', (event, ...args) => {
-  return screen.getAllDisplays()
-})
-
-function sleep (ms) {
-  return new Promise(resolve => {
-    setTimeout(resolve, ms)
-  })
-}
-
 ipcMain.on('manage-countdown-window', async (event, command, arg) => {
   switch (command) {
-  case 'fullscreen-on':
-    countdownWindowHandler.browserWindow.setFullScreen(false)
-    if (arg !== null) {
-      await sleep(1000)
-      countdownWindowHandler.browserWindow.setPosition(arg.bounds.x + 100, arg.bounds.y + 100)
-      countdownWindowHandler.browserWindow.setFullScreen(true)
-    }
-    break
+    case 'fullscreen-on':
+      countdownWindowHandler.browserWindow.setFullScreen(false)
+      if (arg !== null) {
+        await sleep(1000)
+        countdownWindowHandler.browserWindow.setPosition(arg.bounds.x + 100, arg.bounds.y + 100)
+        countdownWindowHandler.browserWindow.setFullScreen(true)
+      }
+      break
 
-  default:
-    break
+    default:
+      break
   }
 })
+
 
 const webServerEnabled = store.get('settings.webServerEnabled') === null
   ? false
@@ -89,22 +77,21 @@ const webServerEnabled = store.get('settings.webServerEnabled') === null
 const port = store.get('settings.webServerPort') === null ? 6565 : store.get('settings.webServerPort')
 let webServer = null
 
-const mainWindowHandler = createMainWindow()
 mainWindowHandler.onCreated(() => {
   webServer = new WebServer(mainWindowHandler.browserWindow)
   webServer.port = port
 
   ipcMain.on('webserver-manager', (event, command, arg) => {
     switch (command) {
-    case 'stop':
-      webServer.stop()
-      break
-    case 'start':
-      webServer.port = store.get('settings.webServerPort') === null
-        ? 6565
-        : store.get('settings.webServerPort')
-      webServer.start()
-      break
+      case 'stop':
+        webServer.stop()
+        break
+      case 'start':
+        webServer.port = store.get('settings.webServerPort') === null
+          ? 6565
+          : store.get('settings.webServerPort')
+        webServer.start()
+        break
     }
   })
 

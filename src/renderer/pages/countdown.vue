@@ -41,7 +41,7 @@
 import { ipcRenderer } from 'electron'
 import dayjs from 'dayjs'
 import duration from 'dayjs/plugin/duration'
-import Store from 'electron-store'
+import Store from "electron-store"
 
 let store = new Store()
 
