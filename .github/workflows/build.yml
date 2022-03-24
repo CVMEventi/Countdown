@@ -1,4 +1,4 @@
-name: Build/release
+name: Build/Publish artifacts
 
 on:
   push:
@@ -27,3 +27,8 @@ jobs:
 
       - name: Build
         run: npm run make
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: builds
+          path: out/make
