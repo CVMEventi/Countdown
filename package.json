@@ -60,6 +60,17 @@
             "loggerPort": 9050
           }
         ]
+      ],
+      "publishers": [
+        {
+          "name": "@electron-forge/publisher-github",
+          "config": {
+            "repository": {
+              "owner": "CVMEventi",
+              "name": "Countdown"
+            }
+          }
+        }
       ]
     }
   },
