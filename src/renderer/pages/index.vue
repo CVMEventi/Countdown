@@ -172,7 +172,8 @@ export default {
   methods: {
     setScreen (screen) {
       this.selectedScreen = screen
-      ipcRenderer.send('manage-countdown-window', 'fullscreen-on', this.selectedScreen)
+      const screenId = this.selectedScreen ? this.selectedScreen.id : null
+      ipcRenderer.send('manage-countdown-window', 'fullscreen-on', screenId)
     },
     start () {
       this.secondsSetOnCurrentTimer = this.totalSeconds

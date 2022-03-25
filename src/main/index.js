@@ -1,4 +1,4 @@
-import {app, BrowserWindow, ipcMain} from "electron";
+import {app, BrowserWindow, ipcMain, screen} from "electron";
 import addDefaultEvents from "./Utilities/addDefaultEvents";
 import { isDev, enableDevMode } from "./Utilities/dev";
 import Store from "electron-store";
@@ -57,10 +57,12 @@ ipcMain.on('window-updated', (event, arg) => {
 ipcMain.on('manage-countdown-window', async (event, command, arg) => {
   switch (command) {
     case 'fullscreen-on':
+      const selectedScreen = screen.getAllDisplays().find((display) => display.id === arg)
+
       countdownWindowHandler.browserWindow.setFullScreen(false)
       if (arg !== null) {
         await sleep(1000)
-        countdownWindowHandler.browserWindow.setPosition(arg.bounds.x + 100, arg.bounds.y + 100)
+        countdownWindowHandler.browserWindow.setPosition(selectedScreen.bounds.x + 100, selectedScreen.bounds.y + 100)
         countdownWindowHandler.browserWindow.setFullScreen(true)
       }
       break
