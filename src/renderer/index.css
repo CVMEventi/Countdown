@@ -43,3 +43,7 @@ html, body, #app, #app > div {
   height: 100%;
   width: 100%;
 }
+
+#app {
+  @apply overflow-x-hidden;
+}
