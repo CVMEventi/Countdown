@@ -31,4 +31,8 @@ jobs:
       - uses: actions/upload-artifact@v3
         with:
           name: builds
-          path: out/make
+          path: |
+            out/make/deb
+            out/make/rpm
+            out/make/zip
+            out/make/squirrel.windows
