@@ -118,11 +118,11 @@ export default {
 }
 
 .text-time {
-  font-size: 40vh;
+  font-size: min(40vh, 25vw);
 }
 
 .text-clock {
-  font-size: 20vh;
+  font-size: min(20vh, 15vw);
 }
 
 .progress-bar {
