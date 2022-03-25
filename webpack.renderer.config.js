@@ -15,6 +15,11 @@ rules.push({
   loader: 'vue-loader'
 })
 
+rules.push({
+  test: /\.(woff|woff2|eot|ttf|otf)$/i,
+  type: 'asset/resource',
+})
+
 module.exports = {
   target: 'electron-renderer',
   // Put your normal webpack config below here
@@ -23,7 +28,7 @@ module.exports = {
   },
   plugins: [
     // make sure to include the plugin!
-    new VueLoaderPlugin()
+    new VueLoaderPlugin(),
   ],
   resolve: {
     alias: {
