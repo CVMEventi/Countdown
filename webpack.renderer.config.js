@@ -1,10 +1,13 @@
 const rules = require('./webpack.rules');
 const { VueLoaderPlugin } = require('vue-loader')
+const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+const CssMinimizerPlugin = require("css-minimizer-webpack-plugin");
+const isProd = process.env.NODE_ENV === 'production';
 
 rules.push({
   test: /\.css$/i,
   use: [
-    "style-loader",
+    isProd ? MiniCssExtractPlugin.loader : 'style-loader',
     "css-loader",
     'postcss-loader',
   ],
@@ -26,9 +29,15 @@ module.exports = {
   module: {
     rules,
   },
+  optimization: {
+    minimizer: [
+      new CssMinimizerPlugin(),
+    ],
+  },
   plugins: [
     // make sure to include the plugin!
     new VueLoaderPlugin(),
+    new MiniCssExtractPlugin(),
   ],
   resolve: {
     alias: {
