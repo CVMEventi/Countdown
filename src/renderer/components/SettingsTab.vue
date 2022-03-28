@@ -47,6 +47,10 @@
         <input id="showHours" v-model="showHours" type="checkbox">
         <label for="showHours">Show hours</label>
       </div>
+      <div>
+        <input id="pulseAtZero" v-model="pulseAtZero" type="checkbox">
+        <label for="pulseAtZero">Pulse at zero</label>
+      </div>
     </card>
     <card class="inline-block border flex flex-col">
       <div class="flex flex-col overflow-y-scroll">
@@ -73,6 +77,18 @@ import draggable from 'vuedraggable'
 import Card from '../components/Card'
 import ColorInput from '../components/ColorInput'
 import SButton from './SButton'
+import {
+  DEFAULT_BACKGROUND_COLOR,
+  DEFAULT_TEXT_COLOR,
+  DEFAULT_TIMER_FINISHED_TEXT_COLOR,
+  DEFAULT_CLOCK_COLOR,
+  DEFAULT_CLOCK_TEXT_COLOR,
+  DEFAULT_PRESETS,
+  DEFAULT_STOP_TIMER_AT_ZERO,
+  DEFAULT_SHOW_HOURS,
+  DEFAULT_PULSE_AT_ZERO,
+  DEFAULT_WINDOW_BOUNDS,
+} from "../../common/constants";
 
 const store = new Store()
 
@@ -96,20 +112,16 @@ export default {
   },
   data () {
     return {
-      backgroundColor: store.get('settings.backgroundColor'),
-      textColor: store.get('settings.textColor'),
-      timerFinishedTextColor: store.get('settings.timerFinishedTextColor'),
-      clockColor: store.get('settings.clockColor'),
-      clockTextColor: store.get('settings.clockTextColor'),
-      presets: store.get('settings.presets'),
-      stopTimerAtZero: store.get('settings.stopTimerAtZero') ?? false,
-      showHours: store.get('settings.showHours') ?? true,
-      window: {
-        x: store.get('window.x') ?? 0,
-        y: store.get('window.y') ?? 0,
-        width: store.get('window.width') ?? 1280,
-        height: store.get('window.height') ?? 720
-      }
+      backgroundColor: store.get('settings.backgroundColor', DEFAULT_BACKGROUND_COLOR),
+      textColor: store.get('settings.textColor', DEFAULT_TEXT_COLOR),
+      timerFinishedTextColor: store.get('settings.timerFinishedTextColor', DEFAULT_TIMER_FINISHED_TEXT_COLOR),
+      clockColor: store.get('settings.clockColor', DEFAULT_CLOCK_COLOR),
+      clockTextColor: store.get('settings.clockTextColor', DEFAULT_CLOCK_TEXT_COLOR),
+      presets: store.get('settings.presets', DEFAULT_PRESETS),
+      stopTimerAtZero: store.get('settings.stopTimerAtZero', DEFAULT_STOP_TIMER_AT_ZERO),
+      showHours: store.get('settings.showHours', DEFAULT_SHOW_HOURS),
+      pulseAtZero: store.get('settings.pulseAtZero', DEFAULT_PULSE_AT_ZERO),
+      window: store.get('window', DEFAULT_WINDOW_BOUNDS)
     }
   },
   computed: {
@@ -147,6 +159,7 @@ export default {
       store.set('settings.presets', this.presets)
       store.set('settings.stopTimerAtZero', this.stopTimerAtZero)
       store.set('settings.showHours', this.showHours)
+      store.set('settings.pulseAtZero', this.pulseAtZero)
 
       store.set('window.x', parseInt(this.window.x))
       store.set('window.y', parseInt(this.window.y))

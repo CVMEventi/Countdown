@@ -8,6 +8,9 @@
       :style="{
         color: timerText
       }"
+      :class="{
+        'animate-pulse-fast': !this.isReset && this.isCountingUp && this.settings.pulseAtZero
+      }"
     >
       {{ time }}
     </div>
@@ -42,6 +45,7 @@ import { ipcRenderer } from 'electron'
 import dayjs from 'dayjs'
 import duration from 'dayjs/plugin/duration'
 import Store from "electron-store"
+import { DEFAULT_STORE, DEFAULT_PULSE_AT_ZERO } from "../../common/constants";
 
 let store = new Store()
 
@@ -57,14 +61,14 @@ export default {
         current: 0,
         of: 0
       },
-      settings: store.get('settings')
+      settings: store.get('settings', DEFAULT_STORE.defaults.settings)
     }
   },
   computed: {
     time () {
       const currentTimeInSeconds = dayjs.duration(Math.abs(this.update.current), 'seconds')
 
-      if (this.settings.showHours ?? true) {
+      if (this.settings.showHours) {
         return currentTimeInSeconds.format('HH:mm:ss')
       } else {
         return currentTimeInSeconds.format('mm:ss')
@@ -88,7 +92,7 @@ export default {
       } else {
         return this.settings.textColor
       }
-    }
+    },
   },
   mounted () {
     ipcRenderer.on('command', (event, arg) => {

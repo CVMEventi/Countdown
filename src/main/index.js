@@ -2,14 +2,14 @@ import {app, BrowserWindow, ipcMain, screen} from "electron";
 import addDefaultEvents from "./Utilities/addDefaultEvents";
 import { isDev, enableDevMode } from "./Utilities/dev";
 import Store from "electron-store";
-import { STORE_DEFAULTS } from './Utilities/constants'
+import { DEFAULT_STORE } from '../common/constants'
 import { sleep } from "./Utilities/utilities";
 import addIpcHandles from "./Utilities/addIpcHandles"
 import createCountdownWindow from "./countdownWindow";
 import createMainWindow from "./mainWindow";
 import WebServer from "./WebServer";
 
-let store = new Store(STORE_DEFAULTS);
+let store = new Store(DEFAULT_STORE);
 let countdownWindowHandler = null
 let mainWindowHandler = null
 
