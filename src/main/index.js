@@ -24,6 +24,10 @@ mainWindowHandler = createMainWindow();
 
 mainWindowHandler.onCreated(() => {
   setMenu(mainWindowHandler);
+
+  mainWindowHandler.browserWindow.on('closed', () => {
+    app.quit();
+  })
 })
 
 countdownWindowHandler = createCountdownWindow({
