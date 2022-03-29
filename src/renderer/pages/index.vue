@@ -164,6 +164,18 @@ export default {
       case 'reset':
         this.reset()
         break
+      case 'startResumePause':
+        if (this.timerIsRunning) {
+          this.$refs.timer.stop();
+          return;
+        }
+
+        if (this.countSeconds > 0 && !this.timerIsRunning) {
+          this.$refs.timer.resume();
+          return;
+        }
+
+        this.start();
       }
 
       console.log(args)

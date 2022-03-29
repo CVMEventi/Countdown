@@ -8,6 +8,7 @@ import addIpcHandles from "./Utilities/addIpcHandles"
 import createCountdownWindow from "./countdownWindow";
 import createMainWindow from "./mainWindow";
 import WebServer from "./WebServer";
+import setMenu from "./Utilities/setMenu";
 
 let store = new Store(DEFAULT_STORE);
 let countdownWindowHandler = null
@@ -20,6 +21,10 @@ if (isDev) {
 }
 
 mainWindowHandler = createMainWindow();
+
+mainWindowHandler.onCreated(() => {
+  setMenu(mainWindowHandler);
+})
 
 countdownWindowHandler = createCountdownWindow({
   x: store.get('window.x') ?? 100,
