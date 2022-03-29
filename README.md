@@ -1,5 +1,9 @@
 # Countdown
 
+### Download
+
+You can download latest release from [releases](https://github.com/CVMEventi/Countdown/releases)
+
 #### Build Setup
 
 ``` bash
