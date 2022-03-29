@@ -33,7 +33,7 @@
         <div>Count</div>
         <time-input v-model="countSeconds" color="green" :disabled="true" />
         <div>Extra</div>
-        <time-input color="red" :value="extraSeconds" :disabled="true" />
+        <time-input color="red" v-model="extraSeconds" :disabled="true" />
         <div class="flex-1" />
         <s-button class="text-4xl mt-5 mb-2 font-mono uppercase" @click.native="start">Start</s-button>
         <s-button
