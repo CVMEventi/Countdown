@@ -49,8 +49,24 @@ ipcMain.on('settings-updated', (event, arg) => {
   browserWindow.webContents.send('settings-updated')
 })
 
-ipcMain.on('window-updated', (event, arg) => {
-  const browserWindow = countdownWindowHandler.browserWindow
+ipcMain.on('window-updated', async (event, arg) => {
+  const fullscreenOn = store.get('window.fullscreenOn', null)
+  const selectedScreen = screen.getAllDisplays().find((display) => display.id === fullscreenOn)
+  /**
+   * @type {null|Electron.CrossProcessExports.BrowserWindow|*}
+   */
+  const browserWindow = countdownWindowHandler.browserWindow;
+
+  if (browserWindow.fullScreen) {
+    browserWindow.setFullScreen(false)
+  }
+  if (fullscreenOn !== null) {
+    await sleep(1000)
+    browserWindow.setPosition(selectedScreen.bounds.x + 100, selectedScreen.bounds.y + 100)
+    browserWindow.setFullScreen(true)
+    return;
+  }
+
   browserWindow.setBounds({
     x: store.get('window.x') ?? 100,
     y: store.get('window.y') ?? 100,
@@ -58,25 +74,6 @@ ipcMain.on('window-updated', (event, arg) => {
     width: store.get('window.width') ?? 1280
   })
 })
-
-ipcMain.on('manage-countdown-window', async (event, command, arg) => {
-  switch (command) {
-    case 'fullscreen-on':
-      const selectedScreen = screen.getAllDisplays().find((display) => display.id === arg)
-
-      countdownWindowHandler.browserWindow.setFullScreen(false)
-      if (arg !== null) {
-        await sleep(1000)
-        countdownWindowHandler.browserWindow.setPosition(selectedScreen.bounds.x + 100, selectedScreen.bounds.y + 100)
-        countdownWindowHandler.browserWindow.setFullScreen(true)
-      }
-      break
-
-    default:
-      break
-  }
-})
-
 
 const webServerEnabled = store.get('settings.webServerEnabled') === null
   ? false

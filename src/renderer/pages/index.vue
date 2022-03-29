@@ -81,7 +81,6 @@
       ref="settingsTab"
       :screens="screens"
       :selected-screen="selectedScreen"
-      @screen-set="setScreen"
       @settings-updated="settingsUpdated"
     />
   </div>
@@ -182,11 +181,6 @@ export default {
     })
   },
   methods: {
-    setScreen (screen) {
-      this.selectedScreen = screen
-      const screenId = this.selectedScreen ? this.selectedScreen.id : null
-      ipcRenderer.send('manage-countdown-window', 'fullscreen-on', screenId)
-    },
     start () {
       this.secondsSetOnCurrentTimer = this.totalSeconds
       this.$refs.timer.start(this.totalSeconds, store.get('settings.stopTimerAtZero') ?? false)

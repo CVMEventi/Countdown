@@ -14,6 +14,7 @@ const DEFAULT_SHOW_HOURS = false;
 const DEFAULT_PULSE_AT_ZERO = false;
 
 const DEFAULT_WINDOW_BOUNDS = {
+  fullscreenOn: null,
   x: 100,
   y: 100,
   width: 1280,

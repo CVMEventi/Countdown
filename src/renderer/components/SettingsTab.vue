@@ -22,6 +22,7 @@
         <input v-model="window.width" type="number" class="input">
         <p class="text-base">Height</p>
         <input v-model="window.height" type="number" class="input">
+        <s-button class="mt-2" type="info" @click.native="updateWindow">Set</s-button>
       </div>
     </card>
     <card class="inline-block border flex flex-col">
@@ -127,10 +128,10 @@ export default {
   computed: {
     currentScreen: {
       get () {
-        return this.selectedScreen
+        return this.screens.find((screen) => screen.id === this.window.fullscreenOn);
       },
       set (newValue) {
-        this.$emit('screen-set', newValue)
+        this.window.fullscreenOn = newValue !== null ? newValue.id : null;
       }
     }
   },
@@ -161,14 +162,21 @@ export default {
       store.set('settings.showHours', this.showHours)
       store.set('settings.pulseAtZero', this.pulseAtZero)
 
+      this.saveWindowBounds()
+
+      this.$emit('settings-updated')
+      ipcRenderer.send('settings-updated')
+    },
+    saveWindowBounds() {
+      store.set('window.fullscreenOn', this.window.fullscreenOn)
       store.set('window.x', parseInt(this.window.x))
       store.set('window.y', parseInt(this.window.y))
       store.set('window.width', parseInt(this.window.width))
       store.set('window.height', parseInt(this.window.height))
-
-      this.$emit('settings-updated')
-      ipcRenderer.send('settings-updated')
-      ipcRenderer.send('window-updated')
+    },
+    updateWindow() {
+      this.saveWindowBounds();
+      ipcRenderer.send('window-updated');
     },
     addPreset () {
       this.presets.push(0)
