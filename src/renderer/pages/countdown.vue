@@ -1,9 +1,10 @@
 <template>
   <div :style="{
-    backgroundColor: settings.backgroundColor
+    backgroundColor: backgroundColor
   }" class="flex justify-center flex-col drag"
   >
     <div
+      v-if="settings.show.timer"
       class="text-center text-time font-digital-clock"
       :style="{
         color: timerText
@@ -14,7 +15,10 @@
     >
       {{ time }}
     </div>
-    <div class="relative pt-1 px-5">
+    <div
+      v-if="settings.show.progress"
+      class="relative pt-1 px-5"
+    >
       <div
         class="overflow-hidden progress-bar mb-4 text-xs flex rounded"
         :class="{
@@ -33,7 +37,10 @@
         />
       </div>
     </div>
-    <div class="text-center text-clock font-digital-clock">
+    <div
+      v-if="settings.show.clock"
+      class="text-center text-clock font-digital-clock"
+    >
       <i :style="{color: settings.clockColor}" class="mdi-set mdi-clock" />
       <span :style="{color: settings.clockTextColor}">{{ currentTime }}</span>
     </div>
@@ -93,6 +100,9 @@ export default {
         return this.settings.textColor
       }
     },
+    backgroundColor() {
+      return this.settings.backgroundColor + parseInt(this.settings.backgroundColorOpacity).toString(16).padStart(2, "0");
+    }
   },
   mounted () {
     ipcRenderer.on('command', (event, arg) => {
@@ -103,6 +113,12 @@ export default {
       store = new Store()
       this.settings = store.get('settings')
     })
+    ipcRenderer.on('temporary-settings-updated', (event, arg) => {
+      this.settings = {
+        ...this.settings,
+        ...arg,
+      }
+    })
     if (this.currentTimeTimerId === null) {
       setInterval(this.updateTime, 1000)
     }
@@ -110,7 +126,7 @@ export default {
   methods: {
     updateTime () {
       this.currentTime = dayjs().format('HH:mm')
-    }
+    },
   }
 }
 </script>

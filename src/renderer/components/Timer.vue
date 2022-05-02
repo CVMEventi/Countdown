@@ -62,9 +62,19 @@ export default {
       this.seconds = this.seconds - 1
       this.$emit('timer-tick', this.seconds)
 
-      if (this.seconds === 0 && this.stopsAtZero) {
+      if (this.seconds <= 0 && this.stopsAtZero) {
+        this.seconds = 0;
+        this.$emit('timer-tick', 0)
         this.stop()
       }
+    },
+    add (seconds) {
+      this.seconds += seconds;
+      this.$emit('timer-tick', this.seconds)
+    },
+    sub (seconds) {
+      this.seconds -= seconds;
+      this.$emit('timer-tick', this.seconds)
     }
   }
 }

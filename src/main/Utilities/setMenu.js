@@ -32,7 +32,7 @@ export default (mainWindowHandler) => {
         },
         {
           label: 'Reset',
-          accelerator: process.platform === 'darwin' ? 'Cmd+R' : 'Ctrl+R',
+          accelerator: 'R',
           click: async () => {
             mainWindowHandler.browserWindow.webContents.send('remote-command', 'reset')
           }

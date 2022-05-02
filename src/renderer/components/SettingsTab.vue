@@ -1,7 +1,7 @@
 <template>
   <card class="flex flex-1 gap-2 min-h-0">
-    <card class="inline-block border flex flex-col">
-      <div class="flex flex-col overflow-y-scroll">
+    <card class="inline-block border flex flex-col overflow-y-scroll">
+      <div class="flex flex-col">
         <p class="text-2xl">Screen</p>
         <select v-model="currentScreen" class="border rounded p-2">
           <option :value="null">-</option>
@@ -22,42 +22,39 @@
         <input v-model="window.width" type="number" class="input">
         <p class="text-base">Height</p>
         <input v-model="window.height" type="number" class="input">
-        <s-button class="mt-2" type="info" @click.native="updateWindow">Set</s-button>
+        <s-button class="mt-2" type="info" @click="getCountdownBounds">Get current position</s-button>
+        <s-button class="mt-2" type="info" @click="updateWindow">Set</s-button>
       </div>
     </card>
-    <card class="inline-block border flex flex-col">
-      <p class="text-2xl">Presets</p>
-      <draggable item-key="index" v-model="presets" handle=".handle" class="flex flex-col my-3 gap-2 overflow-y-scroll items-center">
+    <card class="inline-block border flex flex-col p-0">
+      <p class="text-2xl p-3">Presets</p>
+      <draggable item-key="index" v-model="presets" handle=".handle" class="flex flex-col gap-2 overflow-y-scroll items-center py-2">
         <template #item="{element, index}" >
-          <div :key="index" class="inline-block" style="max-width: 140px">
-            <i class="mdi mdi-menu-swap cursor-pointer handle" />
-            <input v-model="presets[index]" class="input text-center" style="max-width: 80px">
-            <i class="mdi mdi-trash-can cursor-pointer" @click="deletePreset(index)" />
+          <div :key="index" class="inline-block" style="width: 150px">
+            <i class="text-xl px-2 mdi mdi-menu-swap cursor-pointer handle" />
+            <input type="number" v-model="presets[index]" class="input text-center" style="max-width: 80px">
+            <i class="px-2 mdi mdi-trash-can cursor-pointer" @click="deletePreset(index)" />
           </div>
         </template>
       </draggable>
-      <s-button type="info" @click.native="addPreset">Add</s-button>
+      <s-button class="m-3" type="info" @click="addPreset">Add</s-button>
     </card>
     <card class="inline-block border flex flex-col">
       <p class="text-2xl">Timer</p>
-      <div>
-        <input id="stopTimerAtZero" v-model="stopTimerAtZero" type="checkbox">
-        <label for="stopTimerAtZero">Stop timer at 0</label>
-      </div>
-      <div>
-        <input id="showHours" v-model="showHours" type="checkbox">
-        <label for="showHours">Show hours</label>
-      </div>
-      <div>
-        <input id="pulseAtZero" v-model="pulseAtZero" type="checkbox">
-        <label for="pulseAtZero">Pulse at zero</label>
-      </div>
+      <check-box id="stopTimerAtZero" v-model="stopTimerAtZero">Stop timer at 0</check-box>
+      <check-box id="showHours" v-model="showHours">Show hours</check-box>
+      <check-box id="pulseAtZero" v-model="pulseAtZero">Pulse at zero</check-box>
+      <p class="text-2xl">Show</p>
+      <check-box id="showTimer" v-model="show.timer">Timer</check-box>
+      <check-box id="showProgress" v-model="show.progress">Progress</check-box>
+      <check-box id="showClock" v-model="show.clock">Clock</check-box>
     </card>
     <card class="inline-block border flex flex-col">
       <div class="flex flex-col overflow-y-scroll">
         <p class="text-2xl">Colors</p>
         <p class="text-base">Background</p>
         <color-input v-model="backgroundColor" default-value="#000000" />
+        <input @input="realTimeSettingUpdated" v-model="backgroundColorOpacity" type="range" min="0" max="255">
         <p class="text-base">Text</p>
         <color-input v-model="textColor" default-value="#ffffff" />
         <p class="text-base">Text on timer finished</p>
@@ -80,6 +77,7 @@ import ColorInput from '../components/ColorInput'
 import SButton from './SButton'
 import {
   DEFAULT_BACKGROUND_COLOR,
+  DEFAULT_BACKGROUND_OPACITY,
   DEFAULT_TEXT_COLOR,
   DEFAULT_TIMER_FINISHED_TEXT_COLOR,
   DEFAULT_CLOCK_COLOR,
@@ -88,14 +86,16 @@ import {
   DEFAULT_STOP_TIMER_AT_ZERO,
   DEFAULT_SHOW_HOURS,
   DEFAULT_PULSE_AT_ZERO,
-  DEFAULT_WINDOW_BOUNDS,
+  DEFAULT_WINDOW_BOUNDS, DEFAULT_SHOW_SECTIONS,
 } from "../../common/constants";
+import CheckBox from "./CheckBox";
 
 const store = new Store()
 
 export default {
   name: 'SettingsTab',
   components: {
+    CheckBox,
     ColorInput,
     SButton,
     Card,
@@ -114,6 +114,7 @@ export default {
   data () {
     return {
       backgroundColor: store.get('settings.backgroundColor', DEFAULT_BACKGROUND_COLOR),
+      backgroundColorOpacity: store.get('settings.backgroundColorOpacity', DEFAULT_BACKGROUND_OPACITY),
       textColor: store.get('settings.textColor', DEFAULT_TEXT_COLOR),
       timerFinishedTextColor: store.get('settings.timerFinishedTextColor', DEFAULT_TIMER_FINISHED_TEXT_COLOR),
       clockColor: store.get('settings.clockColor', DEFAULT_CLOCK_COLOR),
@@ -122,7 +123,8 @@ export default {
       stopTimerAtZero: store.get('settings.stopTimerAtZero', DEFAULT_STOP_TIMER_AT_ZERO),
       showHours: store.get('settings.showHours', DEFAULT_SHOW_HOURS),
       pulseAtZero: store.get('settings.pulseAtZero', DEFAULT_PULSE_AT_ZERO),
-      window: store.get('window', DEFAULT_WINDOW_BOUNDS)
+      window: store.get('window', DEFAULT_WINDOW_BOUNDS),
+      show: store.get('settings.show', DEFAULT_SHOW_SECTIONS),
     }
   },
   computed: {
@@ -140,6 +142,8 @@ export default {
       if (CSS.supports('color', this.backgroundColor)) {
         store.set('settings.backgroundColor', this.backgroundColor)
       }
+
+      store.set('settings.backgroundColorOpacity', this.backgroundColorOpacity)
 
       if (CSS.supports('color', this.textColor)) {
         store.set('settings.textColor', this.textColor)
@@ -162,6 +166,8 @@ export default {
       store.set('settings.showHours', this.showHours)
       store.set('settings.pulseAtZero', this.pulseAtZero)
 
+      store.set('settings.show', this.show)
+
       this.saveWindowBounds()
 
       this.$emit('settings-updated')
@@ -183,6 +189,16 @@ export default {
     },
     deletePreset (index) {
       this.presets.splice(index, 1)
+    },
+    realTimeSettingUpdated() {
+      let settings = {
+        backgroundColorOpacity: this.backgroundColorOpacity,
+      };
+
+      ipcRenderer.send('temporary-settings-updated', settings);
+    },
+    async getCountdownBounds() {
+      this.window = await ipcRenderer.invoke('countdown-bounds')
     }
   }
 }

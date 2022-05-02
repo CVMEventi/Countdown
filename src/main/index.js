@@ -37,7 +37,8 @@ countdownWindowHandler = createCountdownWindow({
   width: store.get('window.width') ?? 1280,
   // fullscreen: true
   frame: false,
-  enableLargerThanScreen: true
+  enableLargerThanScreen: true,
+  transparent: true,
 });
 
 ipcMain.on('send-to-countdown-window', (event, arg) => {
@@ -51,6 +52,10 @@ ipcMain.on('send-to-countdown-window', (event, arg) => {
 ipcMain.on('settings-updated', (event, arg) => {
   const browserWindow = countdownWindowHandler.browserWindow
   browserWindow.webContents.send('settings-updated')
+})
+ipcMain.on('temporary-settings-updated', (event, arg) => {
+  const browserWindow = countdownWindowHandler.browserWindow
+  browserWindow.webContents.send('temporary-settings-updated', arg)
 })
 
 ipcMain.on('window-updated', async (event, arg) => {
@@ -110,4 +115,9 @@ mainWindowHandler.onCreated(() => {
 
 ipcMain.handle('server-running', (event, ...args) => {
   return webServer.isRunning
+})
+
+ipcMain.handle('countdown-bounds', (event, args) => {
+  const browserWindow = countdownWindowHandler.browserWindow
+  return browserWindow.getBounds()
 })
