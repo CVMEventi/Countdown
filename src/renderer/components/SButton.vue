@@ -1,5 +1,6 @@
 <template>
   <button
+    @click.stop.prevent="click"
     :disabled="disabled"
     class="px-4 py-2 rounded text-white ring-transparent"
     :class="{
@@ -35,6 +36,15 @@ export default {
     disabled: {
       type: Boolean,
       default: false
+    },
+  },
+  emits: [
+    'click',
+  ],
+  methods: {
+    click(event) {
+      event.target.blur();
+      this.$emit('click')
     }
   }
 }
