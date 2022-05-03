@@ -28,17 +28,13 @@
     </div>
     <div v-if="selectedTab === 'countdown'" class="countdown-tab">
       <div class="flex gap-2">
-        <card class="clock-setup overflow-y-scroll">
+        <card class="clock-setup overflow-y-scroll justify-center">
           <div class="uppercase">Set</div>
           <time-input v-model="totalSeconds" color="white"/>
-          <div>Count</div>
+          <div class="uppercase mt-2">Count</div>
           <time-input v-model="countSeconds" color="green" :disabled="true"/>
-          <div>Extra</div>
+          <div class="uppercase mt-2">Extra</div>
           <time-input color="red" v-model="extraSeconds" :disabled="true"/>
-          <div class="flex gap-2">
-            <s-button class="mt-2 flex-1" type="info" @click="add">+1</s-button>
-            <s-button class="mt-2 flex-1" type="info" @click="sub">-1</s-button>
-          </div>
         </card>
         <card class="control-buttons overflow-y-scroll">
           <s-button class="text-4xl mb-2 font-mono uppercase" @click="start">Start</s-button>
@@ -57,6 +53,35 @@
           >
             Reset
           </s-button>
+          <div class="flex gap-2 justify-center">
+            <jog @up-click="add(1)" @down-click="sub(1)">
+              <template v-slot:up>
+                +
+              </template>
+              <template v-slot:down>
+                -
+              </template>
+              1m
+            </jog>
+            <jog @up-click="add(5)" @down-click="sub(5)">
+              <template v-slot:up>
+                +
+              </template>
+              <template v-slot:down>
+                -
+              </template>
+              5m
+            </jog>
+            <jog @up-click="add(10)" @down-click="sub(10)">
+              <template v-slot:up>
+                +
+              </template>
+              <template v-slot:down>
+                -
+              </template>
+              10m
+            </jog>
+          </div>
           <!--<s-button
             class="text-4xl mb-2 font-mono uppercase"
             type="danger"
@@ -102,11 +127,13 @@ import Timer from '../components/Timer'
 import TimeInput from '../components/TimeInput'
 import TabButton from '../components/TabButton'
 import SettingsTab from '../components/SettingsTab'
+import Jog from "../components/Jog";
 
 let store = new Store()
 
 export default {
   components: {
+    Jog,
     SettingsTab,
     Card,
     SButton,
@@ -226,18 +253,18 @@ export default {
       ipcRenderer.send('webserver-manager', 'stop')
       console.log(await ipcRenderer.invoke('server-running'))
     },
-    add() {
+    add(minutes) {
       if (this.$refs.timer.isRunning) {
-        this.$refs.timer.add(60);
+        this.$refs.timer.add(minutes * 60);
       } else {
-        this.totalSeconds += 60
+        this.totalSeconds += minutes * 60
       }
     },
-    sub() {
+    sub(minutes) {
       if (this.$refs.timer.isRunning) {
-        this.$refs.timer.sub(60)
+        this.$refs.timer.sub(minutes * 60)
       } else {
-        this.totalSeconds -= 60
+        this.totalSeconds -= minutes * 60
       }
     }
   }
