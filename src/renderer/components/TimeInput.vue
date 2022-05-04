@@ -1,7 +1,8 @@
 <template>
-  <div class="inline-flex border rounded justify-center" :class="classes">
+  <div class="bg-white inline-flex border rounded justify-center" :class="classes">
     <input
-      v-model="hours"
+      :value="formattedHours"
+      @input="updateTime('hours', $event.target.value)"
       min="0"
       max="23"
       type="number"
@@ -12,7 +13,8 @@
     >
     <p class="text-5xl">:</p>
     <input
-      v-model="minutes"
+      :value="formattedMinutes"
+      @input="updateTime('minutes', $event.target.value)"
       min="0"
       max="60"
       type="number"
@@ -23,7 +25,8 @@
     >
     <p class="text-5xl">:</p>
     <input
-      v-model="seconds"
+      :value="formattedSeconds"
+      @input="updateTime('seconds', $event.target.value)"
       min="0"
       max="60"
       type="number"
@@ -56,6 +59,22 @@ export default {
       default: 'gray'
     }
   },
+  data() {
+    return {
+      seconds: 0,
+      minutes: 0,
+      hours: 0,
+    }
+  },
+  watch: {
+    modelValue: function(newVal, oldVal) {
+      const duration = dayjs.duration(newVal, 'seconds')
+
+      this.seconds = duration.seconds()
+      this.minutes = duration.minutes()
+      this.hours = duration.hours()
+    }
+  },
   computed: {
     classes () {
       return {
@@ -65,32 +84,14 @@ export default {
         disabled: this.disabled
       }
     },
-    seconds: {
-      get() {
-        const duration = dayjs.duration(this.modelValue, 'seconds')
-        return this.padNumber(duration.seconds())
-      },
-      set(newValue) {
-        this.updateTime('seconds', newValue)
-      }
+    formattedSeconds() {
+      return this.padNumber(this.seconds)
     },
-    minutes: {
-      get() {
-        const duration = dayjs.duration(this.modelValue, 'seconds')
-        return this.padNumber(duration.minutes())
-      },
-      set(newValue) {
-        this.updateTime('minutes', newValue)
-      }
+    formattedMinutes() {
+      return this.padNumber(this.minutes)
     },
-    hours: {
-      get() {
-        const duration = dayjs.duration(this.modelValue, 'seconds')
-        return this.padNumber(duration.hours())
-      },
-      set(newValue) {
-        this.updateTime('hours', newValue)
-      }
+    formattedHours() {
+      return this.padNumber(this.hours)
     }
   },
   activated () {
@@ -101,15 +102,32 @@ export default {
       return ('00' + number).slice(-2)
     },
     updateTime (unit, value) {
+      let parsedValue = parseInt(value)
+
+      if (parsedValue < 0) {
+        parsedValue = 0
+      }
+
       const oldDuration = dayjs.duration(this.modelValue, 'seconds')
 
+      this.seconds = unit === 'seconds' ? parsedValue : oldDuration.seconds();
+      this.minutes = unit === 'minutes' ? parsedValue : oldDuration.minutes();
+      this.hours = unit === 'hours' ? parsedValue : oldDuration.hours();
+
       const duration = dayjs.duration({
-        seconds: unit === 'seconds' ? parseFloat(value) : oldDuration.seconds(),
-        minutes: unit === 'minutes' ? parseFloat(value) : oldDuration.minutes(),
-        hours: unit === 'hours' ? parseFloat(value) : oldDuration.hours()
+        seconds: unit === 'seconds' ? parsedValue : oldDuration.seconds(),
+        minutes: unit === 'minutes' ? parsedValue : oldDuration.minutes(),
+        hours: unit === 'hours' ? parsedValue : oldDuration.hours()
       })
 
-      this.$emit('update:modelValue', duration.asSeconds())
+      console.log(duration.asHours());
+      if (duration.asHours() >= 24) {
+        let maxTime = 86399 // 23h 59m 59s as seconds
+
+        this.$emit('update:modelValue', maxTime)
+      } else {
+        this.$emit('update:modelValue', duration.asSeconds())
+      }
     }
   }
 }
