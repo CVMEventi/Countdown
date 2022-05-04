@@ -35,12 +35,12 @@
 
 @font-face {
   font-family: B612;
-  src: url("./assets/fonts/B612Mono-regular.ttf");
+  src: url("./assets/fonts/B612Mono-Regular.ttf");
 }
 
 @font-face {
   font-family: Xanh;
-  src: url("./assets/fonts/XanhMono-regular.ttf");
+  src: url("./assets/fonts/XanhMono-Regular.ttf");
 }
 
 html, body, #app, #app > div {
