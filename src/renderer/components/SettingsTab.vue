@@ -1,9 +1,9 @@
 <template>
-  <card class="flex flex-1 gap-2 min-h-0">
+  <card class="flex flex-1 gap-2 min-h-0 text-white">
     <card class="inline-block border flex flex-col overflow-y-scroll">
       <div class="flex flex-col">
         <p class="text-2xl">Screen</p>
-        <select v-model="currentScreen" class="border rounded p-2">
+        <select v-model="currentScreen" class="border rounded p-2 text-black">
           <option :value="null">-</option>
           <option
             v-for="(screen, index) in screens"
@@ -15,25 +15,23 @@
           </option>
         </select>
         <p class="text-base">X</p>
-        <input v-model="window.x" type="number" class="input">
+        <input v-model="window.x" type="number" class="input text-black">
         <p class="text-base">Y</p>
-        <input v-model="window.y" type="number" class="input">
+        <input v-model="window.y" type="number" class="input text-black">
         <p class="text-base">Width</p>
-        <input v-model="window.width" type="number" class="input">
+        <input v-model="window.width" type="number" class="input text-black">
         <p class="text-base">Height</p>
-        <input v-model="window.height" type="number" class="input">
+        <input v-model="window.height" type="number" class="input text-black">
         <s-button class="mt-2" type="info" @click="getCountdownBounds">Get current position</s-button>
         <s-button class="mt-2" type="info" @click="updateWindow">Set</s-button>
       </div>
     </card>
     <card class="inline-block border flex flex-col p-0">
-      <p class="text-2xl p-3">Presets</p>
-      <draggable item-key="index" v-model="presets" handle=".handle" class="flex flex-col gap-2 overflow-y-scroll items-center py-2">
+      <p class="text-2xl p-3 pb-2">Presets</p>
+      <draggable item-key="index" v-model="presets" handle=".handle" class="flex flex-col gap-2 overflow-y-scroll items-center pb-1">
         <template #item="{element, index}" >
-          <div :key="index" class="inline-block" style="width: 150px">
-            <i class="text-xl px-2 mdi mdi-menu-swap cursor-pointer handle" />
-            <input type="number" v-model="presets[index]" class="input text-center" style="max-width: 80px">
-            <i class="px-2 mdi mdi-trash-can cursor-pointer" @click="deletePreset(index)" />
+          <div :key="index" class="inline-block w-[170px] px-2">
+            <edit-preset v-model="presets[index]" @delete="deletePreset(index)"></edit-preset>
           </div>
         </template>
       </draggable>
@@ -41,6 +39,7 @@
     </card>
     <card class="inline-block border flex flex-col">
       <p class="text-2xl">Timer</p>
+      <check-box id="blackAtReset" v-model="blackAtReset">Black at reset</check-box>
       <check-box id="stopTimerAtZero" v-model="stopTimerAtZero">Stop timer at 0</check-box>
       <check-box id="showHours" v-model="showHours">Show hours</check-box>
       <check-box id="pulseAtZero" v-model="pulseAtZero">Pulse at zero</check-box>
@@ -50,7 +49,7 @@
       <check-box id="showClock" v-model="show.clock">Clock</check-box>
     </card>
     <card class="inline-block border flex flex-col">
-      <div class="flex flex-col overflow-y-scroll">
+      <div class="flex flex-col overflow-y-scroll" style="min-width: 220px">
         <p class="text-2xl">Colors</p>
         <p class="text-base">Background</p>
         <color-input v-model="backgroundColor" default-value="#000000" />
@@ -63,6 +62,12 @@
         <color-input v-model="clockColor" default-value="#ffffff" />
         <p class="text-base">Clock Text</p>
         <color-input v-model="clockTextColor" default-value="#ffffff" />
+        <p class="text-2xl mt-3">Font</p>
+        <select v-model="font" class="border rounded p-2 text-black">
+          <option value="digital-7">digital-7</option>
+          <option value="B612">B612</option>
+          <option value="Xanh">Xanh</option>
+        </select>
       </div>
     </card>
   </card>
@@ -86,20 +91,25 @@ import {
   DEFAULT_STOP_TIMER_AT_ZERO,
   DEFAULT_SHOW_HOURS,
   DEFAULT_PULSE_AT_ZERO,
-  DEFAULT_WINDOW_BOUNDS, DEFAULT_SHOW_SECTIONS,
+  DEFAULT_WINDOW_BOUNDS,
+  DEFAULT_SHOW_SECTIONS,
+  DEFAULT_BLACK_AT_RESET,
+  DEFAULT_FONT,
 } from "../../common/constants";
 import CheckBox from "./CheckBox";
+import EditPreset from "./EditPreset";
 
 const store = new Store()
 
 export default {
   name: 'SettingsTab',
   components: {
+    EditPreset,
     CheckBox,
     ColorInput,
     SButton,
     Card,
-    draggable
+    draggable,
   },
   props: {
     screens: {
@@ -122,9 +132,11 @@ export default {
       presets: store.get('settings.presets', DEFAULT_PRESETS),
       stopTimerAtZero: store.get('settings.stopTimerAtZero', DEFAULT_STOP_TIMER_AT_ZERO),
       showHours: store.get('settings.showHours', DEFAULT_SHOW_HOURS),
+      blackAtReset: store.get('settings.blackAtReset', DEFAULT_BLACK_AT_RESET),
       pulseAtZero: store.get('settings.pulseAtZero', DEFAULT_PULSE_AT_ZERO),
       window: store.get('window', DEFAULT_WINDOW_BOUNDS),
       show: store.get('settings.show', DEFAULT_SHOW_SECTIONS),
+      font: store.get('settings.font', DEFAULT_FONT),
     }
   },
   computed: {
@@ -162,11 +174,14 @@ export default {
       }
 
       store.set('settings.presets', this.presets)
+      store.set('settings.blackAtReset', this.blackAtReset)
       store.set('settings.stopTimerAtZero', this.stopTimerAtZero)
       store.set('settings.showHours', this.showHours)
       store.set('settings.pulseAtZero', this.pulseAtZero)
 
       store.set('settings.show', this.show)
+
+      store.set('settings.font', this.font)
 
       this.saveWindowBounds()
 

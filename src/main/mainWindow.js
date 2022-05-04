@@ -3,8 +3,8 @@ import { isDev } from './Utilities/dev'
 
 export default function createMainWindow (options = {
   height: 580,
-  width: 900,
-  minWidth: 900,
+  width: 920,
+  minWidth: 920,
   minHeight: 580,
 }) {
   const winHandler = new BrowserWinHandler(options)

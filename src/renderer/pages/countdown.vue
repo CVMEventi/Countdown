@@ -1,7 +1,16 @@
 <template>
-  <div :style="{
-    backgroundColor: backgroundColor
-  }" class="flex justify-center flex-col drag"
+  <div
+    :style="{
+      backgroundColor: backgroundColor,
+    }"
+    v-if="settings.blackAtReset && isReset" class="drag"></div>
+  <div
+    v-if="!settings.blackAtReset || (settings.blackAtReset && !isReset)"
+    :style="{
+      backgroundColor: backgroundColor,
+      ...cssVars
+    }"
+    class="flex justify-center flex-col drag"
   >
     <div
       v-if="settings.show.timer"
@@ -52,7 +61,7 @@ import { ipcRenderer } from 'electron'
 import dayjs from 'dayjs'
 import duration from 'dayjs/plugin/duration'
 import Store from "electron-store"
-import { DEFAULT_STORE, DEFAULT_PULSE_AT_ZERO } from "../../common/constants";
+import { DEFAULT_STORE, DEFAULT_FONT } from "../../common/constants";
 
 let store = new Store()
 
@@ -78,7 +87,10 @@ export default {
       if (this.settings.showHours) {
         return currentTimeInSeconds.format('HH:mm:ss')
       } else {
-        return currentTimeInSeconds.format('mm:ss')
+        let minutes = String(Math.floor(currentTimeInSeconds.asMinutes())).padStart(2, '0');
+        let seconds = String(currentTimeInSeconds.seconds()).padStart(2, '0');
+
+        return `${minutes}:${seconds}`;
       }
     },
     progressBarPercent () {
@@ -102,6 +114,11 @@ export default {
     },
     backgroundColor() {
       return this.settings.backgroundColor + parseInt(this.settings.backgroundColorOpacity).toString(16).padStart(2, "0");
+    },
+    cssVars() {
+      return {
+        '--clock-font': this.settings.font || DEFAULT_FONT,
+      }
     }
   },
   mounted () {
@@ -147,5 +164,9 @@ export default {
 
 .progress-bar {
   height: 12vh
+}
+
+.font-digital-clock {
+  font-family: var(--clock-font), monospace;
 }
 </style>

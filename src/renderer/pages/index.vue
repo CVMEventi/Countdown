@@ -1,5 +1,5 @@
 <template>
-  <div class="main-container flex flex-col">
+  <div class="main-container flex flex-col bg-zinc-700">
     <timer ref="timer" @timer-tick="timerTick" @timer-status-change="timerStatusChange"/>
     <div class="flex flex-row justify-between p-1 gap-2">
       <nav class="relative z-0 rounded-lg shadow flex divide-x divide-gray-200" aria-label="Tabs">
@@ -29,11 +29,11 @@
     <div v-if="selectedTab === 'countdown'" class="countdown-tab">
       <div class="flex gap-2">
         <card class="clock-setup overflow-y-scroll justify-center">
-          <div class="uppercase">Set</div>
+          <div class="uppercase text-white">Set</div>
           <time-input v-model="totalSeconds" color="white"/>
-          <div class="uppercase mt-2">Count</div>
+          <div class="uppercase mt-2 text-white">Count</div>
           <time-input v-model="countSeconds" color="green" :disabled="true"/>
-          <div class="uppercase mt-2">Extra</div>
+          <div class="uppercase mt-2 text-white">Extra</div>
           <time-input color="red" v-model="extraSeconds" :disabled="true"/>
         </card>
         <card class="control-buttons overflow-y-scroll">
@@ -292,8 +292,6 @@ export default {
   @apply flex flex-col;
   min-width: 250px;
 }
-
-.min-
 
 .presets {
 }

@@ -4,6 +4,9 @@
     :disabled="disabled"
     class="px-4 py-2 rounded text-white ring-transparent"
     :class="{
+      'text-slate-600': type === 'warning' && disabled,
+      'text-white': type !== 'warning' && !disabled,
+
       'bg-green-500': type === 'success',
       'bg-green-300': type === 'success' && disabled,
       'hover:bg-green-600': type === 'success' && !disabled,

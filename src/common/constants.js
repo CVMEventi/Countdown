@@ -13,6 +13,9 @@ const DEFAULT_WEBSERVER_PORT = 6565;
 const DEFAULT_STOP_TIMER_AT_ZERO = false;
 const DEFAULT_SHOW_HOURS = false;
 const DEFAULT_PULSE_AT_ZERO = false;
+const DEFAULT_BLACK_AT_RESET = false;
+
+const DEFAULT_FONT = 'digital-7';
 
 const DEFAULT_SHOW_SECTIONS = {
   timer: true,
@@ -38,11 +41,13 @@ const DEFAULT_STORE = {
       clockTextColor: DEFAULT_CLOCK_TEXT_COLOR,
       presets: DEFAULT_PRESETS,
       stopTimerAtZero: DEFAULT_STOP_TIMER_AT_ZERO,
+      blackAtReset: DEFAULT_BLACK_AT_RESET,
       showHours: DEFAULT_SHOW_HOURS,
       pulseAtZero: DEFAULT_PULSE_AT_ZERO,
       webServerEnabled: DEFAULT_WEBSERVER_ENABLED,
       webServerPort: DEFAULT_WEBSERVER_PORT,
       show: DEFAULT_SHOW_SECTIONS,
+      font: DEFAULT_FONT,
     },
     window: DEFAULT_WINDOW_BOUNDS,
   }
@@ -64,4 +69,6 @@ export {
   DEFAULT_SHOW_HOURS,
   DEFAULT_WINDOW_BOUNDS,
   DEFAULT_SHOW_SECTIONS,
+  DEFAULT_BLACK_AT_RESET,
+  DEFAULT_FONT,
 }

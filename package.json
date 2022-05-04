@@ -100,11 +100,13 @@
     "vue-loader": "^17.0.0"
   },
   "dependencies": {
+    "@heroicons/vue": "^1.0.6",
     "@mdi/font": "^6.6.95",
     "dayjs": "^1.11.0",
     "electron-squirrel-startup": "^1.0.0",
     "electron-store": "^8.0.1",
     "express": "^4.17.3",
+    "express-ws": "^5.0.2",
     "vue": "^3.2.31",
     "vue-router": "^4.0.14",
     "vuedraggable": "^4.1.0",

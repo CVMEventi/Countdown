@@ -35,8 +35,14 @@
   src: url("./assets/fonts/digital-7.woff2");
 }
 
-.font-digital-clock {
-  font-family: digital-7, monospace;
+@font-face {
+  font-family: B612;
+  src: url("./assets/fonts/B612Mono-regular.ttf");
+}
+
+@font-face {
+  font-family: Xanh;
+  src: url("./assets/fonts/XanhMono-regular.ttf");
 }
 
 html, body, #app, #app > div {

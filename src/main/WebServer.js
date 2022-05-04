@@ -1,4 +1,6 @@
 import express from 'express'
+import expressWs from 'express-ws';
+import {ipcMain} from "electron";
 
 export default class WebServer {
   /**
@@ -11,7 +13,7 @@ export default class WebServer {
   mainWindow = null
   isRunning = false
   /**
-   * @type {http.Server}
+   * @type {import(http).Server}
    */
   httpServer = null
   port = null
@@ -19,6 +21,9 @@ export default class WebServer {
   constructor (mainWindow) {
     this.mainWindow = mainWindow
     this.expressServer = express()
+
+    const expressWsInstance = expressWs(this.expressServer)
+
     this.expressServer.get('/', (req, res) => {
       res.send('Countdown')
     })
@@ -49,6 +54,21 @@ export default class WebServer {
     this.expressServer.get('/reset', (req, res) => {
       this.mainWindow.webContents.send('remote-command', 'reset')
       res.send(200)
+    })
+
+    this.expressServer.ws('/ws', (ws, req) => {
+
+      ws.on('message', function(msg) {
+        JSON.parse(msg)
+        ws.send(msg);
+      });
+    });
+    const wsServer = expressWsInstance.getWss('/ws')
+
+    ipcMain.on('send-to-countdown-window', (event, arg) => {
+      wsServer.clients.forEach((client) => {
+        client.send(JSON.stringify(arg))
+      })
     })
   }
 
