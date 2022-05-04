@@ -56,28 +56,28 @@
           <div class="flex gap-2 justify-center">
             <jog @up-click="add(1)" @down-click="sub(1)">
               <template v-slot:up>
-                +
+                <plus-icon class="w-5 h-5 inline-flex"></plus-icon>
               </template>
               <template v-slot:down>
-                -
+                <minus-icon class="w-5 h-5 inline-flex"></minus-icon>
               </template>
               1m
             </jog>
             <jog @up-click="add(5)" @down-click="sub(5)">
               <template v-slot:up>
-                +
+                <plus-icon class="w-5 h-5 inline-flex"></plus-icon>
               </template>
               <template v-slot:down>
-                -
+                <minus-icon class="w-5 h-5 inline-flex"></minus-icon>
               </template>
               5m
             </jog>
             <jog @up-click="add(10)" @down-click="sub(10)">
               <template v-slot:up>
-                +
+                <plus-icon class="w-5 h-5 inline-flex"></plus-icon>
               </template>
               <template v-slot:down>
-                -
+                <minus-icon class="w-5 h-5 inline-flex"></minus-icon>
               </template>
               10m
             </jog>
@@ -128,6 +128,7 @@ import TimeInput from '../components/TimeInput'
 import TabButton from '../components/TabButton'
 import SettingsTab from '../components/SettingsTab'
 import Jog from "../components/Jog";
+import { PlusIcon, MinusIcon } from '@heroicons/vue/outline';
 
 let store = new Store()
 
@@ -139,7 +140,9 @@ export default {
     SButton,
     Timer,
     TimeInput,
-    TabButton
+    TabButton,
+    PlusIcon,
+    MinusIcon,
   },
   layout: 'default',
   data() {

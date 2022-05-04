@@ -50,7 +50,7 @@
       v-if="settings.show.clock"
       class="text-center text-clock font-digital-clock"
     >
-      <i :style="{color: settings.clockColor}" class="mdi-set mdi-clock" />
+      <clock-icon class="clock-icon inline-block" :style="{color: settings.clockColor}" />
       <span :style="{color: settings.clockTextColor}">{{ currentTime }}</span>
     </div>
   </div>
@@ -62,13 +62,17 @@ import dayjs from 'dayjs'
 import duration from 'dayjs/plugin/duration'
 import Store from "electron-store"
 import { DEFAULT_STORE, DEFAULT_FONT } from "../../common/constants";
+import { ClockIcon } from '@heroicons/vue/solid';
 
 let store = new Store()
 
 dayjs.extend(duration)
 
 export default {
-  layout: 'countdown',
+  name: 'countdown',
+  components: {
+    ClockIcon,
+  },
   data () {
     return {
       currentTimeTimerId: null,
@@ -152,6 +156,11 @@ export default {
 .drag {
   -webkit-user-select: none;
   -webkit-app-region: drag;
+}
+
+.clock-icon {
+  height: min(20vh, 15vw);
+  width: min(20vh, 15vw);
 }
 
 .text-time {

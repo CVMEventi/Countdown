@@ -7,15 +7,20 @@
       placeholder="#000000"
       @input="$emit('update:modelValue', $event.target.value)"
     >
-    <button v-if="modelValue !== defaultValue" @click="$emit('update:modelValue', defaultValue)">
-      <i class="mdi-set mdi-reload" />
+    <button class="ml-2" v-if="modelValue !== defaultValue" @click="$emit('update:modelValue', defaultValue)">
+      <refresh-icon class="w-5 h-5 inline-flex"></refresh-icon>
     </button>
   </div>
 </template>
 
 <script>
+import { RefreshIcon } from '@heroicons/vue/outline';
+
 export default {
   name: 'ColorInput',
+  components: {
+    RefreshIcon,
+  },
   props: {
     modelValue: {
       type: String,
