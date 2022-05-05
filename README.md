@@ -2,6 +2,10 @@
 
 Simple countdown for live events
 
+### Download
+
+You can download latest release from [releases](https://github.com/CVMEventi/Countdown/releases)
+
 ### Images
 Main window to set timer
 ![Main Window](./docs/images/main.png)
@@ -14,10 +18,6 @@ Countdown going
 
 Countdown stopped
 ![Countdown Window stopped](./docs/images/countdown.png)
-
-### Download
-
-You can download latest release from [releases](https://github.com/CVMEventi/Countdown/releases)
 
 #### Build Setup
 
