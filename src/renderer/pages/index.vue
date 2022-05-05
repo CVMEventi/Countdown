@@ -1,7 +1,7 @@
 <template>
   <div class="main-container flex flex-col bg-zinc-700">
     <timer ref="timer" @timer-tick="timerTick" @timer-status-change="timerStatusChange"/>
-    <div class="flex flex-row justify-between p-1 gap-2">
+    <div class="flex flex-row justify-between p-1 gap-2 items-center">
       <nav class="relative z-0 rounded-lg shadow flex divide-x divide-gray-200" aria-label="Tabs">
         <tab-button
           first
@@ -18,6 +18,7 @@
           Settings
         </tab-button>
       </nav>
+      <div class="flex-1"></div>
       <s-button
         v-if="selectedTab === 'settings'"
         class="self-end"
@@ -25,6 +26,9 @@
       >
         Save
       </s-button>
+      <card class="bg-white self-end p-0">
+        <img class="h-10" alt="CVM Logo" src="../assets/images/logo.png" />
+      </card>
     </div>
     <div v-if="selectedTab === 'countdown'" class="countdown-tab">
       <div class="flex gap-2">

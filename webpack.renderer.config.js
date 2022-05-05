@@ -19,7 +19,7 @@ rules.push({
 })
 
 rules.push({
-  test: /\.(woff|woff2|eot|ttf|otf)$/i,
+  test: /\.(woff|woff2|eot|ttf|otf|png|jpeg|jpg)$/i,
   type: 'asset/resource',
 })
 
