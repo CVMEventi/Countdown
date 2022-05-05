@@ -3,17 +3,20 @@
     <card class="inline-block border flex flex-col w-[300px]">
       <div class="flex flex-col gap-2">
         <p class="text-2xl">Screen</p>
-        <select v-model="currentScreen" class="border rounded p-2 text-black">
-          <option :value="null">-</option>
-          <option
-            v-for="(screen, index) in screens"
-            :key="screen.id"
-            :value="screen"
-          >
-            Screen {{ index }}
-            ({{ screen.size.width }}x{{ screen.size.height }}{{ screen.internal ? " Internal" : "" }})
-          </option>
-        </select>
+        <div class="inline-flex flex-col">
+          <p class="text-base">Fullscreen</p>
+          <select v-model="currentScreen" class="input p-2 text-black">
+            <option :value="null">-</option>
+            <option
+              v-for="(screen, index) in screens"
+              :key="screen.id"
+              :value="screen"
+            >
+              Screen {{ index }}
+              ({{ screen.size.width }}x{{ screen.size.height }}{{ screen.internal ? " Internal" : "" }})
+            </option>
+          </select>
+        </div>
 
         <div class="inline-flex gap-2">
           <div class="inline-flex flex-col flex-1">
@@ -40,10 +43,10 @@
       </div>
     </card>
     <card class="inline-block border flex flex-col p-0">
-      <p class="text-2xl p-3 pb-2">Presets</p>
+      <p class="text-2xl p-3 pb-2">Presets (m)</p>
       <draggable item-key="index" v-model="presets" handle=".handle" class="flex flex-col gap-2 overflow-y-scroll items-center pb-1">
         <template #item="{element, index}" >
-          <div :key="index" class="inline-block w-[170px] px-2">
+          <div :key="index" class="inline-block w-[140px] px-2">
             <edit-preset v-model="presets[index]" @delete="deletePreset(index)"></edit-preset>
           </div>
         </template>
@@ -63,7 +66,7 @@
       <check-box id="showClock" v-model="show.clock">Clock</check-box>
     </card>
     <card class="inline-block border flex flex-col">
-      <div class="flex flex-col overflow-y-scroll" style="min-width: 220px">
+      <div class="flex flex-col" style="min-width: 220px">
         <p class="text-2xl">Colors</p>
         <p class="text-base">Background</p>
         <color-input v-model="backgroundColor" default-value="#000000" />
@@ -77,7 +80,7 @@
         <p class="text-base">Clock Text</p>
         <color-input v-model="clockTextColor" default-value="#ffffff" />
         <p class="text-2xl mt-3">Font</p>
-        <select v-model="font" class="border rounded p-2 text-black">
+        <select v-model="font" class="input p-2 text-black">
           <option value="digital-7">digital-7</option>
           <option value="B612">B612</option>
           <option value="Xanh">Xanh</option>
