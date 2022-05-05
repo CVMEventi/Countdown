@@ -1,7 +1,7 @@
 <template>
   <card class="flex flex-1 gap-2 min-h-0 text-white">
-    <card class="inline-block border flex flex-col overflow-y-scroll">
-      <div class="flex flex-col">
+    <card class="inline-block border flex flex-col w-[300px]">
+      <div class="flex flex-col gap-2">
         <p class="text-2xl">Screen</p>
         <select v-model="currentScreen" class="border rounded p-2 text-black">
           <option :value="null">-</option>
@@ -14,16 +14,29 @@
             ({{ screen.size.width }}x{{ screen.size.height }}{{ screen.internal ? " Internal" : "" }})
           </option>
         </select>
-        <p class="text-base">X</p>
-        <input v-model="window.x" type="number" class="input text-black">
-        <p class="text-base">Y</p>
-        <input v-model="window.y" type="number" class="input text-black">
-        <p class="text-base">Width</p>
-        <input v-model="window.width" type="number" class="input text-black">
-        <p class="text-base">Height</p>
-        <input v-model="window.height" type="number" class="input text-black">
-        <s-button class="mt-2" type="info" @click="getCountdownBounds">Get current position</s-button>
-        <s-button class="mt-2" type="info" @click="updateWindow">Set</s-button>
+
+        <div class="inline-flex gap-2">
+          <div class="inline-flex flex-col flex-1">
+            <p class="text-base">X</p>
+            <input v-model="window.x" type="number" class="input text-black w-full">
+          </div>
+          <div class="inline-flex flex-col flex-1">
+            <p class="text-base">Y</p>
+            <input v-model="window.y" type="number" class="input text-black w-full">
+          </div>
+        </div>
+        <div class="inline-flex gap-2">
+          <div class="inline-flex flex-col flex-1">
+            <p class="text-base">Width</p>
+            <input v-model="window.width" type="number" class="input text-black w-full">
+          </div>
+          <div class="inline-flex flex-col flex-1">
+            <p class="text-base">Height</p>
+            <input v-model="window.height" type="number" class="input text-black w-full">
+          </div>
+        </div>
+        <s-button type="info" @click="getCountdownBounds">Get current position</s-button>
+        <s-button type="info" @click="updateWindow">Set</s-button>
       </div>
     </card>
     <card class="inline-block border flex flex-col p-0">

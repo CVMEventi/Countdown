@@ -32,7 +32,7 @@
     </div>
     <div v-if="selectedTab === 'countdown'" class="countdown-tab">
       <div class="flex gap-2">
-        <card class="clock-setup overflow-y-scroll justify-center">
+        <card class="clock-setup justify-center">
           <div class="uppercase text-white">Set</div>
           <time-input v-model="totalSeconds" color="white"/>
           <div class="uppercase mt-2 text-white">Count</div>
@@ -40,7 +40,7 @@
           <div class="uppercase mt-2 text-white">Extra</div>
           <time-input color="red" v-model="extraSeconds" :disabled="true"/>
         </card>
-        <card class="control-buttons overflow-y-scroll">
+        <card class="control-buttons">
           <s-button class="text-4xl mb-2 font-mono uppercase" @click="start">Start</s-button>
           <s-button
             :disabled="!timerIsRunning && countSeconds === 0"
@@ -102,7 +102,7 @@
           </s-button>-->
         </card>
       </div>
-      <card class="presets inline-flex gap-2 overflow-y-scroll">
+      <card class="presets inline-flex gap-2">
         <s-button
           v-for="(preset, index) in settings.presets"
           :key="index" type="info"
