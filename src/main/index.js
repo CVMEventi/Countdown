@@ -23,10 +23,10 @@ if (isDev) {
 
 mainWindowHandler = createMainWindow();
 
-mainWindowHandler.onCreated(() => {
+mainWindowHandler.onCreated((browserWindow) => {
   setMenu(mainWindowHandler);
 
-  mainWindowHandler.browserWindow.on('closed', () => {
+  browserWindow.on('closed', () => {
     app.quit();
   })
 })
@@ -41,6 +41,14 @@ countdownWindowHandler = createCountdownWindow({
   enableLargerThanScreen: true,
   transparent: true,
 });
+
+countdownWindowHandler.onCreated(async function (browserWindow) {
+  browserWindow.on('closed', () => {
+    app.quit();
+  })
+
+  await setCountdownWindowPosition(browserWindow)
+})
 
 ipcMain.on('send-to-countdown-window', (event, arg) => {
   /**
@@ -59,13 +67,12 @@ ipcMain.on('temporary-settings-updated', (event, arg) => {
   browserWindow.webContents.send('temporary-settings-updated', arg)
 })
 
-ipcMain.on('window-updated', async (event, arg) => {
+/**
+ * @param {null|Electron.CrossProcessExports.BrowserWindow|*} browserWindow
+ */
+async function setCountdownWindowPosition(browserWindow) {
   const fullscreenOn = store.get('window.fullscreenOn', null)
   const selectedScreen = screen.getAllDisplays().find((display) => display.id === fullscreenOn)
-  /**
-   * @type {null|Electron.CrossProcessExports.BrowserWindow|*}
-   */
-  const browserWindow = countdownWindowHandler.browserWindow;
 
   if (browserWindow.fullScreen) {
     browserWindow.setFullScreen(false)
@@ -83,6 +90,10 @@ ipcMain.on('window-updated', async (event, arg) => {
     height: store.get('window.height') ?? 720,
     width: store.get('window.width') ?? 1280
   })
+}
+
+ipcMain.on('window-updated', async (event, arg) => {
+  await setCountdownWindowPosition(countdownWindowHandler.browserWindow)
 })
 
 const webServerEnabled = store.get('settings.webServerEnabled') === null
@@ -91,8 +102,8 @@ const webServerEnabled = store.get('settings.webServerEnabled') === null
 const port = store.get('settings.webServerPort') === null ? 6565 : store.get('settings.webServerPort')
 let webServer = null
 
-mainWindowHandler.onCreated(() => {
-  webServer = new WebServer(mainWindowHandler.browserWindow)
+mainWindowHandler.onCreated((browserWindow) => {
+  webServer = new WebServer(browserWindow)
   webServer.port = port
 
   ipcMain.on('webserver-manager', (event, command, arg) => {
