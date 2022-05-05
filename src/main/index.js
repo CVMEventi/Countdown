@@ -1,3 +1,4 @@
+import "v8-compile-cache";
 import {app, BrowserWindow, ipcMain, screen} from "electron";
 import addDefaultEvents from "./Utilities/addDefaultEvents";
 import { isDev, enableDevMode } from "./Utilities/dev";

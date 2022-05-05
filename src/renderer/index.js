@@ -1,3 +1,4 @@
+import "v8-compile-cache";
 import './index.css';
 import { createApp } from 'vue';
 import Index from './pages/index';

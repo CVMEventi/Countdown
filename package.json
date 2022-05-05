@@ -106,6 +106,7 @@
     "electron-store": "^8.0.1",
     "express": "^4.17.3",
     "express-ws": "^5.0.2",
+    "v8-compile-cache": "^2.3.0",
     "vue": "^3.2.31",
     "vue-router": "^4.0.14",
     "vuedraggable": "^4.1.0",
