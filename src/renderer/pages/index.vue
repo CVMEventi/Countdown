@@ -27,7 +27,9 @@
         Save
       </s-button>
       <card class="bg-white self-end p-0">
-        <img class="h-10" alt="CVM Logo" src="../assets/images/logo.png" />
+        <button class="block" type="button" @click="openURL('https://cvm.it')">
+          <img class="h-10" alt="CVM Logo" src="../assets/images/logo.png" />
+        </button>
       </card>
     </div>
     <div v-if="selectedTab === 'countdown'" class="countdown-tab">
@@ -133,6 +135,7 @@ import TabButton from '../components/TabButton'
 import SettingsTab from '../components/SettingsTab'
 import Jog from "../components/Jog";
 import { PlusIcon, MinusIcon } from '@heroicons/vue/outline';
+import { shell } from "electron";
 
 let store = new Store()
 
@@ -273,6 +276,9 @@ export default {
       } else {
         this.totalSeconds -= minutes * 60
       }
+    },
+    openURL(url) {
+      shell.openExternal(url);
     }
   }
 }
