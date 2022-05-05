@@ -1,5 +1,20 @@
 # Countdown
 
+Simple countdown for live events
+
+### Images
+Main window to set timer
+![Main Window](./docs/images/main.png)
+
+Settings window
+![Setting Window](./docs/images/settings.png)
+
+Countdown going
+![Countdown Window going](./docs/images/countdown-going.png)
+
+Countdown stopped
+![Countdown Window stopped](./docs/images/countdown.png)
+
 ### Download
 
 You can download latest release from [releases](https://github.com/CVMEventi/Countdown/releases)
