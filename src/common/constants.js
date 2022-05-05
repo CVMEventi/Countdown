@@ -14,6 +14,7 @@ const DEFAULT_STOP_TIMER_AT_ZERO = false;
 const DEFAULT_SHOW_HOURS = false;
 const DEFAULT_PULSE_AT_ZERO = false;
 const DEFAULT_BLACK_AT_RESET = false;
+const DEFAULT_TIMER_ALWAYS_ON_TOP = false;
 
 const DEFAULT_FONT = 'digital-7';
 
@@ -48,6 +49,8 @@ const DEFAULT_STORE = {
       webServerPort: DEFAULT_WEBSERVER_PORT,
       show: DEFAULT_SHOW_SECTIONS,
       font: DEFAULT_FONT,
+      timerAlwaysOnTop: DEFAULT_TIMER_ALWAYS_ON_TOP,
+      setWindowAlwaysOnTop: DEFAULT_SET_WINDOW_ALWAYS_ON_TOP,
     },
     window: DEFAULT_WINDOW_BOUNDS,
   }
@@ -71,4 +74,5 @@ export {
   DEFAULT_SHOW_SECTIONS,
   DEFAULT_BLACK_AT_RESET,
   DEFAULT_FONT,
+  DEFAULT_TIMER_ALWAYS_ON_TOP,
 }

@@ -40,6 +40,7 @@ countdownWindowHandler = createCountdownWindow({
   frame: false,
   enableLargerThanScreen: true,
   transparent: true,
+  alwaysOnTop: store.get('settings.timerAlwaysOnTop', false),
 });
 
 countdownWindowHandler.onCreated(async function (browserWindow) {
@@ -61,6 +62,8 @@ ipcMain.on('send-to-countdown-window', (event, arg) => {
 ipcMain.on('settings-updated', (event, arg) => {
   const browserWindow = countdownWindowHandler.browserWindow
   browserWindow.webContents.send('settings-updated')
+
+  browserWindow.setAlwaysOnTop(store.get('settings.timerAlwaysOnTop', false))
 })
 ipcMain.on('temporary-settings-updated', (event, arg) => {
   const browserWindow = countdownWindowHandler.browserWindow

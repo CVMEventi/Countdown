@@ -56,6 +56,7 @@
       <check-box id="stopTimerAtZero" v-model="stopTimerAtZero">Stop timer at 0</check-box>
       <check-box id="showHours" v-model="showHours">Show hours</check-box>
       <check-box id="pulseAtZero" v-model="pulseAtZero">Pulse at zero</check-box>
+      <check-box id="timerAlwaysOnTop" v-model="timerAlwaysOnTop">Window always on top</check-box>
       <p class="text-2xl">Show</p>
       <check-box id="showTimer" v-model="show.timer">Timer</check-box>
       <check-box id="showProgress" v-model="show.progress">Progress</check-box>
@@ -108,6 +109,7 @@ import {
   DEFAULT_SHOW_SECTIONS,
   DEFAULT_BLACK_AT_RESET,
   DEFAULT_FONT,
+  DEFAULT_TIMER_ALWAYS_ON_TOP,
 } from "../../common/constants";
 import CheckBox from "./CheckBox";
 import EditPreset from "./EditPreset";
@@ -150,6 +152,7 @@ export default {
       window: store.get('window', DEFAULT_WINDOW_BOUNDS),
       show: store.get('settings.show', DEFAULT_SHOW_SECTIONS),
       font: store.get('settings.font', DEFAULT_FONT),
+      timerAlwaysOnTop: store.get('settings.timerAlwaysOnTop', DEFAULT_TIMER_ALWAYS_ON_TOP),
     }
   },
   computed: {
@@ -191,6 +194,7 @@ export default {
       store.set('settings.stopTimerAtZero', this.stopTimerAtZero)
       store.set('settings.showHours', this.showHours)
       store.set('settings.pulseAtZero', this.pulseAtZero)
+      store.set('settings.timerAlwaysOnTop', this.timerAlwaysOnTop)
 
       store.set('settings.show', this.show)
 
