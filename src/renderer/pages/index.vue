@@ -185,15 +185,27 @@ export default {
   async mounted() {
     this.screens = await ipcRenderer.invoke('get-screens')
     ipcRenderer.on('remote-command', (event, ...args) => {
+      let hours = 0;
+      let minutes = 0;
+      let seconds = 0;
+
       switch (args[0]) {
         case 'start':
           if (args[1] !== undefined) {
-            this.totalSeconds = parseInt(args[1]) * 60
+            hours = parseInt(args[1]);
+            minutes = parseInt(args[2] || '0');
+            seconds = parseInt(args[3] || '0');
+
+            this.totalSeconds = hours * 60 * 60 + minutes * 60 + seconds
           }
           this.start()
           break
         case 'set':
-          this.totalSeconds = parseInt(args[1]) * 60
+          hours = parseInt(args[1] || '0');
+          minutes = parseInt(args[2] || '0');
+          seconds = parseInt(args[3] || '0');
+
+          this.totalSeconds = hours * 60 * 60 + minutes * 60 + seconds
           break
         case 'togglePause':
           this.toggleTimer()
@@ -219,6 +231,21 @@ export default {
           }
 
           this.start();
+          break
+        case 'jog-set':
+          hours = parseInt(args[1] || '0');
+          minutes = parseInt(args[2] || '0');
+          seconds = parseInt(args[3] || '0');
+
+          this.totalSeconds += hours * 60 * 60 + minutes * 60 + seconds
+          break
+        case 'jog-current':
+          hours = parseInt(args[1] || '0');
+          minutes = parseInt(args[2] || '0');
+          seconds = parseInt(args[3] || '0');
+
+          this.$refs.timer.add(hours * 60 * 60 + minutes * 60 + seconds);
+          break
       }
 
       console.log(args)

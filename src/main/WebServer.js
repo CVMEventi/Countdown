@@ -27,12 +27,24 @@ export default class WebServer {
     this.expressServer.get('/', (req, res) => {
       res.send('Countdown')
     })
-    this.expressServer.get('/set/:minutes', (req, res) => {
-      this.mainWindow.webContents.send('remote-command', 'set', req.params.minutes)
+    this.expressServer.get('/set/:hours/:minutes/:seconds', (req, res) => {
+      this.mainWindow.webContents.send(
+        'remote-command',
+        'set',
+        req.params.hours,
+        req.params.minutes,
+        req.params.seconds
+      )
       res.send(200)
     })
-    this.expressServer.get('/start/:minutes', (req, res) => {
-      this.mainWindow.webContents.send('remote-command', 'start', req.params.minutes)
+    this.expressServer.get('/start/:hours/:minutes/:seconds', (req, res) => {
+      this.mainWindow.webContents.send(
+        'remote-command',
+        'start',
+        req.params.hours,
+        req.params.minutes,
+        req.params.seconds
+      )
       res.send(200)
     })
     this.expressServer.get('/start', (req, res) => {
@@ -53,6 +65,26 @@ export default class WebServer {
     })
     this.expressServer.get('/reset', (req, res) => {
       this.mainWindow.webContents.send('remote-command', 'reset')
+      res.send(200)
+    })
+    this.expressServer.get('/jog-set/:hours/:minutes/:seconds', (req, res) => {
+      this.mainWindow.webContents.send(
+        'remote-command',
+        'jog-set',
+        req.params.hours,
+        req.params.minutes,
+        req.params.seconds
+      )
+      res.send(200)
+    })
+    this.expressServer.get('/jog-current/:hours/:minutes/:seconds', (req, res) => {
+      this.mainWindow.webContents.send(
+        'remote-command',
+        'jog-current',
+        req.params.hours,
+        req.params.minutes,
+        req.params.seconds
+      )
       res.send(200)
     })
 

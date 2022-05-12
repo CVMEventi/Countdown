@@ -9,6 +9,7 @@
       :disabled="disabled"
       class="input input-big input-number-fixed"
       :class="classes"
+      @click="$event.target.select()"
       @focus="$event.target.select()"
     >
     <p class="text-5xl">:</p>
@@ -21,6 +22,7 @@
       :disabled="disabled"
       class="input input-big input-number-fixed"
       :class="classes"
+      @click="$event.target.select()"
       @focus="$event.target.select()"
     >
     <p class="text-5xl">:</p>
@@ -33,6 +35,7 @@
       :disabled="disabled"
       class="input input-big input-number-fixed"
       :class="classes"
+      @click="$event.target.select()"
       @focus="$event.target.select()"
     >
   </div>
