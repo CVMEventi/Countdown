@@ -97,7 +97,7 @@ export default class WebServer {
     });
     const wsServer = expressWsInstance.getWss('/ws')
 
-    ipcMain.on('send-to-countdown-window', (event, arg) => {
+    ipcMain.on('send-to-websocket', (event, arg) => {
       wsServer.clients.forEach((client) => {
         client.send(JSON.stringify(arg))
       })

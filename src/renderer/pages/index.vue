@@ -136,6 +136,9 @@ import SettingsTab from '../components/SettingsTab'
 import Jog from "../components/Jog";
 import { PlusIcon, MinusIcon } from '@heroicons/vue/outline';
 import { shell } from "electron";
+import dayjs from 'dayjs'
+import duration from 'dayjs/plugin/duration'
+dayjs.extend(duration)
 
 let store = new Store()
 
@@ -165,6 +168,11 @@ export default {
       selectedTab: 'countdown',
       settings: store.get('settings')
     }
+  },
+  watch: {
+    totalSeconds() {
+      this.propsUpdated();
+    },
   },
   computed: {
     extraSeconds() {
@@ -258,6 +266,9 @@ export default {
     },
     toggleTimer() {
       this.$refs.timer.toggle()
+      ipcRenderer.send('send-to-websocket', {
+        state: this.$refs.timer.isRunning ? 'Running' : 'Paused',
+      })
     },
     timerTick(seconds) {
       this.currentSeconds = seconds
@@ -265,14 +276,42 @@ export default {
         current: this.currentSeconds,
         of: this.$refs.timer.secondsSet
       })
+
+      const isExpired = this.currentSeconds <= 0;
+
+      const currentTimeDuration = dayjs.duration(Math.abs(this.currentSeconds), 'seconds')
+      const timeSetOnCurrentTimerDuration = dayjs.duration(this.$refs.timer.secondsSet, 'seconds')
+
+      ipcRenderer.send('send-to-websocket', {
+        state: isExpired ? 'Expired' : 'Running',
+        currentTimeHms: currentTimeDuration.format('HH:mm:ss'),
+        currentTimeMs: currentTimeDuration.format('mm:ss'),
+        currentTimeH: currentTimeDuration.format('HH'),
+        currentTimeM: currentTimeDuration.format('mm'),
+        currentTimeS: currentTimeDuration.format('ss'),
+        currentTime: this.currentSeconds,
+        timeSetOnCurrentTimer: this.$refs.timer.secondsSet,
+        timeSetOnCurrentTimerHms: timeSetOnCurrentTimerDuration.format('HH:mm:ss'),
+        timeSetOnCurrentTimerMs: timeSetOnCurrentTimerDuration.format('mm:ss'),
+        timeSetOnCurrentTimerH: timeSetOnCurrentTimerDuration.format('HH'),
+        timeSetOnCurrentTimerM: timeSetOnCurrentTimerDuration.format('mm'),
+        timeSetOnCurrentTimerS: timeSetOnCurrentTimerDuration.format('ss'),
+      })
     },
     timerStatusChange() {
       this.timerIsRunning = this.$refs.timer.isRunning
     },
     reset() {
+      if (this.secondsSetOnCurrentTimer === 0) {
+        this.totalSeconds = 0;
+      }
+
       this.$refs.timer.reset()
-      this.totalSeconds = 0
-      this.secondsSetOnCurrentTimer = 0
+      this.secondsSetOnCurrentTimer = 0;
+
+      ipcRenderer.send('send-to-websocket', {
+        state: 'Not Running',
+      })
     },
     setPresetTime(minutes) {
       const secondsPerMinute = 60
@@ -306,6 +345,18 @@ export default {
     },
     openURL(url) {
       shell.openExternal(url);
+    },
+    propsUpdated() {
+      const setTimeDuration = dayjs.duration(this.totalSeconds, 'seconds')
+
+      ipcRenderer.send('send-to-websocket', {
+        setTime: this.totalSeconds,
+        setTimeHms: setTimeDuration.format('HH:mm:ss'),
+        setTimeMs: setTimeDuration.format('mm:ss'),
+        setTimeH: setTimeDuration.format('HH'),
+        setTimeM: setTimeDuration.format('mm'),
+        setTimeS: setTimeDuration.format('ss'),
+      })
     }
   }
 }
