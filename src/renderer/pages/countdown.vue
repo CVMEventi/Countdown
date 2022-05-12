@@ -32,7 +32,8 @@
         class="overflow-hidden progress-bar mb-4 text-xs flex rounded"
         :class="{
           'bg-red-200': isCountingUp && !isReset,
-          'bg-green-200': !isCountingUp && !isReset,
+          'bg-green-200': !isCountingUp && !isReset && !isYellowBar,
+          'bg-yellow-200': isYellowBar,
           'bg-gray-200': isReset
         }"
       >
@@ -41,7 +42,8 @@
           class="transition shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center"
           :class="{
             'bg-red-700': isCountingUp && !isReset,
-            'bg-green-500': !isCountingUp && !isReset
+            'bg-green-500': !isCountingUp && !isReset && !isYellowBar,
+            'bg-yellow-500': isYellowBar,
           }"
         />
       </div>
@@ -51,7 +53,7 @@
       class="text-center text-clock font-digital-clock"
     >
       <clock-icon class="clock-icon inline-block" :style="{color: settings.clockColor}" />
-      <span :style="{color: settings.clockTextColor}">{{ currentTime }}</span>
+      <span class="ml-5" :style="{color: settings.clockTextColor}">{{ currentTime }}</span>
     </div>
   </div>
 </template>
@@ -105,6 +107,23 @@ export default {
     },
     isReset () {
       return this.update.of === 0 && this.update.current === 0
+    },
+    isYellowBar() {
+      if (this.isReset || this.isCountingUp) {
+        return false;
+      }
+
+      if (this.settings.yellowAtOption === 'minutes'
+        && this.settings.yellowAtMinutes >= this.update.current / 60) {
+        return true;
+      }
+
+      if (this.settings.yellowAtOption === 'percent'
+        && this.settings.yellowAtPercent >= this.update.of / 100 * this.update.current) {
+        return true;
+      }
+
+      return false;
     },
     isCountingUp () {
       return this.update.current <= 0

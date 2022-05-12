@@ -60,6 +60,13 @@
       <check-box id="showHours" v-model="showHours">Show hours</check-box>
       <check-box id="pulseAtZero" v-model="pulseAtZero">Pulse at zero</check-box>
       <check-box id="timerAlwaysOnTop" v-model="timerAlwaysOnTop">Window always on top</check-box>
+      <p class="text-sm mt-2">Yellow Bar at</p>
+      <input-with-button
+        @click="updateYellowOption"
+        @input="updateYellowValue"
+        :model-value="this.yellowAtOption === 'minutes' ? this.yellowAtMinutes : this.yellowAtPercent">
+        {{ this.yellowAtOption === 'minutes' ? 'm' : '%' }}
+      </input-with-button>
       <p class="text-2xl">Show</p>
       <check-box id="showTimer" v-model="show.timer">Timer</check-box>
       <check-box id="showProgress" v-model="show.progress">Progress</check-box>
@@ -97,6 +104,7 @@ import draggable from 'vuedraggable'
 import Card from '../components/Card'
 import ColorInput from '../components/ColorInput'
 import SButton from './SButton'
+import InputWithButton from "./InputWithButton";
 import {
   DEFAULT_BACKGROUND_COLOR,
   DEFAULT_BACKGROUND_OPACITY,
@@ -113,6 +121,10 @@ import {
   DEFAULT_BLACK_AT_RESET,
   DEFAULT_FONT,
   DEFAULT_TIMER_ALWAYS_ON_TOP,
+  DEFAULT_YELLOW_AT_OPTION,
+  DEFAULT_YELLOW_AT_MINUTES,
+  DEFAULT_YELLOW_AT_PERCENT,
+
 } from "../../common/constants";
 import CheckBox from "./CheckBox";
 import EditPreset from "./EditPreset";
@@ -122,6 +134,7 @@ const store = new Store()
 export default {
   name: 'SettingsTab',
   components: {
+    InputWithButton,
     EditPreset,
     CheckBox,
     ColorInput,
@@ -156,6 +169,9 @@ export default {
       show: store.get('settings.show', DEFAULT_SHOW_SECTIONS),
       font: store.get('settings.font', DEFAULT_FONT),
       timerAlwaysOnTop: store.get('settings.timerAlwaysOnTop', DEFAULT_TIMER_ALWAYS_ON_TOP),
+      yellowAtOption: store.get('settings.yellowAtOption', DEFAULT_YELLOW_AT_OPTION),
+      yellowAtMinutes: store.get('settings.yellowAtMinutes', DEFAULT_YELLOW_AT_MINUTES),
+      yellowAtPercent: store.get('settings.yellowAtPercent', DEFAULT_YELLOW_AT_PERCENT),
     }
   },
   computed: {
@@ -169,6 +185,24 @@ export default {
     }
   },
   methods: {
+    updateYellowOption() {
+      if (this.yellowAtOption === 'minutes') {
+        this.yellowAtOption = 'percent';
+      } else {
+        this.yellowAtOption = 'minutes';
+      }
+    },
+    updateYellowValue(value) {
+      if (value > 100) {
+        value = 100;
+      }
+
+      if (this.yellowAtOption === 'minutes') {
+        this.yellowAtMinutes = parseInt(value);
+      } else {
+        this.yellowAtPercent = parseInt(value);
+      }
+    },
     save () {
       if (CSS.supports('color', this.backgroundColor)) {
         store.set('settings.backgroundColor', this.backgroundColor)
@@ -198,6 +232,9 @@ export default {
       store.set('settings.showHours', this.showHours)
       store.set('settings.pulseAtZero', this.pulseAtZero)
       store.set('settings.timerAlwaysOnTop', this.timerAlwaysOnTop)
+      store.set('settings.yellowAtOption', this.yellowAtOption)
+      store.set('settings.yellowAtMinutes', this.yellowAtMinutes)
+      store.set('settings.yellowAtPercent', this.yellowAtPercent)
 
       store.set('settings.show', this.show)
 
