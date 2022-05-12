@@ -6,7 +6,7 @@
       @input="$emit('update:modelValue', $event.target.checked)"
       type="checkbox" />
     <label
-      class="pl-1"
+      class="pl-1 text-sm"
       :for="id">
       <slot></slot>
     </label>
