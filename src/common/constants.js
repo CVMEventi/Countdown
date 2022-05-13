@@ -40,6 +40,7 @@ const DEFAULT_STORE = {
   defaults: {
     settings: {
       backgroundColor: DEFAULT_BACKGROUND_COLOR,
+      backgroundColorOpacity: DEFAULT_BACKGROUND_OPACITY,
       textColor: DEFAULT_TEXT_COLOR,
       timerFinishedTextColor: DEFAULT_TIMER_FINISHED_TEXT_COLOR,
       clockColor: DEFAULT_CLOCK_COLOR,
