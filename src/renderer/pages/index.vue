@@ -136,6 +136,7 @@ import SettingsTab from '../components/SettingsTab'
 import Jog from "../components/Jog";
 import { PlusIcon, MinusIcon } from '@heroicons/vue/outline';
 import { shell } from "electron";
+import { DEFAULT_STORE } from "../../common/constants";
 import dayjs from 'dayjs'
 import duration from 'dayjs/plugin/duration'
 dayjs.extend(duration)
@@ -188,7 +189,30 @@ export default {
       }
 
       return this.currentSeconds
-    }
+    },
+    isReset () {
+      return this.$refs.timer.secondsSet === 0 && this.currentSeconds === 0
+    },
+    isCountingUp () {
+      return this.currentSeconds <= 0
+    },
+    isExpiring() {
+      if (this.isReset || this.isCountingUp) {
+        return false;
+      }
+
+      if (this.settings.yellowAtOption === 'minutes'
+        && this.settings.yellowAtMinutes >= this.currentSeconds / 60) {
+        return true;
+      }
+
+      if (this.settings.yellowAtOption === 'percent'
+        && this.settings.yellowAtPercent >= this.$refs.timer.secondsSet / 100 * this.currentSeconds) {
+        return true;
+      }
+
+      return false;
+    },
   },
   async mounted() {
     this.screens = await ipcRenderer.invoke('get-screens')
@@ -279,11 +303,18 @@ export default {
 
       const isExpired = this.currentSeconds <= 0;
 
+      let state = 'Running';
+      if (isExpired) {
+        state = 'Expired';
+      } else if (this.isExpiring) {
+        state = 'Expiring';
+      }
+
       const currentTimeDuration = dayjs.duration(Math.abs(this.currentSeconds), 'seconds')
       const timeSetOnCurrentTimerDuration = dayjs.duration(this.$refs.timer.secondsSet, 'seconds')
 
       ipcRenderer.send('send-to-websocket', {
-        state: isExpired ? 'Expired' : 'Running',
+        state: state,
         currentTimeHms: currentTimeDuration.format('HH:mm:ss'),
         currentTimeMs: currentTimeDuration.format('mm:ss'),
         currentTimeH: currentTimeDuration.format('HH'),
