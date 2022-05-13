@@ -25,7 +25,8 @@
           "CompanyName": "CVM Eventi",
           "ProductName": "Countdown"
         },
-        "appCategoryType": "public.app-category.utilities"
+        "appCategoryType": "public.app-category.utilities",
+        "executableName": "Countdown"
       },
       "makers": [
         {
