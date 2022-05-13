@@ -1,6 +1,6 @@
 {
   "name": "countdown",
-  "productName": "countdown",
+  "productName": "Countdown",
   "version": "0.0.13",
   "description": "CVM Countdown",
   "main": ".webpack/main",
@@ -19,7 +19,14 @@
   "license": "MIT",
   "config": {
     "forge": {
-      "packagerConfig": {},
+      "packagerConfig": {
+        "icon": "icons/icon.icns",
+        "win32metadata": {
+          "CompanyName": "CVM Eventi",
+          "ProductName": "Countdown"
+        },
+        "appCategoryType": "public.app-category.utilities"
+      },
       "makers": [
         {
           "name": "@electron-forge/maker-squirrel",
