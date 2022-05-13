@@ -246,7 +246,7 @@ export default {
       ipcRenderer.send('settings-updated')
     },
     saveWindowBounds() {
-      store.set('window.fullscreenOn', this.window.fullscreenOn)
+      store.set('window.fullscreenOn', this.window.fullscreenOn || null)
       store.set('window.x', parseInt(this.window.x))
       store.set('window.y', parseInt(this.window.y))
       store.set('window.width', parseInt(this.window.width))

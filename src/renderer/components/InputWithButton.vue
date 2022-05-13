@@ -18,7 +18,7 @@
 export default {
   name: "InputWithButton",
   props: {
-    modelValue: String
+    modelValue: Number
   },
   emits: [
     'input',
