@@ -1,6 +1,6 @@
 {
   "name": "countdown",
-  "productName": "Countdown",
+  "productName": "countdown",
   "version": "0.0.13",
   "description": "CVM Countdown",
   "main": ".webpack/main",
@@ -26,7 +26,8 @@
           "ProductName": "Countdown"
         },
         "appCategoryType": "public.app-category.utilities",
-        "executableName": "Countdown"
+        "name": "Countdown",
+        "executableName": "countdown"
       },
       "makers": [
         {
