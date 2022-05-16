@@ -6,6 +6,11 @@ Simple countdown for live events
 
 You can download latest release from [releases](https://github.com/CVMEventi/Countdown/releases)
 
+### APIs
+
+- [HTTP APIs](https://github.com/CVMEventi/Countdown/wiki/HTTP-APIs)
+- OSC (Soon)
+
 ### Images
 Main window to set timer
 ![Main Window](./docs/images/main.png)
