@@ -2,6 +2,10 @@
 
 Simple countdown for live events
 
+<a href="https://bitfocus.io/companion/?ref=wiki" target="_new"><img height="50px" alt="Controllable by Companion" src="https://bitfocus.io/companion-badge.png?ref=wiki"></a>
+
+_Companion module in beta version (compatible with v0.0.15 and later)_
+
 ### Download
 
 You can download latest release from [releases](https://github.com/CVMEventi/Countdown/releases)
