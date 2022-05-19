@@ -109,12 +109,12 @@
     "vue-loader": "^17.0.0"
   },
   "dependencies": {
+    "@fastify/websocket": "^5.0.0",
     "@heroicons/vue": "^1.0.6",
     "dayjs": "^1.11.0",
     "electron-squirrel-startup": "^1.0.0",
     "electron-store": "^8.0.1",
-    "express": "^4.17.3",
-    "express-ws": "^5.0.2",
+    "fastify": "^3.29.0",
     "v8-compile-cache": "^2.3.0",
     "vue": "^3.2.31",
     "vue-router": "^4.0.14",

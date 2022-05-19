@@ -1,33 +1,43 @@
 import express from 'express'
 import expressWs from 'express-ws';
+import Fastify from 'fastify';
+import FastifyWebSocket from '@fastify/websocket';
 import {ipcMain} from "electron";
+import http from "http";
+import Store from "electron-store";
+import {DEFAULT_STORE} from "../common/constants";
 
 export default class WebServer {
   /**
-   * @type {import(express).core.Express}
+   * @type {import(fastify).default}
    */
-  expressServer = null
+  fastifyServer = null
   /**
    * @type {import(electron).BrowserWindow}
    */
   mainWindow = null
   isRunning = false
-  /**
-   * @type {import(http).Server}
-   */
-  httpServer = null
   port = null
+
+  lastError = null
 
   constructor (mainWindow) {
     this.mainWindow = mainWindow
-    this.expressServer = express()
+    this.fastifyServer = new Fastify({
+      logger: true,
+    })
+    this.fastifyServer.register(FastifyWebSocket);
 
-    const expressWsInstance = expressWs(this.expressServer)
+    this.setupRoutes()
+    this.setupIpc();
+  }
 
-    this.expressServer.get('/', (req, res) => {
+  setupRoutes() {
+
+    this.fastifyServer.get('/', (req, res) => {
       res.send('Countdown')
     })
-    this.expressServer.get('/set/:hours/:minutes/:seconds', (req, res) => {
+    this.fastifyServer.get('/set/:hours/:minutes/:seconds', (req, res) => {
       this.mainWindow.webContents.send(
         'remote-command',
         'set',
@@ -37,7 +47,7 @@ export default class WebServer {
       )
       res.send(200)
     })
-    this.expressServer.get('/start/:hours/:minutes/:seconds', (req, res) => {
+    this.fastifyServer.get('/start/:hours/:minutes/:seconds', (req, res) => {
       this.mainWindow.webContents.send(
         'remote-command',
         'start',
@@ -47,27 +57,27 @@ export default class WebServer {
       )
       res.send(200)
     })
-    this.expressServer.get('/start', (req, res) => {
+    this.fastifyServer.get('/start', (req, res) => {
       this.mainWindow.webContents.send('remote-command', 'start')
       res.send(200)
     })
-    this.expressServer.get('/toggle-pause', (req, res) => {
+    this.fastifyServer.get('/toggle-pause', (req, res) => {
       this.mainWindow.webContents.send('remote-command', 'togglePause')
       res.send(200)
     })
-    this.expressServer.get('/pause', (req, res) => {
+    this.fastifyServer.get('/pause', (req, res) => {
       this.mainWindow.webContents.send('remote-command', 'pause')
       res.send(200)
     })
-    this.expressServer.get('/resume', (req, res) => {
+    this.fastifyServer.get('/resume', (req, res) => {
       this.mainWindow.webContents.send('remote-command', 'resume')
       res.send(200)
     })
-    this.expressServer.get('/reset', (req, res) => {
+    this.fastifyServer.get('/reset', (req, res) => {
       this.mainWindow.webContents.send('remote-command', 'reset')
       res.send(200)
     })
-    this.expressServer.get('/jog-set/:hours/:minutes/:seconds', (req, res) => {
+    this.fastifyServer.get('/jog-set/:hours/:minutes/:seconds', (req, res) => {
       this.mainWindow.webContents.send(
         'remote-command',
         'jog-set',
@@ -77,7 +87,7 @@ export default class WebServer {
       )
       res.send(200)
     })
-    this.expressServer.get('/jog-current/:hours/:minutes/:seconds', (req, res) => {
+    this.fastifyServer.get('/jog-current/:hours/:minutes/:seconds', (req, res) => {
       this.mainWindow.webContents.send(
         'remote-command',
         'jog-current',
@@ -88,31 +98,83 @@ export default class WebServer {
       res.send(200)
     })
 
-    this.expressServer.ws('/ws', (ws, req) => {
+    this.fastifyServer.register(async function (fastify) {
+      fastify.get('/ws', { websocket: true }, (connection /* SocketStream */, req /* FastifyRequest */) => {
 
-      ws.on('message', function(msg) {
-        JSON.parse(msg)
-        ws.send(msg);
-      });
-    });
-    const wsServer = expressWsInstance.getWss('/ws')
-
-    ipcMain.on('send-to-websocket', (event, arg) => {
-      wsServer.clients.forEach((client) => {
-        client.send(JSON.stringify(arg))
       })
     })
+
   }
 
-  start () {
-    this.httpServer = this.expressServer.listen(this.port, () => {
-      this.isRunning = true
+  setupIpc() {
+    ipcMain.on('send-to-websocket', (event, arg) => {
+      this.fastifyServer.websocketServer.clients.forEach(function each(client) {
+        if (client.readyState === 1) {
+          client.send(JSON.stringify(arg))
+        }
+      })
+    })
+
+    ipcMain.handle('server-running', () => {
+      return this.buildStatusUpdateContent()
+    })
+
+    ipcMain.handle('webserver-manager', async (event, command, arg) => {
+      switch (command) {
+        case 'stop':
+          await this.stop()
+          return false
+        case 'start':
+          let store = new Store(DEFAULT_STORE);
+          this.port = store.get('settings.webServerPort') === null
+            ? 6565
+            : store.get('settings.webServerPort')
+          return await this.start()
+      }
     })
   }
 
-  stop () {
-    this.httpServer.close(() => {
-      this.isRunning = false
+  async start () {
+    let promise = new Promise((resolve, reject) => {
+      this.fastifyServer.listen(this.port, '0.0.0.0', err => {
+        if (err) {
+          this.isRunning = false
+          this.lastError = err.code
+          this.sendIpcStatusUpdate()
+          resolve(false)
+          return
+        }
+        this.isRunning = true
+        this.lastError = null
+        resolve(true);
+        this.sendIpcStatusUpdate()
+      })
     })
+
+    return await promise;
+  }
+
+  async stop () {
+    let promise = new Promise((resolve, reject) => {
+      this.fastifyServer.close(() => {
+        this.isRunning = false
+        this.sendIpcStatusUpdate()
+        resolve(true)
+      })
+    })
+
+    return await promise
+  }
+
+  sendIpcStatusUpdate() {
+    this.mainWindow.webContents.send('webserver-update', this.buildStatusUpdateContent())
+  }
+
+  buildStatusUpdateContent() {
+    return {
+      port: this.port,
+      isRunning: this.isRunning,
+      lastError: this.lastError,
+    }
   }
 }

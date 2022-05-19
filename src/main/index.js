@@ -109,27 +109,9 @@ mainWindowHandler.onCreated((browserWindow) => {
   webServer = new WebServer(browserWindow)
   webServer.port = port
 
-  ipcMain.on('webserver-manager', (event, command, arg) => {
-    switch (command) {
-      case 'stop':
-        webServer.stop()
-        break
-      case 'start':
-        webServer.port = store.get('settings.webServerPort') === null
-          ? 6565
-          : store.get('settings.webServerPort')
-        webServer.start()
-        break
-    }
-  })
-
   if (webServerEnabled) {
     webServer.start()
   }
-})
-
-ipcMain.handle('server-running', (event, ...args) => {
-  return webServer.isRunning
 })
 
 ipcMain.handle('countdown-bounds', (event, args) => {
