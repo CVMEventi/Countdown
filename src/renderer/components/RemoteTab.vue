@@ -74,10 +74,10 @@ export default {
     },
     async save() {
       store.set('settings.webServerEnabled', this.httpServerEnabled)
-      store.set('settings.webServerPort', this.httpServerPort)
+      store.set('settings.webServerPort', parseInt(this.httpServerPort))
 
       if (this.httpServerEnabled
-        && this.httpServerPort != this.currentPort
+        && parseInt(this.httpServerPort) !== parseInt(this.currentPort)
         && this.isRunning) {
         this.isRunning = await ipcRenderer.invoke('webserver-manager', 'stop')
         this.isRunning = await ipcRenderer.invoke('webserver-manager', 'start')
