@@ -9,8 +9,8 @@ import { createRouter, createWebHashHistory } from 'vue-router';
 console.log('👋 This message is being logged by "index.js", included via webpack');
 
 const routes = [
-  { path: '/', component: Index },
   { path: '/countdown', component: Countdown },
+  { path: '/control/:tab?', component: Index, props: (route) => ({ tab: route.params.tab || 'main' }) },
 ]
 
 const router = createRouter({

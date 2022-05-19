@@ -5,24 +5,30 @@
       <nav class="relative z-0 rounded-lg shadow flex divide-x divide-gray-200" aria-label="Tabs">
         <tab-button
           first
-          :selected="selectedTab === 'countdown'"
-          @click="selectedTab = 'countdown'"
+          :selected="tab === 'main'"
+          @click="$router.replace('/control/main')"
         >
           Countdown
         </tab-button>
         <tab-button
-          last
-          :selected="selectedTab === 'settings'"
-          @click="selectedTab = 'settings'"
+          :selected="tab === 'settings'"
+          @click="$router.replace('/control/settings')"
         >
           Settings
+        </tab-button>
+        <tab-button
+          last
+          :selected="tab === 'remote'"
+          @click="$router.replace('/control/remote')"
+        >
+          Remote
         </tab-button>
       </nav>
       <div class="flex-1"></div>
       <s-button
-        v-if="selectedTab === 'settings'"
+        v-if="tab === 'settings' || tab === 'remote'"
         class="self-end"
-        @click="$refs.settingsTab.save()"
+        @click="save"
       >
         Save
       </s-button>
@@ -32,7 +38,7 @@
         </button>
       </card>
     </div>
-    <div v-if="selectedTab === 'countdown'" class="countdown-tab">
+    <div v-if="tab === 'main'" class="countdown-tab">
       <div class="flex gap-2">
         <card class="clock-setup justify-center">
           <div class="uppercase text-white">Set</div>
@@ -104,7 +110,7 @@
           </s-button>-->
         </card>
       </div>
-      <card class="presets inline-flex gap-2">
+      <card class="presets inline-flex gap-2 overflow-x-auto">
         <s-button
           v-for="(preset, index) in settings.presets"
           :key="index" type="info"
@@ -115,12 +121,15 @@
       </card>
     </div>
     <settings-tab
-      v-if="selectedTab === 'settings'"
+      v-if="tab === 'settings'"
       ref="settingsTab"
       :screens="screens"
       :selected-screen="selectedScreen"
       @settings-updated="settingsUpdated"
     />
+    <remote-tab
+      v-if="tab === 'remote'"
+      ref="remoteTab" />
   </div>
 </template>
 
@@ -140,11 +149,13 @@ import { DEFAULT_STORE } from "../../common/constants";
 import dayjs from 'dayjs'
 import duration from 'dayjs/plugin/duration'
 dayjs.extend(duration)
+import RemoteTab from "../components/RemoteTab";
 
 let store = new Store()
 
 export default {
   components: {
+    RemoteTab,
     Jog,
     SettingsTab,
     Card,
@@ -156,6 +167,9 @@ export default {
     MinusIcon,
   },
   layout: 'default',
+  props: {
+    tab: String,
+  },
   data() {
     return {
       externalContent: '',
@@ -388,6 +402,13 @@ export default {
         setTimeM: setTimeDuration.format('mm'),
         setTimeS: setTimeDuration.format('ss'),
       })
+    },
+    save() {
+      if (this.tab === 'settings') {
+        this.$refs.settingsTab.save()
+      } else {
+        this.$refs.remoteTab.save()
+      }
     }
   }
 }

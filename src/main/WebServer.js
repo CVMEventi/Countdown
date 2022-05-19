@@ -23,13 +23,17 @@ export default class WebServer {
 
   constructor (mainWindow) {
     this.mainWindow = mainWindow
+    this.reset()
+    this.setupIpc();
+  }
+
+  reset() {
     this.fastifyServer = new Fastify({
       logger: true,
     })
     this.fastifyServer.register(FastifyWebSocket);
 
     this.setupRoutes()
-    this.setupIpc();
   }
 
   setupRoutes() {
@@ -157,6 +161,7 @@ export default class WebServer {
   async stop () {
     let promise = new Promise((resolve, reject) => {
       this.fastifyServer.close(() => {
+        this.reset();
         this.isRunning = false
         this.sendIpcStatusUpdate()
         resolve(true)

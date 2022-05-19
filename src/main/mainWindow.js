@@ -10,7 +10,7 @@ export default function createMainWindow (options = {
   const winHandler = new BrowserWinHandler(options)
 
   winHandler.onCreated(_browserWindow => {
-    winHandler.loadPage('/')
+    winHandler.loadPage('/control/main')
     // Or load custom url
     // _browserWindow.loadURL('https://google.com')
     if (isDev) {

@@ -244,6 +244,8 @@ export default {
 
       this.$emit('settings-updated')
       ipcRenderer.send('settings-updated')
+
+      this.$router.replace('/control/main')
     },
     saveWindowBounds() {
       store.set('window.fullscreenOn', this.window.fullscreenOn || null)
