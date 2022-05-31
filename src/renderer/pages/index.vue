@@ -366,14 +366,6 @@ export default {
       store = new Store()
       this.settings = store.get('settings')
     },
-    async startServer() {
-      ipcRenderer.send('webserver-manager', 'start')
-      console.log(await ipcRenderer.invoke('server-running'))
-    },
-    async stopServer() {
-      ipcRenderer.send('webserver-manager', 'stop')
-      console.log(await ipcRenderer.invoke('server-running'))
-    },
     add(minutes) {
       if (this.$refs.timer.isRunning) {
         this.$refs.timer.add(minutes * 60);
