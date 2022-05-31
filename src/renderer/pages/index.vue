@@ -2,28 +2,7 @@
   <div class="main-container flex flex-col bg-zinc-700">
     <timer ref="timer" @timer-tick="timerTick" @timer-status-change="timerStatusChange"/>
     <div class="flex flex-row justify-between p-1 gap-2 items-center">
-      <nav class="relative z-0 rounded-lg shadow flex divide-x divide-gray-200" aria-label="Tabs">
-        <tab-button
-          first
-          :selected="tab === 'main'"
-          @click="$router.replace('/control/main')"
-        >
-          Countdown
-        </tab-button>
-        <tab-button
-          :selected="tab === 'settings'"
-          @click="$router.replace('/control/settings')"
-        >
-          Settings
-        </tab-button>
-        <tab-button
-          last
-          :selected="tab === 'remote'"
-          @click="$router.replace('/control/remote')"
-        >
-          Remote
-        </tab-button>
-      </nav>
+      <navigation :selected-tab="tab"/>
       <div class="flex-1"></div>
       <s-button
         v-if="tab === 'settings' || tab === 'remote'"
@@ -144,6 +123,7 @@ import TabButton from '../components/TabButton'
 import SettingsTab from '../components/SettingsTab'
 import Jog from "../components/Jog";
 import { PlusIcon, MinusIcon } from '@heroicons/vue/outline';
+import Navigation from "../components/Navigation";
 import { shell } from "electron";
 import { DEFAULT_STORE } from "../../common/constants";
 import dayjs from 'dayjs'
@@ -165,6 +145,7 @@ export default {
     TabButton,
     PlusIcon,
     MinusIcon,
+    Navigation,
   },
   layout: 'default',
   props: {
