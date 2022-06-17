@@ -3,8 +3,16 @@
     @click.stop.prevent="click"
     @focus="$event.target.blur();"
     :disabled="disabled"
-    class="px-4 py-2 rounded text-white ring-transparent"
+    class="rounded text-white ring-transparent"
     :class="{
+      'px-4': !tiny,
+      'py-2': !tiny,
+
+      'px-2': tiny,
+      'py-1': tiny,
+
+      'text-[14px]': tiny,
+
       'text-slate-600': type === 'warning' && disabled,
       'text-white': type !== 'warning' && !disabled,
 
@@ -41,6 +49,10 @@ export default {
       type: Boolean,
       default: false
     },
+    tiny: {
+      type: Boolean,
+      default: false
+    }
   },
   emits: [
     'click',

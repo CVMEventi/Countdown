@@ -6,8 +6,6 @@ import Countdown from './pages/countdown';
 import App from './App';
 import { createRouter, createWebHashHistory } from 'vue-router';
 
-console.log('👋 This message is being logged by "index.js", included via webpack');
-
 const routes = [
   { path: '/countdown', component: Countdown },
   { path: '/control/:tab?', component: Index, props: (route) => ({ tab: route.params.tab || 'main' }) },

@@ -5,7 +5,7 @@
       <navigation :selected-tab="tab"/>
       <div class="flex-1"></div>
       <s-button
-        v-if="tab === 'settings' || tab === 'remote'"
+        v-if="tab === 'settings' || tab === 'remote' || tab === 'windows'"
         class="self-end"
         @click="save"
       >
@@ -73,20 +73,6 @@
               10m
             </jog>
           </div>
-          <!--<s-button
-            class="text-4xl mb-2 font-mono uppercase"
-            type="danger"
-            @click="startServer"
-          >
-            Start
-          </s-button>
-          <s-button
-            class="text-4xl mb-2 font-mono uppercase"
-            type="danger"
-            @click="stopServer"
-          >
-            Stop
-          </s-button>-->
         </card>
       </div>
       <card class="presets inline-flex gap-2 overflow-x-auto">
@@ -98,6 +84,9 @@
           {{ preset }}
         </s-button>
       </card>
+      <s-button type="warning" @click="gong">
+        test
+      </s-button>
     </div>
     <settings-tab
       v-if="tab === 'settings'"
@@ -109,6 +98,11 @@
     <remote-tab
       v-if="tab === 'remote'"
       ref="remoteTab" />
+    <windows-tab
+      :screens="screens"
+      v-if="tab === 'windows'"
+      ref="windowsTab"
+    />
   </div>
 </template>
 
@@ -121,11 +115,11 @@ import Timer from '../components/Timer'
 import TimeInput from '../components/TimeInput'
 import TabButton from '../components/TabButton'
 import SettingsTab from '../components/SettingsTab'
+import WindowsTab from "../components/WindowsTab";
 import Jog from "../components/Jog";
 import { PlusIcon, MinusIcon } from '@heroicons/vue/outline';
 import Navigation from "../components/Navigation";
 import { shell } from "electron";
-import { DEFAULT_STORE } from "../../common/constants";
 import dayjs from 'dayjs'
 import duration from 'dayjs/plugin/duration'
 dayjs.extend(duration)
@@ -146,6 +140,7 @@ export default {
     PlusIcon,
     MinusIcon,
     Navigation,
+    WindowsTab,
   },
   layout: 'default',
   props: {
@@ -379,9 +374,14 @@ export default {
     save() {
       if (this.tab === 'settings') {
         this.$refs.settingsTab.save()
-      } else {
+      } else if (this.tab === 'remote') {
         this.$refs.remoteTab.save()
+      } else {
+        this.$refs.windowsTab.save()
       }
+    },
+    gong() {
+      sound.play();
     }
   }
 }

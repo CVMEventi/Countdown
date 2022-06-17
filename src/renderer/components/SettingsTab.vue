@@ -1,51 +1,10 @@
 <template>
   <card class="flex flex-1 gap-2 min-h-0 text-white">
-    <card class="inline-block border flex flex-col w-[300px]">
-      <div class="flex flex-col gap-2">
-        <p class="text-2xl">Screen</p>
-        <div class="inline-flex flex-col">
-          <p class="text-base">Fullscreen</p>
-          <select v-model="currentScreen" class="input p-2 text-black">
-            <option :value="null">-</option>
-            <option
-              v-for="(screen, index) in screens"
-              :key="screen.id"
-              :value="screen"
-            >
-              Screen {{ index }}
-              ({{ screen.size.width }}x{{ screen.size.height }}{{ screen.internal ? " Internal" : "" }})
-            </option>
-          </select>
-        </div>
-
-        <div class="inline-flex gap-2">
-          <div class="inline-flex flex-col flex-1">
-            <p class="text-base">X</p>
-            <input v-model="window.x" type="number" class="input text-black w-full">
-          </div>
-          <div class="inline-flex flex-col flex-1">
-            <p class="text-base">Y</p>
-            <input v-model="window.y" type="number" class="input text-black w-full">
-          </div>
-        </div>
-        <div class="inline-flex gap-2">
-          <div class="inline-flex flex-col flex-1">
-            <p class="text-base">Width</p>
-            <input v-model="window.width" type="number" class="input text-black w-full">
-          </div>
-          <div class="inline-flex flex-col flex-1">
-            <p class="text-base">Height</p>
-            <input v-model="window.height" type="number" class="input text-black w-full">
-          </div>
-        </div>
-        <s-button type="info" @click="getCountdownBounds">Get current position</s-button>
-        <s-button type="info" @click="updateWindow">Set</s-button>
-      </div>
-    </card>
     <card class="inline-block border flex flex-col p-0">
       <p class="text-2xl p-3 pb-2">Presets (m)</p>
-      <draggable item-key="index" v-model="presets" handle=".handle" class="flex flex-col gap-2 overflow-y-scroll items-center pb-1">
-        <template #item="{element, index}" >
+      <draggable item-key="index" v-model="presets" handle=".handle"
+                 class="flex flex-col gap-2 overflow-y-scroll items-center pb-1">
+        <template #item="{element, index}">
           <div :key="index" class="inline-block w-[140px] px-2">
             <edit-preset v-model="presets[index]" @delete="deletePreset(index)"></edit-preset>
           </div>
@@ -76,16 +35,16 @@
       <div class="flex flex-col" style="min-width: 220px">
         <p class="text-2xl">Colors</p>
         <p class="text-base">Background</p>
-        <color-input v-model="backgroundColor" default-value="#000000" />
+        <color-input v-model="backgroundColor" default-value="#000000"/>
         <input @input="realTimeSettingUpdated" v-model="backgroundColorOpacity" type="range" min="0" max="255">
         <p class="text-base">Text</p>
-        <color-input v-model="textColor" default-value="#ffffff" />
+        <color-input v-model="textColor" default-value="#ffffff"/>
         <p class="text-base">Text on timer finished</p>
-        <color-input v-model="timerFinishedTextColor" default-value="#ff0000" />
+        <color-input v-model="timerFinishedTextColor" default-value="#ff0000"/>
         <p class="text-base">Clock</p>
-        <color-input v-model="clockColor" default-value="#ffffff" />
+        <color-input v-model="clockColor" default-value="#ffffff"/>
         <p class="text-base">Clock Text</p>
-        <color-input v-model="clockTextColor" default-value="#ffffff" />
+        <color-input v-model="clockTextColor" default-value="#ffffff"/>
         <p class="text-2xl mt-3">Font</p>
         <select v-model="font" class="input p-2 text-black">
           <option value="digital-7">digital-7</option>
@@ -99,7 +58,7 @@
 
 <script>
 import Store from 'electron-store'
-import { ipcRenderer } from 'electron'
+import {ipcRenderer} from 'electron'
 import draggable from 'vuedraggable'
 import Card from '../components/Card'
 import ColorInput from '../components/ColorInput'
@@ -152,7 +111,7 @@ export default {
       default: null
     }
   },
-  data () {
+  data() {
     return {
       backgroundColor: store.get('settings.backgroundColor', DEFAULT_BACKGROUND_COLOR),
       backgroundColorOpacity: store.get('settings.backgroundColorOpacity', DEFAULT_BACKGROUND_OPACITY),
@@ -165,7 +124,6 @@ export default {
       showHours: store.get('settings.showHours', DEFAULT_SHOW_HOURS),
       blackAtReset: store.get('settings.blackAtReset', DEFAULT_BLACK_AT_RESET),
       pulseAtZero: store.get('settings.pulseAtZero', DEFAULT_PULSE_AT_ZERO),
-      window: store.get('window', DEFAULT_WINDOW_BOUNDS),
       show: store.get('settings.show', DEFAULT_SHOW_SECTIONS),
       font: store.get('settings.font', DEFAULT_FONT),
       timerAlwaysOnTop: store.get('settings.timerAlwaysOnTop', DEFAULT_TIMER_ALWAYS_ON_TOP),
@@ -176,10 +134,10 @@ export default {
   },
   computed: {
     currentScreen: {
-      get () {
+      get() {
         return this.screens.find((screen) => screen.id === this.window.fullscreenOn);
       },
-      set (newValue) {
+      set(newValue) {
         this.window.fullscreenOn = newValue !== null ? newValue.id : null;
       }
     }
@@ -203,7 +161,7 @@ export default {
         this.yellowAtPercent = parseInt(value);
       }
     },
-    save () {
+    save() {
       if (CSS.supports('color', this.backgroundColor)) {
         store.set('settings.backgroundColor', this.backgroundColor)
       }
@@ -240,28 +198,15 @@ export default {
 
       store.set('settings.font', this.font)
 
-      this.saveWindowBounds()
-
       this.$emit('settings-updated')
       ipcRenderer.send('settings-updated')
 
       this.$router.replace('/control/main')
     },
-    saveWindowBounds() {
-      store.set('window.fullscreenOn', this.window.fullscreenOn || null)
-      store.set('window.x', parseInt(this.window.x))
-      store.set('window.y', parseInt(this.window.y))
-      store.set('window.width', parseInt(this.window.width))
-      store.set('window.height', parseInt(this.window.height))
-    },
-    updateWindow() {
-      this.saveWindowBounds();
-      ipcRenderer.send('window-updated');
-    },
-    addPreset () {
+    addPreset() {
       this.presets.push(0)
     },
-    deletePreset (index) {
+    deletePreset(index) {
       this.presets.splice(index, 1)
     },
     realTimeSettingUpdated() {
@@ -271,15 +216,12 @@ export default {
 
       ipcRenderer.send('temporary-settings-updated', settings);
     },
-    async getCountdownBounds() {
-      this.window = await ipcRenderer.invoke('countdown-bounds')
-    }
   }
 }
 </script>
 
 <style scoped>
-  .min-h-color {
-    min-height: 27px;
-  }
+.min-h-color {
+  min-height: 27px;
+}
 </style>

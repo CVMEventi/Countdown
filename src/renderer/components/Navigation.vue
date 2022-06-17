@@ -14,11 +14,17 @@
       Settings
     </tab-button>
     <tab-button
-      last
       :selected="selectedTab === 'remote'"
       @click="$router.replace('/control/remote')"
     >
       Remote
+    </tab-button>
+    <tab-button
+      last
+      :selected="selectedTab === 'windows'"
+      @click="$router.replace('/control/windows')"
+    >
+      Windows
     </tab-button>
   </nav>
 </template>

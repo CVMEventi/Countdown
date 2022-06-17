@@ -34,12 +34,14 @@ import { ipcRenderer } from "electron";
 import SButton from "./SButton";
 import Store from 'electron-store';
 import { DEFAULT_WEBSERVER_ENABLED, DEFAULT_WEBSERVER_PORT } from "../../common/constants";
+import ScreensDrag from "./ScreensDrag";
 
 const store = new Store();
 
 export default {
   name: "RemoteTab",
   components: {
+    ScreensDrag,
     SButton,
     Card,
     CheckBox
@@ -99,12 +101,12 @@ export default {
         this.isRunning = await ipcRenderer.invoke('webserver-manager', 'start')
       }
       this.isLoading = false;
-    }
+    },
   },
   computed: {
     httpToggleText() {
       return this.isRunning ? "Stop" : "Start"
-    }
+    },
   }
 }
 </script>
