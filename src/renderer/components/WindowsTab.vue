@@ -11,7 +11,7 @@
         <div class="inline-flex gap-2">
           <div class="inline-flex flex-col">
             <p class="text-base">Fullscreen</p>
-            <select v-model="window.fullscreenOn" class="input text-black">
+            <select v-model="window.fullscreenOn" class="block w-full pl-3 pr-10 py-1.5 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
               <option :value="null">-</option>
               <option
                 v-for="(screen, index) in screens"
@@ -55,6 +55,10 @@ import Card from "./Card";
 import SButton from "./SButton";
 
 const store = new Store()
+
+ipcRenderer.on('screens-updated', () => {
+  console.log('display updated')
+})
 
 export default {
   name: "WindowsTab",

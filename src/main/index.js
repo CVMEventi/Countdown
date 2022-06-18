@@ -21,10 +21,20 @@ if (isDev) {
   enableDevMode();
 }
 
+function screensUpdated(browserWindow) {
+  browserWindow.webContents.send('screens-updated');
+}
+
 mainWindowHandler = createMainWindow();
 
 mainWindowHandler.onCreated((browserWindow) => {
   setMenu(mainWindowHandler);
+
+  console.log(screen.getAllDisplays())
+
+  screen.on('display-added', () => screensUpdated(browserWindow))
+  screen.on('display-removed', () => screensUpdated(browserWindow))
+  screen.on('display-metrics-changed', () => screensUpdated(browserWindow))
 
   browserWindow.on('closed', () => {
     app.quit();

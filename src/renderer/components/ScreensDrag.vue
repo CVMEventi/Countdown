@@ -63,9 +63,6 @@ export default {
       let maxX = 0;
       let maxY = 0;
 
-      console.log(this.screens)
-      console.log(this.screens.length)
-
       let negativeOffsetX = 0;
       let negativeOffsetY = 0;
 

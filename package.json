@@ -111,6 +111,7 @@
   "dependencies": {
     "@fastify/websocket": "^5.0.0",
     "@heroicons/vue": "^1.0.6",
+    "@tailwindcss/forms": "^0.5.2",
     "dayjs": "^1.11.0",
     "debounce": "^1.2.1",
     "electron-squirrel-startup": "^1.0.0",

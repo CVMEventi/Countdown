@@ -206,6 +206,11 @@ export default {
   },
   async mounted() {
     this.screens = await ipcRenderer.invoke('get-screens')
+
+    ipcRenderer.on('screens-updated', async () => {
+      this.screens = await ipcRenderer.invoke('get-screens')
+    })
+
     ipcRenderer.on('remote-command', (event, ...args) => {
       let hours = 0;
       let minutes = 0;
