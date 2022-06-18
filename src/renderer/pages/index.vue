@@ -5,7 +5,7 @@
       <navigation :selected-tab="tab"/>
       <div class="flex-1"></div>
       <s-button
-        v-if="tab === 'settings' || tab === 'remote' || tab === 'windows'"
+        v-if="tab === 'remote'"
         class="self-end"
         @click="save"
       >

@@ -103,11 +103,12 @@ export default {
     }
   },
   watch: {
-    'window.x'() { this.setAndSave(this) },
-    'window.y'() { this.setAndSave(this) },
-    'window.height'() { this.setAndSave(this) },
-    'window.width'() { this.setAndSave(this) },
-    'window.fullscreenOn'() { this.setAndSave(this) },
+    window: {
+      handler() {
+        this.setAndSave(this)
+      },
+      deep: true,
+    },
   }
 }
 </script>
