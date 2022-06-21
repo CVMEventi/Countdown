@@ -109,9 +109,7 @@ ipcMain.on('window-updated', async (event, arg) => {
   await setCountdownWindowPosition(countdownWindowHandler.browserWindow)
 })
 
-const webServerEnabled = store.get('settings.webServerEnabled') === null
-  ? false
-  : store.get('settings.webServerEnabled')
+const webServerEnabled = store.get('settings.webServerEnabled', false)
 const port = store.get('settings.webServerPort') === null ? 6565 : store.get('settings.webServerPort')
 let webServer = null
 

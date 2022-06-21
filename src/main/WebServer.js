@@ -112,6 +112,9 @@ export default class WebServer {
 
   setupIpc() {
     ipcMain.on('send-to-websocket', (event, arg) => {
+      if (!this.fastifyServer.websocketServer) {
+        return;
+      }
       this.fastifyServer.websocketServer.clients.forEach(function each(client) {
         if (client.readyState === 1) {
           client.send(JSON.stringify(arg))
