@@ -10,7 +10,7 @@
           </div>
         </template>
       </draggable>
-      <s-button class="m-3" type="info" @click="addPreset">Add</s-button>
+      <s-button tiny class="m-3" type="info" @click="addPreset">Add</s-button>
     </card>
     <card class="inline-block border flex flex-col">
       <p class="text-2xl">Timer</p>
@@ -30,6 +30,8 @@
       <check-box id="showTimer" v-model="settings.show.timer">Timer</check-box>
       <check-box id="showProgress" v-model="settings.show.progress">Progress</check-box>
       <check-box id="showClock" v-model="settings.show.clock">Clock</check-box>
+      <p class="text-2xl">Audio</p>
+      <check-box id="audioEnabled" v-model="settings.audioEnabled">Enable</check-box>
     </card>
     <card class="inline-block border flex flex-col">
       <div class="flex flex-col" style="min-width: 220px">
@@ -83,6 +85,7 @@ import {
   DEFAULT_YELLOW_AT_OPTION,
   DEFAULT_YELLOW_AT_MINUTES,
   DEFAULT_YELLOW_AT_PERCENT,
+  DEFAULT_AUDIO_ENABLED,
 
 } from "../../common/constants";
 import CheckBox from "./CheckBox";
@@ -132,6 +135,7 @@ export default {
         yellowAtOption: store.get('settings.yellowAtOption', DEFAULT_YELLOW_AT_OPTION),
         yellowAtMinutes: store.get('settings.yellowAtMinutes', DEFAULT_YELLOW_AT_MINUTES),
         yellowAtPercent: store.get('settings.yellowAtPercent', DEFAULT_YELLOW_AT_PERCENT),
+        audioEnabled: store.get('settings.audioEnabled', DEFAULT_AUDIO_ENABLED),
       }
     }
   },
@@ -186,6 +190,7 @@ export default {
         backgroundColorOpacity: self.settings.backgroundColorOpacity,
         show: self.settings.show,
         font: self.settings.font,
+        audioEnabled: self.settings.audioEnabled,
       }
 
       if (CSS.supports('color', self.settings.backgroundColor)) {

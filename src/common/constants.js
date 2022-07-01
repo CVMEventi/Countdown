@@ -22,6 +22,8 @@ const DEFAULT_YELLOW_AT_PERCENT = 10;
 
 const DEFAULT_FONT = 'digital-7';
 
+const DEFAULT_AUDIO_ENABLED = false;
+
 const DEFAULT_SHOW_SECTIONS = {
   timer: true,
   progress: true,
@@ -59,6 +61,7 @@ const DEFAULT_STORE = {
       yellowAtOption: DEFAULT_YELLOW_AT_OPTION,
       yellowAtMinutes: DEFAULT_YELLOW_AT_MINUTES,
       yellowAtPercent: DEFAULT_YELLOW_AT_PERCENT,
+      audioEnabled: DEFAULT_AUDIO_ENABLED,
     },
     window: DEFAULT_WINDOW_BOUNDS,
   }
@@ -87,4 +90,5 @@ export {
   DEFAULT_YELLOW_AT_PERCENT,
   DEFAULT_YELLOW_AT_OPTION,
   DEFAULT_YELLOW_AT_MINUTES,
+  DEFAULT_AUDIO_ENABLED,
 }

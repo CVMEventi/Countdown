@@ -84,9 +84,6 @@
           {{ preset }}
         </s-button>
       </card>
-      <s-button type="warning" @click="gong">
-        test
-      </s-button>
     </div>
     <settings-tab
       v-if="tab === 'settings'"
@@ -124,6 +121,11 @@ import dayjs from 'dayjs'
 import duration from 'dayjs/plugin/duration'
 dayjs.extend(duration)
 import RemoteTab from "../components/RemoteTab";
+import { Howl } from "howler";
+import gong from "../assets/sounds/gong.wav";
+let sound = new Howl({
+  src: [gong],
+})
 
 let store = new Store()
 
@@ -157,7 +159,8 @@ export default {
       secondsSetOnCurrentTimer: 0,
       timerIsRunning: false,
       selectedTab: 'countdown',
-      settings: store.get('settings')
+      settings: store.get('settings'),
+      audioRun: false,
     }
   },
   watch: {
@@ -281,6 +284,7 @@ export default {
   methods: {
     start() {
       this.secondsSetOnCurrentTimer = this.totalSeconds
+      this.audioRun = false;
       this.$refs.timer.start(this.totalSeconds, store.get('settings.stopTimerAtZero') ?? false)
     },
     toggleTimer() {
@@ -300,6 +304,10 @@ export default {
 
       let state = 'Running';
       if (isExpired) {
+        if (this.settings.audioEnabled && !this.audioRun) {
+          sound.play();
+          this.audioRun = true;
+        }
         state = 'Expired';
       } else if (this.isExpiring) {
         state = 'Expiring';
@@ -331,6 +339,8 @@ export default {
       if (this.secondsSetOnCurrentTimer === 0) {
         this.totalSeconds = 0;
       }
+
+      this.audioRun = true;
 
       this.$refs.timer.reset()
       this.secondsSetOnCurrentTimer = 0;
@@ -385,9 +395,6 @@ export default {
         this.$refs.windowsTab.save()
       }
     },
-    gong() {
-      sound.play();
-    }
   }
 }
 </script>
