@@ -30,6 +30,7 @@
       <check-box id="showTimer" v-model="settings.show.timer">Timer</check-box>
       <check-box id="showProgress" v-model="settings.show.progress">Progress</check-box>
       <check-box id="showClock" v-model="settings.show.clock">Clock</check-box>
+      <check-box id="showSecondsOnClock" v-model="settings.show.secondsOnClock">Seconds on clock</check-box>
       <p class="text-2xl">Audio</p>
       <check-box id="audioEnabled" v-model="settings.audioEnabled">Enable</check-box>
     </card>

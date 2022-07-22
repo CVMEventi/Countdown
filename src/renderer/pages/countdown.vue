@@ -165,7 +165,11 @@ export default {
   },
   methods: {
     updateTime () {
-      this.currentTime = dayjs().format('HH:mm')
+      if (this.settings.show.secondsOnClock) {
+        this.currentTime = dayjs().format('HH:mm:ss')
+      } else {
+        this.currentTime = dayjs().format('HH:mm')
+      }
     },
   }
 }

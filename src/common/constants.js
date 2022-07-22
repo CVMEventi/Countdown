@@ -28,6 +28,7 @@ const DEFAULT_SHOW_SECTIONS = {
   timer: true,
   progress: true,
   clock: true,
+  secondsOnClock: false,
 };
 
 const DEFAULT_WINDOW_BOUNDS = {
