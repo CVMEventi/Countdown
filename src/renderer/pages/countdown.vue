@@ -64,7 +64,7 @@ import dayjs from 'dayjs'
 import duration from 'dayjs/plugin/duration'
 import Store from "electron-store"
 import { DEFAULT_STORE, DEFAULT_FONT } from "../../common/constants";
-import { ClockIcon } from '@heroicons/vue/solid';
+import { ClockIcon } from '@heroicons/vue/24/solid';
 
 let store = new Store()
 

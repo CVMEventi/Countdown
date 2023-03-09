@@ -1,7 +1,7 @@
 <template>
   <div class="mt-1 flex rounded-md shadow-sm">
     <div class="handle relative inline-flex items-center space-x-2 px-2 py-1 border border-gray-300 text-sm font-medium rounded-l-md text-gray-700 bg-gray-50 cursor-pointer">
-      <view-list-icon class="h-5 w-5 text-gray-400" />
+      <bars3-icon class="h-5 w-5 text-gray-400" />
     </div>
     <div class="-mr-px relative flex items-stretch flex-grow focus-within:z-10">
       <input :value="modelValue"
@@ -18,12 +18,12 @@
 </template>
 
 <script>
-import { ViewListIcon, TrashIcon } from '@heroicons/vue/outline';
+import { Bars3Icon, TrashIcon } from '@heroicons/vue/24/outline';
 
 export default {
   name: "EditPreset",
   components: {
-    ViewListIcon,
+    Bars3Icon,
     TrashIcon,
   },
   emits: [

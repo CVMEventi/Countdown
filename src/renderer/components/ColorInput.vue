@@ -8,18 +8,18 @@
       @input="$emit('update:modelValue', $event.target.value)"
     >
     <button class="ml-2" v-if="modelValue !== defaultValue" @click="$emit('update:modelValue', defaultValue)">
-      <refresh-icon class="w-5 h-5 inline-flex"></refresh-icon>
+      <arrow-path-icon class="w-5 h-5 inline-flex"></arrow-path-icon>
     </button>
   </div>
 </template>
 
 <script>
-import { RefreshIcon } from '@heroicons/vue/outline';
+import { ArrowPathIcon } from '@heroicons/vue/24/outline';
 
 export default {
   name: 'ColorInput',
   components: {
-    RefreshIcon,
+    ArrowPathIcon,
   },
   props: {
     modelValue: {

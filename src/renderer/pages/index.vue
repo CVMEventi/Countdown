@@ -114,7 +114,7 @@ import TabButton from '../components/TabButton'
 import SettingsTab from '../components/SettingsTab'
 import WindowsTab from "../components/WindowsTab";
 import Jog from "../components/Jog";
-import { PlusIcon, MinusIcon } from '@heroicons/vue/outline';
+import { PlusIcon, MinusIcon } from '@heroicons/vue/24/outline';
 import Navigation from "../components/Navigation";
 import { shell } from "electron";
 import dayjs from 'dayjs'
