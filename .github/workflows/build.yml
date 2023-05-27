@@ -29,10 +29,21 @@ jobs:
         run: npm run make
 
       - uses: actions/upload-artifact@v3
+        if: ${{ matrix.os == 'macOS' }}
         with:
-          name: builds
+          name: macos-build
+          path: |
+            out/make/zip
+      - uses: actions/upload-artifact@v3
+        if: ${{ matrix.os == 'Windows' }}
+        with:
+          name: windows-build
+          path: |
+            out/make/squirrel.windows
+      - uses: actions/upload-artifact@v3
+        if: ${{ matrix.os == 'Linux' }}
+        with:
+          name: linux-build
           path: |
             out/make/deb
             out/make/rpm
-            out/make/zip
-            out/make/squirrel.windows
