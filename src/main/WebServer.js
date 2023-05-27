@@ -143,7 +143,7 @@ export default class WebServer {
 
   async start () {
     let promise = new Promise((resolve, reject) => {
-      this.fastifyServer.listen(this.port, '0.0.0.0', err => {
+      this.fastifyServer.listen({ port: this.port, host: '0.0.0.0' }, err => {
         if (err) {
           this.isRunning = false
           this.lastError = err.code
