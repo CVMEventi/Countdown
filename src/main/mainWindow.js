@@ -2,10 +2,10 @@ import BrowserWinHandler from './Utilities/BrowserWinHandler'
 import { isDev } from './Utilities/dev'
 
 export default function createMainWindow (options = {
-  height: 580,
+  height: 590,
   width: 920,
   minWidth: 920,
-  minHeight: 580,
+  minHeight: 590,
   title: 'Countdown Settings'
 }) {
   const winHandler = new BrowserWinHandler(options)
