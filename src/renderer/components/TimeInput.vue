@@ -1,5 +1,5 @@
 <template>
-  <div class="bg-white inline-flex border rounded justify-center" :class="classes">
+  <div class="inline-flex border rounded justify-center" :class="classes">
     <input
       :value="formattedHours"
       @input="updateTime('hours', $event.target.value)"
@@ -81,6 +81,7 @@ export default {
   computed: {
     classes () {
       return {
+        'bg-white': !this.disabled && this.color === 'white',
         'bg-gray-100': this.disabled && this.color === 'white',
         'bg-emerald-100': this.color === 'green',
         'bg-red-100': this.color === 'red',
