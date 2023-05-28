@@ -1,11 +1,11 @@
 <template>
   <card class="flex flex-1 gap-2 min-h-0 text-white">
     <card class="inline-block border flex flex-col p-0">
-      <p class="text-2xl p-3 pb-2">Presets (m)</p>
+      <p class="text-2xl">Presets (m)</p>
       <draggable item-key="index" v-model="settings.presets" handle=".handle"
                  class="flex flex-col gap-2 overflow-y-scroll items-center pb-1">
         <template #item="{element, index}">
-          <div :key="index" class="inline-block w-[140px] px-2">
+          <div :key="index" class="inline-block w-[140px]">
             <edit-preset v-model="settings.presets[index]" @delete="deletePreset(index)"></edit-preset>
           </div>
         </template>
