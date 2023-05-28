@@ -38,6 +38,9 @@ export default {
   methods: {
     input(event) {
       let value = parseFloat(event.target.value)
+      if (!value) {
+        value = 0;
+      }
       if (value < 0) {
         value = 0;
       }
