@@ -28,9 +28,7 @@ export default class WebServer {
   }
 
   reset() {
-    this.fastifyServer = new Fastify({
-      logger: true,
-    })
+    this.fastifyServer = new Fastify();
     this.fastifyServer.register(FastifyWebSocket);
 
     this.setupRoutes()
