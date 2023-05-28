@@ -131,7 +131,7 @@ export default class WebServer {
           return false
         case 'start':
           let store = new Store(DEFAULT_STORE);
-          this.port = store.get('settings.webServerPort') === null
+          this.port = store.get('settings.webServerPort') == null
             ? 6565
             : store.get('settings.webServerPort')
           return await this.start()

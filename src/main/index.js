@@ -3,7 +3,7 @@ import {app, BrowserWindow, ipcMain, screen} from "electron";
 import addDefaultEvents from "./Utilities/addDefaultEvents";
 import { isDev, enableDevMode } from "./Utilities/dev";
 import Store from "electron-store";
-import { DEFAULT_STORE } from '../common/constants'
+import {DEFAULT_STORE, DEFAULT_WEBSERVER_ENABLED, DEFAULT_WEBSERVER_PORT} from '../common/constants'
 import { sleep } from "./Utilities/utilities";
 import addIpcHandles from "./Utilities/addIpcHandles"
 import createCountdownWindow from "./countdownWindow";
@@ -109,8 +109,8 @@ ipcMain.on('window-updated', async (event, arg) => {
   await setCountdownWindowPosition(countdownWindowHandler.browserWindow)
 })
 
-const webServerEnabled = store.get('settings.webServerEnabled', false)
-const port = store.get('settings.webServerPort') === null ? 6565 : store.get('settings.webServerPort')
+const webServerEnabled = store.get('settings.webServerEnabled', DEFAULT_WEBSERVER_ENABLED)
+const port = store.get('settings.webServerPort') == null ? DEFAULT_WEBSERVER_PORT : store.get('settings.webServerPort')
 let webServer = null
 
 mainWindowHandler.onCreated((browserWindow) => {
