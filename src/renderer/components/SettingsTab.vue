@@ -1,5 +1,5 @@
 <template>
-  <card class="flex flex-1 gap-2 min-h-0 text-white">
+  <div class="flex flex-1 gap-2 p-1 min-h-0 text-white">
     <card class="inline-block border flex flex-col p-0">
       <p class="text-2xl">Presets (m)</p>
       <draggable item-key="index" v-model="settings.presets" handle=".handle"
@@ -56,7 +56,7 @@
         </select>
       </div>
     </card>
-  </card>
+  </div>
 </template>
 
 <script>

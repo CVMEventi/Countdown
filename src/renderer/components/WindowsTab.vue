@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col flex-1 gap-2 min-h-0 text-white">
+  <div class="flex flex-col flex-1 gap-2 min-h-0 text-white p-1">
     <screens-drag style="max-height: 50%" :screens="screens" v-model:windows="windows"></screens-drag>
     <card class="inline-block flex flex-col">
       <div class="flex flex-col gap-2">

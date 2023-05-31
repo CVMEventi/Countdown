@@ -17,7 +17,7 @@
         </button>
       </card>
     </div>
-    <div v-if="tab === 'main'" class="countdown-tab">
+    <div v-if="tab === 'main'" class="countdown-tab p-1">
       <div class="flex gap-2">
         <card class="clock-setup justify-center">
           <div class="uppercase text-white">Set</div>
@@ -409,7 +409,6 @@ export default {
 
 .countdown-tab {
   @apply flex flex-col gap-2;
-  padding: 0 10px 10px 10px;
 }
 
 .clock-setup {

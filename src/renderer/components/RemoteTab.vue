@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-1 gap-2 min-h-0 text-white">
+  <div class="flex flex-1 gap-2 p-1 min-h-0 text-white">
     <card class="inline-block flex flex-col w-[300px]">
       <p class="text-2xl pb-2">HTTP Server</p>
       <check-box id="httpServerEnabled" v-model="httpServerEnabled">Enable</check-box>
