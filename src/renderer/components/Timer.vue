@@ -3,24 +3,29 @@
 </template>
 
 <script>
+import AdjustingInterval from "../AdjustingInterval";
+
 export default {
   name: 'Timer',
   data () {
     return {
-      timerId: null,
+      adjustingTimer: null,
       secondsSet: 0,
       seconds: 0,
       stopsAtZero: false
     }
   },
+  beforeMount() {
+    this.adjustingTimer = new AdjustingInterval(this.timerTick, 1000);
+  },
   computed: {
     isRunning () {
-      return this.timerId !== null
+      return this.adjustingTimer.isRunning();
     }
   },
   methods: {
     start (seconds, stopsAtZero) {
-      if (this.timerId) {
+      if (this.isRunning) {
         this.stop()
       }
 
@@ -33,19 +38,18 @@ export default {
       this.resume()
     },
     resume () {
-      if (this.timerId) return
-      this.timerId = setInterval(this.timerTick, 1000)
+      if (this.isRunning) return
+      this.adjustingTimer.start();
       this.$emit('timer-status-change', 'started')
     },
     stop () {
-      if (this.timerId) {
-        clearInterval(this.timerId)
-        this.timerId = null
+      if (this.isRunning) {
+        this.adjustingTimer.stop();
         this.$emit('timer-status-change', 'stopped')
       }
     },
     toggle () {
-      if (this.timerId) {
+      if (this.isRunning) {
         this.stop()
       } else {
         this.resume()
