@@ -80,32 +80,43 @@ module.exports = {
     prePackage: async () => {
       fs.rmSync('node_modules/grandiose/build/node_gyp_bins', {recursive: true, force: true});
     },
-    postMake: async (forgeConfig, options) => {
+    postMake: async (forgeConfig, results) => {
       if (process.env.CI) {
         const outputFolder = "artifacts";
-        for (let i = 0; i < options.length; i++) {
-          if (!fs.existsSync(outputFolder)) {
-            fs.mkdirSync(outputFolder);
-          }
-          const packageJson = require('./package.json');
-          const version = packageJson.version;
+        if (!fs.existsSync(outputFolder)) {
+          fs.mkdirSync(outputFolder);
+        }
 
-          let currentArch = options[i].arch;
+        const packageJson = require('./package.json');
+        const version = packageJson.version;
 
-          if (options[i]["arch"] === "ia32") {
+        return results.map((result) => {
+          let currentArch = result.arch;
+          if (result.arch === "ia32") {
             currentArch = "x86";
           }
 
-          for (let artifact = 0; artifact < options[i]["artifacts"].length; artifact++) {
-            if (options[i]["artifacts"][artifact].includes("deb")) fs.rename(options[i]["artifacts"][artifact], path.join(outputFolder, `${appName}-Linux-${currentArch}-${version}.deb`), function(err) {});
-            else if (options[i]["artifacts"][artifact].includes("rpm")) fs.rename(options[i]["artifacts"][artifact], path.join(outputFolder, `${appName}-Linux-${currentArch}-${version}.rpm`), function(err) {});
-            else if (options[i]["artifacts"][artifact].includes("dmg")) fs.rename(options[i]["artifacts"][artifact], path.join(outputFolder, `${appName}-MacOS-${currentArch}-${version}.dmg`), function(err) {});
-            else if (options[i]["artifacts"][artifact].includes("zip")) fs.rename(options[i]["artifacts"][artifact], path.join(outputFolder, `${appName}-MacOS-${currentArch}-${version}.zip`), function(err) {});
-            else if (options[i]["artifacts"][artifact].includes("msi")) fs.rename(options[i]["artifacts"][artifact], path.join(outputFolder, `${appName}-Windows-${currentArch}-${version}.msi`), function(err) {});
-            else if (options[i]["artifacts"][artifact].includes("exe")) fs.rename(options[i]["artifacts"][artifact], path.join(outputFolder, `${appName}-Windows-${currentArch}-${version}.exe`), function(err) {});
-            else if (options[i]["artifacts"][artifact].includes("nupkg")) fs.rename(options[i]["artifacts"][artifact], path.join(outputFolder, `${appName}-Windows-${currentArch}-${version}.nupkg`), function(err) {});
-          }
-        }
+          result.artifacts = result.artifacts.map((artifact) => {
+            let os = 'Unknown';
+            if (artifact.includes('deb')
+              || artifact.includes('rpm')) {
+              os = 'Linux';
+            } else if (artifact.includes("dmg")
+              || artifact.includes("zip")) {
+              os = 'macOS';
+            } else if (artifact.includes("msi")
+              || artifact.includes("exe")
+              || artifact.includes("nupkg")) {
+              os = 'Windows';
+            }
+            const extension = path.extname(artifact)
+            const newName = `${appName}-${os}-${currentArch}-${version}${extension}`;
+            fs.renameSync(artifact, path.join(outputFolder, newName));
+            return newName;
+          })
+
+          return result;
+        })
       }
     },
   }
