@@ -26,27 +26,12 @@ jobs:
         run: npm install
 
       - name: Build
-        run: npm run make
-
-      - name: Upload macOS artifacts
-        uses: actions/upload-artifact@v3
-        if: ${{ runner.os == 'macOS' }}
-        with:
-          name: macos-build
-          path: |
-            out/make/zip
-      - name: Upload Windows artifacts
-        uses: actions/upload-artifact@v3
-        if: ${{ runner.os == 'Windows' }}
-        with:
-          name: windows-build
-          path: |
-            out/make/squirrel.windows
-      - name: Upload Linux artifacts
+        run: |
+          npm run make
+          npm run make --arch arm64
+      - name: Upload artifacts
         uses: actions/upload-artifact@v3
         if: ${{ runner.os == 'Linux' }}
         with:
-          name: linux-build
           path: |
-            out/make/deb
-            out/make/rpm
+            artifacts

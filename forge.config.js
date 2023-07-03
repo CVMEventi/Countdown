@@ -1,12 +1,19 @@
+const fs = require('fs');
+const path = require('path');
+const packageJson = require("./package.json");
+
+const appName = "Countdown";
+
 module.exports = {
   packagerConfig: {
+    asar: true,
     icon: "icons/icon.icns",
     win32metadata: {
       "CompanyName": "CVM Eventi",
       "ProductName": "Countdown"
     },
     appCategoryType: "public.app-category.utilities",
-    name: "Countdown",
+    name: appName,
     executableName: "countdown"
   },
   rebuildConfig: {},"makers": [
@@ -29,9 +36,17 @@ module.exports = {
     {
       name: "@electron-forge/maker-rpm",
       config: {}
+    },
+    {
+      name: "@electron-forge/maker-dmg",
+      config: {}
     }
   ],
   plugins: [
+    {
+      name: "@electron-forge/plugin-auto-unpack-natives",
+      config: {}
+    },
     {
       name: "@electron-forge/plugin-webpack",
       config: {
