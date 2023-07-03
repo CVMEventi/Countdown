@@ -31,7 +31,6 @@ jobs:
           npm run make --arch arm64
       - name: Upload artifacts
         uses: actions/upload-artifact@v3
-        if: ${{ runner.os == 'Linux' }}
         with:
           path: |
             artifacts
