@@ -82,7 +82,7 @@ module.exports = {
     },
     postMake: async (forgeConfig, options) => {
       if (process.env.CI) {
-        const outputFolder = "./artifacts";
+        const outputFolder = "artifacts";
         for (let i = 0; i < options.length; i++) {
           if (!fs.existsSync(outputFolder)) {
             fs.mkdirSync(outputFolder);
@@ -102,6 +102,8 @@ module.exports = {
             else if (options[i]["artifacts"][artifact].includes("dmg")) fs.rename(options[i]["artifacts"][artifact], path.join(outputFolder, `${appName}-MacOS-${currentArch}-${version}.dmg`), function(err) {});
             else if (options[i]["artifacts"][artifact].includes("zip")) fs.rename(options[i]["artifacts"][artifact], path.join(outputFolder, `${appName}-MacOS-${currentArch}-${version}.zip`), function(err) {});
             else if (options[i]["artifacts"][artifact].includes("msi")) fs.rename(options[i]["artifacts"][artifact], path.join(outputFolder, `${appName}-Windows-${currentArch}-${version}.msi`), function(err) {});
+            else if (options[i]["artifacts"][artifact].includes("exe")) fs.rename(options[i]["artifacts"][artifact], path.join(outputFolder, `${appName}-Windows-${currentArch}-${version}.exe`), function(err) {});
+            else if (options[i]["artifacts"][artifact].includes("nupkg")) fs.rename(options[i]["artifacts"][artifact], path.join(outputFolder, `${appName}-Windows-${currentArch}-${version}.nupkg`), function(err) {});
           }
         }
       }
