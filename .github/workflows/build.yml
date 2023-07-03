@@ -29,8 +29,25 @@ jobs:
         run: |
           npm run make
           npm run make --arch arm64
-      - name: Upload artifacts
+
+      - name: Upload macOS artifacts
         uses: actions/upload-artifact@v3
+        if: ${{ runner.os == 'macOS' }}
         with:
+          name: macos-build
           path: |
-            artifacts
+            artifacts/*macOS*
+      - name: Upload Windows artifacts
+        uses: actions/upload-artifact@v3
+        if: ${{ runner.os == 'Windows' }}
+        with:
+          name: windows-build
+          path: |
+            artifacts/*Windows*
+      - name: Upload Linux artifacts
+        uses: actions/upload-artifact@v3
+        if: ${{ runner.os == 'Linux' }}
+        with:
+          name: linux-build
+          path: |
+            artifacts/*Linux*
