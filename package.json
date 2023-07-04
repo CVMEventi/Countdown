@@ -64,7 +64,7 @@
     "electron-squirrel-startup": "^1.0.0",
     "electron-store": "^8.0.1",
     "fastify": "^4.0.3",
-    "grandiose": "github:CVMEventi/grandiose#09107e5",
+    "grandiose": "github:CVMEventi/grandiose#5db6bca",
     "howler": "^2.2.3",
     "v8-compile-cache": "^2.3.0",
     "vue": "^3.2.31",
