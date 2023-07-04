@@ -75,7 +75,7 @@ const config: ForgeConfig = {
     })
   ],
   hooks: {
-    packageAfterPrune: async (config, buildPath, platform) => {
+    packageAfterPrune: async (config, buildPath, electronVersion, platform) => {
       if (platform !== 'win32') {
         const binsPath = 'node_modules/grandiose/build/node_gyp_bins/python3'
         fs.unlinkSync(path.join(buildPath, binsPath));
