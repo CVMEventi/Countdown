@@ -47,7 +47,7 @@
 
 <script>
 import ScreensDrag from "./ScreensDrag";
-import {DEFAULT_WINDOW_BOUNDS} from "../../common/constants";
+import {DEFAULT_WINDOW_BOUNDS} from "../../common/config";
 import Store from "electron-store";
 import { debounce } from "debounce";
 import {ipcRenderer} from "electron";

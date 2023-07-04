@@ -1,16 +1,24 @@
 /* eslint-disable */
 import { EventEmitter } from 'events'
 import { BrowserWindow, app } from 'electron'
+import BrowserWindowConstructorOptions = Electron.BrowserWindowConstructorOptions;
 const DEV_SERVER_URL = process.env.DEV_SERVER_URL
 const isProduction = process.env.NODE_ENV === 'production'
 const isDev = process.env.NODE_ENV === 'development'
 
+declare const MAIN_WINDOW_WEBPACK_ENTRY: string;
+
 export default class BrowserWinHandler {
+  allowRecreate: boolean
+  _eventEmitter: EventEmitter
+  options: BrowserWindowConstructorOptions
+  browserWindow: BrowserWindow
+
   /**
    * @param [options] {object} - browser window options
    * @param [allowRecreate] {boolean}
    */
-  constructor (options, allowRecreate = true) {
+  constructor (options: BrowserWindowConstructorOptions, allowRecreate = true) {
     this._eventEmitter = new EventEmitter()
     this.allowRecreate = allowRecreate
     this.options = options
@@ -65,14 +73,14 @@ export default class BrowserWinHandler {
    *
    * @param callback {onReadyCallback}
    */
-  onCreated (callback) {
+  onCreated (callback: (browserWindow: BrowserWindow) => void) {
     if (this.browserWindow !== null) return callback(this.browserWindow);
     this._eventEmitter.once('created', () => {
       callback(this.browserWindow)
     })
   }
 
-  async loadPage(pagePath) {
+  async loadPage(pagePath: string) {
     if (!this.browserWindow) return Promise.reject(new Error('The page could not be loaded before win \'created\' event'))
     const serverUrl = MAIN_WINDOW_WEBPACK_ENTRY;
     const fullPath = serverUrl + '#' + pagePath;

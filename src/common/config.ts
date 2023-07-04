@@ -10,6 +10,9 @@ const DEFAULT_PRESETS = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60];
 const DEFAULT_WEBSERVER_ENABLED = true;
 const DEFAULT_WEBSERVER_PORT = 6565;
 
+const DEFAULT_NDI_ENABLED = false;
+const DEFAULT_NDI_ALPHA = false;
+
 const DEFAULT_STOP_TIMER_AT_ZERO = false;
 const DEFAULT_SHOW_HOURS = false;
 const DEFAULT_PULSE_AT_ZERO = false;
@@ -24,14 +27,14 @@ const DEFAULT_FONT = 'digital-7';
 
 const DEFAULT_AUDIO_ENABLED = false;
 
-const DEFAULT_SHOW_SECTIONS = {
+const DEFAULT_SHOW_SECTIONS: ShowSections = {
   timer: true,
   progress: true,
   clock: true,
   secondsOnClock: false,
 };
 
-const DEFAULT_WINDOW_BOUNDS = {
+const DEFAULT_WINDOW_BOUNDS: WindowBounds = {
   fullscreenOn: null,
   x: 100,
   y: 100,
@@ -39,7 +42,7 @@ const DEFAULT_WINDOW_BOUNDS = {
   height: 720
 }
 
-const DEFAULT_STORE = {
+const DEFAULT_STORE: CountdownConfiguration = {
   defaults: {
     settings: {
       backgroundColor: DEFAULT_BACKGROUND_COLOR,
@@ -55,6 +58,8 @@ const DEFAULT_STORE = {
       pulseAtZero: DEFAULT_PULSE_AT_ZERO,
       webServerEnabled: DEFAULT_WEBSERVER_ENABLED,
       webServerPort: DEFAULT_WEBSERVER_PORT,
+      ndiEnabled: DEFAULT_NDI_ENABLED,
+      ndiAlpha: DEFAULT_NDI_ALPHA,
       show: DEFAULT_SHOW_SECTIONS,
       font: DEFAULT_FONT,
       timerAlwaysOnTop: DEFAULT_TIMER_ALWAYS_ON_TOP,
@@ -78,6 +83,8 @@ export {
   DEFAULT_CLOCK_TEXT_COLOR,
   DEFAULT_WEBSERVER_ENABLED,
   DEFAULT_WEBSERVER_PORT,
+  DEFAULT_NDI_ENABLED,
+  DEFAULT_NDI_ALPHA,
   DEFAULT_PRESETS,
   DEFAULT_STOP_TIMER_AT_ZERO,
   DEFAULT_PULSE_AT_ZERO,
@@ -92,4 +99,50 @@ export {
   DEFAULT_YELLOW_AT_OPTION,
   DEFAULT_YELLOW_AT_MINUTES,
   DEFAULT_AUDIO_ENABLED,
+};
+
+export interface ShowSections {
+  timer: boolean,
+  progress: boolean,
+  clock: boolean,
+  secondsOnClock: boolean,
+}
+
+export interface WindowBounds {
+  fullscreenOn: number,
+  x: number,
+  y: number,
+  width: number,
+  height: number
+}
+
+export interface CountdownConfiguration {
+  defaults: {
+    settings: {
+      backgroundColor: string
+      backgroundColorOpacity: string,
+      textColor: string,
+      timerFinishedTextColor: string,
+      clockColor: string,
+      clockTextColor: string,
+      presets: number[],
+      stopTimerAtZero: boolean,
+      blackAtReset: boolean,
+      showHours: boolean,
+      pulseAtZero: boolean,
+      webServerEnabled: boolean,
+      webServerPort: number,
+      ndiEnabled: boolean,
+      ndiAlpha: boolean,
+      show: ShowSections,
+      font: string,
+      timerAlwaysOnTop: boolean,
+      setWindowAlwaysOnTop: boolean,
+      yellowAtOption: string,
+      yellowAtMinutes: number,
+      yellowAtPercent: number,
+      audioEnabled: boolean,
+    },
+    window: WindowBounds,
+  }
 }

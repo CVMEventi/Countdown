@@ -24,6 +24,11 @@
         {{ !this.isLoading ? httpToggleText : '' }}
       </s-button>
     </card>
+    <card class="inline-block flex flex-col w-[300px]">
+      <p class="text-2xl pb-2">NDI (Beta)</p>
+      <check-box id="ndiEnabled" v-model="ndiEnabled">Enable</check-box>
+      <check-box id="ndiAlpha" v-model="ndiAlpha">Alpha</check-box>
+    </card>
   </div>
 </template>
 
@@ -33,7 +38,12 @@ import CheckBox from "./CheckBox";
 import { ipcRenderer } from "electron";
 import SButton from "./SButton";
 import Store from 'electron-store';
-import { DEFAULT_WEBSERVER_ENABLED, DEFAULT_WEBSERVER_PORT } from "../../common/constants";
+import {
+  DEFAULT_NDI_ALPHA,
+  DEFAULT_NDI_ENABLED,
+  DEFAULT_WEBSERVER_ENABLED,
+  DEFAULT_WEBSERVER_PORT
+} from "../../common/config";
 import ScreensDrag from "./ScreensDrag";
 
 const store = new Store();
@@ -50,6 +60,8 @@ export default {
     return {
       httpServerEnabled: store.get('settings.webServerEnabled', DEFAULT_WEBSERVER_ENABLED),
       httpServerPort: store.get('settings.webServerPort', DEFAULT_WEBSERVER_PORT),
+      ndiEnabled: store.get('settings.ndiEnabled', DEFAULT_NDI_ENABLED),
+      ndiAlpha: store.get('settings.ndiAlpha', DEFAULT_NDI_ALPHA),
       currentPort: '',
       isRunning: false,
       lastError: {
@@ -75,8 +87,10 @@ export default {
       this.currentPort = port;
     },
     async save() {
-      store.set('settings.webServerEnabled', this.httpServerEnabled)
-      store.set('settings.webServerPort', parseInt(this.httpServerPort))
+      store.set('settings.webServerEnabled', this.httpServerEnabled);
+      store.set('settings.webServerPort', parseInt(this.httpServerPort));
+      store.set('settings.ndiEnabled', this.ndiEnabled);
+      store.set('settings.ndiAlpha', this.ndiAlpha);
 
       if (this.httpServerEnabled
         && parseInt(this.httpServerPort) !== parseInt(this.currentPort)

@@ -86,9 +86,9 @@ import {
   DEFAULT_YELLOW_AT_OPTION,
   DEFAULT_YELLOW_AT_MINUTES,
   DEFAULT_YELLOW_AT_PERCENT,
-  DEFAULT_AUDIO_ENABLED,
+  DEFAULT_AUDIO_ENABLED, DEFAULT_STORE,
 
-} from "../../common/constants";
+} from "../../common/config";
 import CheckBox from "./CheckBox";
 import EditPreset from "./EditPreset";
 import {debounce} from "debounce";
@@ -178,7 +178,10 @@ export default {
       }
     },
     save: debounce((self) => {
+      let oldSettings = store.get('settings', DEFAULT_STORE.defaults.settings);
+
       let newSettings = {
+        ...oldSettings,
         presets: self.settings.presets,
         blackAtReset: self.settings.blackAtReset,
         stopTimerAtZero: self.settings.stopTimerAtZero,

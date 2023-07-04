@@ -87,3 +87,7 @@ typings/
 
 # Electron-Forge
 out/
+
+src/version.ts
+build
+.idea

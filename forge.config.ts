@@ -1,10 +1,25 @@
-const fs = require('fs');
-const path = require('path');
+import type { ForgeConfig } from '@electron-forge/shared-types';
+import { MakerSquirrel } from '@electron-forge/maker-squirrel';
+import { MakerZIP } from '@electron-forge/maker-zip';
+import { MakerDeb } from '@electron-forge/maker-deb';
+import { MakerRpm } from '@electron-forge/maker-rpm';
+import { AutoUnpackNativesPlugin } from '@electron-forge/plugin-auto-unpack-natives';
+import { WebpackPlugin } from '@electron-forge/plugin-webpack';
+
+import { mainConfig } from './webpack.main.config';
+import { rendererConfig } from './webpack.renderer.config';
+
+import * as fs from "fs";
+import * as path from "path";
+import { APP_VERSION } from "./src/version";
+import MakerDMG from "@electron-forge/maker-dmg";
+import PublisherGithub from "@electron-forge/publisher-github";
+
 const packageJson = require("./package.json");
 
 const appName = "Countdown";
 
-module.exports = {
+const config: ForgeConfig = {
   packagerConfig: {
     asar: true,
     icon: "icons/icon.icns",
@@ -16,65 +31,47 @@ module.exports = {
     name: appName,
     executableName: "countdown"
   },
-  rebuildConfig: {},"makers": [
-    {
-      name: "@electron-forge/maker-squirrel",
-      config: {
-        name: "countdown"
-      }
-    },
-    {
-      name: "@electron-forge/maker-zip",
-      platforms: [
-        "darwin"
-      ]
-    },
-    {
-      name: "@electron-forge/maker-deb",
-      config: {}
-    },
-    {
-      name: "@electron-forge/maker-rpm",
-      config: {}
-    },
-    {
-      name: "@electron-forge/maker-dmg",
-      config: {}
-    }
+  rebuildConfig: {},
+  makers: [
+    new MakerSquirrel({
+      name: "countdown",
+    }),
+    new MakerZIP({}, ['darwin']),
+    new MakerRpm({}),
+    new MakerDeb({}),
+    new MakerDMG(),
   ],
   plugins: [
+    new AutoUnpackNativesPlugin({}),
+    new WebpackPlugin({
+      mainConfig,
+      renderer: {
+        config: rendererConfig,
+        entryPoints: [
+          {
+            html: './src/renderer/index.html',
+            js: './src/renderer/index.js',
+            name: 'main_window',
+          },
+        ],
+      },
+      loggerPort: 9050
+    }),
     {
-      name: "@electron-forge/plugin-auto-unpack-natives",
-      config: {}
-    },
-    {
-      name: "@electron-forge/plugin-webpack",
+      name: "@timfish/forge-externals-plugin",
       config: {
-        mainConfig: "./webpack.main.config.js",
-        renderer: {
-          config: "./webpack.renderer.config.js",
-          entryPoints: [
-            {
-              html: "./src/renderer/index.html",
-              js: "./src/renderer/index.js",
-              name: "main_window"
-            }
-          ]
-        },
-        loggerPort: 9050
+        "externals": ["grandiose"],
+        "includeDeps": true,
       }
     }
   ],
   publishers: [
-    {
-      name: "@electron-forge/publisher-github",
-      config: {
-        repository: {
-          owner: "CVMEventi",
-          name: "Countdown"
-        }
+    new PublisherGithub({
+      repository: {
+        owner: "CVMEventi",
+        name: "Countdown"
       }
-    }
+    })
   ],
   hooks: {
     prePackage: async () => {
@@ -87,8 +84,7 @@ module.exports = {
           fs.mkdirSync(outputFolder);
         }
 
-        const packageJson = require('./package.json');
-        const version = packageJson.version;
+        const version = APP_VERSION;
 
         return results.map((result) => {
           let currentArch = result.arch;
@@ -121,3 +117,5 @@ module.exports = {
     },
   }
 };
+
+export default config;

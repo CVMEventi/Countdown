@@ -1,7 +1,8 @@
 import BrowserWinHandler from './Utilities/BrowserWinHandler'
 import { isDev } from './Utilities/dev'
+import BrowserWindowConstructorOptions = Electron.BrowserWindowConstructorOptions;
 
-export default function createMainWindow (options = {
+export default function createMainWindow (options: BrowserWindowConstructorOptions = {
   height: 590,
   width: 920,
   minWidth: 920,
@@ -10,8 +11,8 @@ export default function createMainWindow (options = {
 }) {
   const winHandler = new BrowserWinHandler(options)
 
-  winHandler.onCreated(_browserWindow => {
-    winHandler.loadPage('/control/main')
+  winHandler.onCreated(async (_browserWindow) => {
+    await winHandler.loadPage('/control/main')
     // Or load custom url
     // _browserWindow.loadURL('https://google.com')
     if (isDev) {

@@ -1,8 +1,9 @@
-const rules = require('./webpack.rules');
+import { rules } from './webpack.rules';
 const { VueLoaderPlugin } = require('vue-loader')
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const CssMinimizerPlugin = require("css-minimizer-webpack-plugin");
 const isProd = process.env.NODE_ENV === 'production';
+import {Configuration} from 'webpack';
 
 rules.push({
   test: /\.css$/i,
@@ -23,7 +24,7 @@ rules.push({
   type: 'asset/resource',
 })
 
-module.exports = {
+export const rendererConfig: Configuration = {
   target: 'electron-renderer',
   // Put your normal webpack config below here
   module: {
@@ -43,6 +44,7 @@ module.exports = {
     alias: {
       vue: 'vue/dist/vue.esm-bundler.js'
     },
-    extensions: ['.js', '.vue'],
+    extensions: ['.js', '.ts', '.vue', '.css'],
   },
 };
+

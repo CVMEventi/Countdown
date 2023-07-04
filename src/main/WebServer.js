@@ -5,7 +5,7 @@ import FastifyWebSocket from '@fastify/websocket';
 import {ipcMain} from "electron";
 import http from "http";
 import Store from "electron-store";
-import {DEFAULT_STORE} from "../common/constants";
+import {DEFAULT_STORE} from "../common/config";
 
 export default class WebServer {
   /**
