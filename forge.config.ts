@@ -29,7 +29,8 @@ const config: ForgeConfig = {
     },
     appCategoryType: "public.app-category.utilities",
     name: appName,
-    executableName: "countdown"
+    executableName: "countdown",
+    derefSymlinks: true,
   },
   rebuildConfig: {},
   makers: [
@@ -74,8 +75,11 @@ const config: ForgeConfig = {
     })
   ],
   hooks: {
-    prePackage: async () => {
-      fs.rmSync('node_modules/grandiose/build/node_gyp_bins', {recursive: true, force: true});
+    packageAfterPrune: async (config, buildPath, platform) => {
+      if (platform !== 'win32') {
+        const binsPath = 'node_modules/grandiose/build/node_gyp_bins/python3'
+        fs.unlinkSync(path.join(buildPath, binsPath));
+      }
     },
     postMake: async (forgeConfig, results) => {
       if (process.env.CI) {
