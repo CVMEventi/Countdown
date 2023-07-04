@@ -27,8 +27,7 @@ jobs:
 
       - name: Build
         run: |
-          npm run make
-          npm run make --arch arm64
+          npm run make -- --arch x64,arm64
 
       - name: Upload macOS artifacts
         uses: actions/upload-artifact@v3
