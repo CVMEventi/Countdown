@@ -32,11 +32,11 @@ Countdown stopped
 
 ``` bash
 # install dependencies
-npm install
+yarn
 
 # serve app with hot reload
-npm start
+yarn start
 
 # build electron application for production
-npm run make
+yarn make
 ```
