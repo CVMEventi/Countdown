@@ -122,7 +122,7 @@ import duration from 'dayjs/plugin/duration'
 dayjs.extend(duration)
 import RemoteTab from "../components/RemoteTab";
 import { Howl } from "howler";
-import gong from "../assets/sounds/gong.wav";
+import gong from "../assets/sounds/gong.mp3";
 let sound = new Howl({
   src: [gong],
 })
