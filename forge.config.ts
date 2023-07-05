@@ -83,11 +83,6 @@ const config: ForgeConfig = {
     },
     postMake: async (forgeConfig, results) => {
       if (process.env.CI) {
-        const outputFolder = "artifacts";
-        if (!fs.existsSync(outputFolder)) {
-          fs.mkdirSync(outputFolder);
-        }
-
         const version = APP_VERSION;
 
         return results.map((result) => {
@@ -111,7 +106,8 @@ const config: ForgeConfig = {
             }
             const extension = path.extname(artifact)
             const newName = `${appName}-${os}-${currentArch}-${version}${extension}`;
-            fs.renameSync(artifact, path.join(outputFolder, newName));
+            const outputDir = path.dirname(artifact);
+            fs.renameSync(artifact, path.join(outputDir, newName));
             return newName;
           })
 
