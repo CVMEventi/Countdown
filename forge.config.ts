@@ -22,7 +22,7 @@ const appName = "Countdown";
 const config: ForgeConfig = {
   packagerConfig: {
     asar: {
-      unpack: "node_modules/grandiose/**",
+      unpack: "**/node_modules/grandiose/**/*",
     },
     icon: "icons/icon.icns",
     win32metadata: {
