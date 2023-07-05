@@ -24,10 +24,10 @@ export async function setCountdownWindowPosition(app: CountdownApp) {
   }
 
   browserWindow.setBounds({
-    x: this.store.get('window.x', DEFAULT_WINDOW_BOUNDS.x),
-    y: this.store.get('window.y', DEFAULT_WINDOW_BOUNDS.y),
-    height: this.store.get('window.height', DEFAULT_WINDOW_BOUNDS.height),
-    width: this.store.get('window.width', DEFAULT_WINDOW_BOUNDS.width)
+    x: app.store.get('window.x', DEFAULT_WINDOW_BOUNDS.x),
+    y: app.store.get('window.y', DEFAULT_WINDOW_BOUNDS.y),
+    height: app.store.get('window.height', DEFAULT_WINDOW_BOUNDS.height),
+    width: app.store.get('window.width', DEFAULT_WINDOW_BOUNDS.width)
   })
 }
 
