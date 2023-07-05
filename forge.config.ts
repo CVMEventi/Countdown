@@ -110,7 +110,7 @@ const config: ForgeConfig = {
             const newName = `${appName}-${os}-${currentArch}-${version}${extension}`;
             const outputDir = path.dirname(artifact);
             fs.renameSync(artifact, path.join(outputDir, newName));
-            return newName;
+            return path.join(outputDir, newName);
           })
 
           return result;
