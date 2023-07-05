@@ -121,11 +121,13 @@ import dayjs from 'dayjs'
 import duration from 'dayjs/plugin/duration'
 dayjs.extend(duration)
 import RemoteTab from "../components/RemoteTab";
+/*
 import { Howl } from "howler";
 import gong from "../assets/sounds/gong.mp3";
 let sound = new Howl({
   src: [gong],
 })
+*/
 
 let store = new Store()
 
@@ -305,7 +307,7 @@ export default {
       let state = 'Running';
       if (isExpired) {
         if (this.settings.audioEnabled && !this.audioRun) {
-          sound.play();
+          //sound.play();
           this.audioRun = true;
         }
         state = 'Expired';
