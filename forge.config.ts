@@ -21,7 +21,9 @@ const appName = "Countdown";
 
 const config: ForgeConfig = {
   packagerConfig: {
-    asar: true,
+    asar: {
+      unpack: "node_modules/grandiose/**",
+    },
     icon: "icons/icon.icns",
     win32metadata: {
       "CompanyName": "CVM Eventi",
