@@ -53,11 +53,11 @@ export default function addIpcHandles(app: CountdownApp)
     browserWindow.setAlwaysOnTop(app.store.get('settings.timerAlwaysOnTop', DEFAULT_TIMER_ALWAYS_ON_TOP))
 
     if (app.store.get('settings.ndiEnabled', DEFAULT_NDI_ENABLED)) {
-      app.ndiManager.start();
+      app.ndiServer.start();
     } else {
-      app.ndiManager.stop()
+      app.ndiServer.stop()
     }
-    app.ndiManager.alpha = app.store.get('settings.ndiAlpha', DEFAULT_NDI_ALPHA);
+    app.ndiServer.alpha = app.store.get('settings.ndiAlpha', DEFAULT_NDI_ALPHA);
   })
 
   ipcMain.on('send-to-countdown-window', (event, arg) => {

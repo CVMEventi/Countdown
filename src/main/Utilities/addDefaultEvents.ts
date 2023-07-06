@@ -1,9 +1,9 @@
-import {app, ipcMain, screen} from "electron";
+import {app} from "electron";
+import * as process from "process";
 
 export default function addDefaultEvents() {
   // Handle creating/removing shortcuts on Windows when installing/uninstalling.
   if (require('electron-squirrel-startup')) {
-    // eslint-disable-line global-require
     app.quit();
   }
 

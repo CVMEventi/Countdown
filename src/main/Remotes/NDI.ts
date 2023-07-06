@@ -1,7 +1,7 @@
 import grandiose, {FourCC, FrameType, VideoFrame} from "grandiose";
 import * as process from "process";
 import os from "os";
-import ImageBufferAdjustment from "./Utilities/ImageBufferAdjustment";
+import ImageBufferAdjustment from "../Utilities/ImageBufferAdjustment";
 import NativeImage = Electron.NativeImage;
 
 export default class NDIManager {

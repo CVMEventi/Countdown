@@ -1,4 +1,4 @@
-import NDIManager from "./NDIManager";
+import NDI from "./Remotes/NDI";
 import addDefaultEvents from "./Utilities/addDefaultEvents";
 import addIpcHandles, {setCountdownWindowPosition} from "./Utilities/addIpcHandles";
 import {enableDevMode, isDev} from "./Utilities/dev";
@@ -15,14 +15,15 @@ import {
   DEFAULT_WEBSERVER_PORT
 } from "../common/config";
 import {sleep} from "./Utilities/utilities";
-import WebServer from "./WebServer";
+import HTTP from "./Remotes/HTTP";
 
 export class CountdownApp {
-  ndiManager = new NDIManager("Countdown");
   mainWindowHandler: BrowserWinHandler = null
   countdownWindowHandler: BrowserWinHandler = null;
   store = new Store(DEFAULT_STORE);
-  webServer: WebServer = null;
+
+  ndiServer = new NDI("Countdown");
+  httpServer: HTTP = null;
 
   constructor() {
     addDefaultEvents();
@@ -34,7 +35,7 @@ export class CountdownApp {
 
   async run() {
     if (this.store.get('settings.ndiEnabled', DEFAULT_NDI_ENABLED)) {
-      await this.ndiManager.start();
+      await this.ndiServer.start();
     }
 
     this.mainWindowHandler = createMainWindow();
@@ -80,7 +81,7 @@ export class CountdownApp {
     let webServer = null
 
     this.mainWindowHandler.onCreated((browserWindow) => {
-      webServer = new WebServer(browserWindow)
+      webServer = new HTTP(browserWindow)
       webServer.port = port
 
       if (webServerEnabled) {
@@ -92,7 +93,7 @@ export class CountdownApp {
       try {
         const browserWindow = this.countdownWindowHandler.browserWindow
         const image = await browserWindow.webContents.capturePage()
-        await this.ndiManager.sendFrame(image);
+        await this.ndiServer.sendFrame(image);
       } catch (e) {
         console.log(e);
         return;

@@ -1,34 +1,33 @@
-import express from 'express'
-import expressWs from 'express-ws';
-import Fastify from 'fastify';
+import fastify, {FastifyInstance, RequestGenericInterface} from 'fastify';
 import FastifyWebSocket from '@fastify/websocket';
-import {ipcMain} from "electron";
-import http from "http";
+import {BrowserWindow, ipcMain} from "electron";
 import Store from "electron-store";
-import {DEFAULT_STORE} from "../common/config";
+import {DEFAULT_STORE} from "../../common/config";
 
-export default class WebServer {
-  /**
-   * @type {import(fastify).default}
-   */
-  fastifyServer = null
-  /**
-   * @type {import(electron).BrowserWindow}
-   */
-  mainWindow = null
-  isRunning = false
-  port = null
+interface TimeRequest extends RequestGenericInterface {
+  Params: {
+    hours: string,
+    minutes: string,
+    seconds: string,
+  };
+}
 
-  lastError = null
+export default class HTTP {
+  fastifyServer: FastifyInstance = null
+  mainWindow: BrowserWindow = null
+  isRunning: boolean = false
+  port: number = null
 
-  constructor (mainWindow) {
+  lastError: unknown = null
+
+  constructor (mainWindow: BrowserWindow) {
     this.mainWindow = mainWindow
     this.reset()
     this.setupIpc();
   }
 
   reset() {
-    this.fastifyServer = new Fastify();
+    this.fastifyServer = fastify();
     this.fastifyServer.register(FastifyWebSocket);
 
     this.setupRoutes()
@@ -39,7 +38,7 @@ export default class WebServer {
     this.fastifyServer.get('/', (req, res) => {
       res.send('Countdown')
     })
-    this.fastifyServer.get('/set/:hours/:minutes/:seconds', (req, res) => {
+    this.fastifyServer.get<TimeRequest>('/set/:hours/:minutes/:seconds', (req, res) => {
       this.mainWindow.webContents.send(
         'remote-command',
         'set',
@@ -49,7 +48,7 @@ export default class WebServer {
       )
       res.send(200)
     })
-    this.fastifyServer.get('/start/:hours/:minutes/:seconds', (req, res) => {
+    this.fastifyServer.get<TimeRequest>('/start/:hours/:minutes/:seconds', (req, res) => {
       this.mainWindow.webContents.send(
         'remote-command',
         'start',
@@ -79,7 +78,7 @@ export default class WebServer {
       this.mainWindow.webContents.send('remote-command', 'reset')
       res.send(200)
     })
-    this.fastifyServer.get('/jog-set/:hours/:minutes/:seconds', (req, res) => {
+    this.fastifyServer.get<TimeRequest>('/jog-set/:hours/:minutes/:seconds', (req, res) => {
       this.mainWindow.webContents.send(
         'remote-command',
         'jog-set',
@@ -89,7 +88,7 @@ export default class WebServer {
       )
       res.send(200)
     })
-    this.fastifyServer.get('/jog-current/:hours/:minutes/:seconds', (req, res) => {
+    this.fastifyServer.get<TimeRequest>('/jog-current/:hours/:minutes/:seconds', (req, res) => {
       this.mainWindow.webContents.send(
         'remote-command',
         'jog-current',
@@ -144,7 +143,7 @@ export default class WebServer {
       this.fastifyServer.listen({ port: this.port, host: '0.0.0.0' }, err => {
         if (err) {
           this.isRunning = false
-          this.lastError = err.code
+          this.lastError = err.message
           this.sendIpcStatusUpdate()
           resolve(false)
           return
