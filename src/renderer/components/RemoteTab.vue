@@ -32,7 +32,8 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
+import {defineComponent} from "vue";
 import Card from "./Card";
 import CheckBox from "./CheckBox";
 import { ipcRenderer } from "electron";
@@ -40,15 +41,15 @@ import SButton from "./SButton";
 import Store from 'electron-store';
 import {
   DEFAULT_NDI_ALPHA,
-  DEFAULT_NDI_ENABLED,
+  DEFAULT_NDI_ENABLED, DEFAULT_STORE,
   DEFAULT_WEBSERVER_ENABLED,
   DEFAULT_WEBSERVER_PORT
 } from "../../common/config";
 import ScreensDrag from "./ScreensDrag";
 
-const store = new Store();
+const store = new Store(DEFAULT_STORE);
 
-export default {
+export default defineComponent({
   name: "RemoteTab",
   components: {
     ScreensDrag,
@@ -122,7 +123,7 @@ export default {
       return this.isRunning ? "Stop" : "Start"
     },
   }
-}
+});
 </script>
 
 <style scoped>

@@ -17,10 +17,11 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
+import {defineComponent} from "vue";
 import { Bars3Icon, TrashIcon } from '@heroicons/vue/24/outline';
 
-export default {
+export default defineComponent({
   name: "EditPreset",
   components: {
     Bars3Icon,
@@ -52,7 +53,7 @@ export default {
       this.$emit('update:modelValue', value)
     }
   }
-}
+});
 </script>
 
 <style scoped>

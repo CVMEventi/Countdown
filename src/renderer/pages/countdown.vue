@@ -3,9 +3,9 @@
     :style="{
       backgroundColor: backgroundColor,
     }"
-    v-if="settings.blackAtReset && isReset" class="drag"></div>
+    v-if="settings.blackAtReset && update.isReset" class="drag"></div>
   <div
-    v-if="!settings.blackAtReset || (settings.blackAtReset && !isReset)"
+    v-if="!settings.blackAtReset || (settings.blackAtReset && !update.isReset)"
     :style="{
       backgroundColor: backgroundColor,
       ...cssVars
@@ -19,7 +19,7 @@
         color: timerText
       }"
       :class="{
-        'animate-pulse-fast': !this.isReset && this.isCountingUp && this.settings.pulseAtZero
+        'animate-pulse-fast': !update.isReset && update.isCountingUp && this.settings.pulseAtZero
       }"
     >
       {{ time }}
@@ -31,19 +31,19 @@
       <div
         class="overflow-hidden progress-bar mb-4 text-xs flex rounded"
         :class="{
-          'bg-red-200': isCountingUp && !isReset,
-          'bg-green-200': !isCountingUp && !isReset && !isYellowBar,
-          'bg-yellow-200': isYellowBar,
-          'bg-gray-200': isReset
+          'bg-red-200': update.isCountingUp && !update.isReset,
+          'bg-green-200': !update.isReset && !update.isReset && !this.update.isExpiring,
+          'bg-yellow-200': update.isExpiring,
+          'bg-gray-200': update.isReset
         }"
       >
         <div
           :style="{width: progressBarPercent}"
           class="transition shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center"
           :class="{
-            'bg-red-700': isCountingUp && !isReset,
-            'bg-green-500': !isCountingUp && !isReset && !isYellowBar,
-            'bg-yellow-500': isYellowBar,
+            'bg-red-700': update.isCountingUp && !update.isReset,
+            'bg-green-500': !update.isCountingUp && !update.isReset && !update.isExpiring,
+            'bg-yellow-500': update.isExpiring,
           }"
         />
       </div>
@@ -58,38 +58,48 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
+import {defineComponent} from "vue";
 import { ipcRenderer } from 'electron'
 import dayjs from 'dayjs'
 import duration from 'dayjs/plugin/duration'
 import Store from "electron-store"
 import { DEFAULT_STORE, DEFAULT_FONT } from "../../common/config";
 import { ClockIcon } from '@heroicons/vue/24/solid';
-import {nextTick} from "vue";
+import {TimerEngineUpdate} from "../../common/TimerInterfaces";
 
 let store = new Store()
 
 dayjs.extend(duration)
 
-export default {
+export default defineComponent({
   name: 'countdown',
   components: {
     ClockIcon,
   },
   data () {
+    const update: TimerEngineUpdate = {
+      setSeconds: 0,
+      countSeconds: 0,
+      currentSeconds: 0,
+      extraSeconds: 0,
+      secondsSetOnCurrentTimer: 0,
+      isCountingUp: false,
+      isExpiring: false,
+      isReset: true,
+      isRunning: false,
+    };
+
     return {
       currentTimeTimerId: null,
       currentTime: dayjs().format('HH:mm'),
-      update: {
-        current: 0,
-        of: 0
-      },
+      update,
       settings: store.get('settings', DEFAULT_STORE.defaults.settings)
     }
   },
   computed: {
     time () {
-      const currentTimeInSeconds = dayjs.duration(Math.abs(this.update.current), 'seconds')
+      const currentTimeInSeconds = dayjs.duration(Math.abs(this.update.currentSeconds), 'seconds')
 
       if (this.settings.showHours) {
         return currentTimeInSeconds.format('HH:mm:ss')
@@ -101,36 +111,13 @@ export default {
       }
     },
     progressBarPercent () {
-      if (this.update.of === 0 || this.update.current === 0) return '100%'
-      if (this.isCountingUp) return '100%'
-      const percentage = this.update.current * 100 / this.update.of
+      if (this.update.secondsSetOnCurrentTimer === 0 || this.update.currentSeconds === 0) return '100%'
+      if (this.update.isCountingUp) return '100%'
+      const percentage = this.update.currentSeconds * 100 / this.update.secondsSetOnCurrentTimer
       return `${percentage}%`
     },
-    isReset () {
-      return this.update.of === 0 && this.update.current === 0
-    },
-    isYellowBar() {
-      if (this.isReset || this.isCountingUp) {
-        return false;
-      }
-
-      if (this.settings.yellowAtOption === 'minutes'
-        && this.settings.yellowAtMinutes >= this.update.current / 60) {
-        return true;
-      }
-
-      if (this.settings.yellowAtOption === 'percent'
-        && this.settings.yellowAtPercent >= this.update.of / 100 * this.update.current) {
-        return true;
-      }
-
-      return false;
-    },
-    isCountingUp () {
-      return this.update.current <= 0
-    },
     timerText () {
-      if (this.isCountingUp && !this.isReset) {
+      if (this.update.isCountingUp && !this.update.isReset) {
         return this.settings.timerFinishedTextColor
       } else {
         return this.settings.textColor
@@ -146,8 +133,7 @@ export default {
     }
   },
   mounted () {
-    ipcRenderer.on('command', (event, arg) => {
-      console.log(arg)
+    ipcRenderer.on('update', (event, arg) => {
       this.update = arg
     })
     ipcRenderer.on('settings-updated', (event, arg) => {
@@ -173,7 +159,7 @@ export default {
       }
     },
   },
-}
+})
 </script>
 
 <style scoped>

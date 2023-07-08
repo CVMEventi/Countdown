@@ -16,14 +16,19 @@ import {
 } from "../common/config";
 import {sleep} from "./Utilities/utilities";
 import HTTP from "./Remotes/HTTP";
+import {TimerEngine} from "./TimerEngine";
+import {IpcTimerController} from "./Remotes/IpcTimerController";
+import {TimerEngineUpdate, TimerEngineWebSocketUpdate} from "../common/TimerInterfaces";
 
 export class CountdownApp {
   mainWindowHandler: BrowserWinHandler = null
   countdownWindowHandler: BrowserWinHandler = null;
   store = new Store(DEFAULT_STORE);
+  timerEngine: TimerEngine;
+  ipcTimerController: IpcTimerController;
 
   ndiServer = new NDI("Countdown");
-  httpServer: HTTP = null;
+  webServer: HTTP = null;
 
   constructor() {
     addDefaultEvents();
@@ -31,6 +36,11 @@ export class CountdownApp {
     if (isDev) {
       enableDevMode();
     }
+    this.timerEngine = new TimerEngine(
+      this._timerEngineUpdate.bind(this),
+      this._timerEngineWebSocketUpdate.bind(this)
+    );
+    this.ipcTimerController = new IpcTimerController(this.timerEngine);
   }
 
   async run() {
@@ -78,14 +88,13 @@ export class CountdownApp {
 
     const webServerEnabled = this.store.get('settings.webServerEnabled', DEFAULT_WEBSERVER_ENABLED)
     const port = this.store.get('settings.webServerPort', DEFAULT_WEBSERVER_PORT)
-    let webServer = null
 
     this.mainWindowHandler.onCreated((browserWindow) => {
-      webServer = new HTTP(browserWindow)
-      webServer.port = port
+      this.webServer = new HTTP(this.timerEngine, browserWindow);
+      this.webServer.port = port;
 
       if (webServerEnabled) {
-        webServer.start()
+        this.webServer.start();
       }
     })
 
@@ -99,5 +108,16 @@ export class CountdownApp {
         return;
       }
     }, 100)
+  }
+
+  _timerEngineUpdate(update: TimerEngineUpdate) {
+    const mainBrowserWindow = this.mainWindowHandler.browserWindow;
+    const countdownBrowserWindow = this.countdownWindowHandler.browserWindow;
+    mainBrowserWindow.webContents.send('update', update);
+    countdownBrowserWindow.webContents.send('update', update);
+  }
+
+  _timerEngineWebSocketUpdate(update: TimerEngineWebSocketUpdate) {
+    this.webServer.sendToWebSocket(update);
   }
 }

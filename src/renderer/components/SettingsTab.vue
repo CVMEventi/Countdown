@@ -59,7 +59,8 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
+import {defineComponent} from "vue";
 import Store from 'electron-store'
 import {ipcRenderer} from 'electron'
 import draggable from 'vuedraggable'
@@ -86,16 +87,16 @@ import {
   DEFAULT_YELLOW_AT_OPTION,
   DEFAULT_YELLOW_AT_MINUTES,
   DEFAULT_YELLOW_AT_PERCENT,
-  DEFAULT_AUDIO_ENABLED, DEFAULT_STORE,
+  DEFAULT_AUDIO_ENABLED, DEFAULT_STORE, CountdownConfiguration, CountdownSettings,
 
 } from "../../common/config";
 import CheckBox from "./CheckBox";
 import EditPreset from "./EditPreset";
 import {debounce} from "debounce";
 
-const store = new Store()
+const store = new Store(DEFAULT_STORE);
 
-export default {
+export default defineComponent({
   name: 'SettingsTab',
   components: {
     InputWithButton,
@@ -180,7 +181,7 @@ export default {
     save: debounce((self) => {
       let oldSettings = store.get('settings', DEFAULT_STORE.defaults.settings);
 
-      let newSettings = {
+      let newSettings: CountdownSettings = {
         ...oldSettings,
         presets: self.settings.presets,
         blackAtReset: self.settings.blackAtReset,
@@ -223,7 +224,7 @@ export default {
       ipcRenderer.send('settings-updated')
 
       //this.$router.replace('/control/main')
-    }, 200),
+    }, 200, false),
     addPreset() {
       this.settings.presets.push(0)
     },
@@ -238,7 +239,7 @@ export default {
       ipcRenderer.send('temporary-settings-updated', settings);
     },
   },
-}
+})
 </script>
 
 <style scoped>

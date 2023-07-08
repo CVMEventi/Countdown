@@ -19,8 +19,10 @@
   </a>
 </template>
 
-<script>
-export default {
+<script lang="ts">
+import {defineComponent} from "vue";
+
+export default defineComponent({
   name: 'TabButton',
   props: {
     first: {
@@ -36,7 +38,7 @@ export default {
       default: false
     }
   }
-}
+});
 </script>
 
 <style scoped>

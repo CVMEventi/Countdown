@@ -12,14 +12,16 @@
   </div>
 </template>
 
-<script>
-export default {
+<script lang="ts">
+import {defineComponent} from "vue";
+
+export default defineComponent({
   name: "Jog",
   emits: [
     'up-click',
     'down-click',
   ]
-}
+});
 </script>
 
 <style scoped>

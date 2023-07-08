@@ -13,10 +13,11 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
+import {defineComponent} from "vue";
 import { ArrowPathIcon } from '@heroicons/vue/24/outline';
 
-export default {
+export default defineComponent({
   name: 'ColorInput',
   components: {
     ArrowPathIcon,
@@ -31,7 +32,7 @@ export default {
       default: ''
     }
   }
-}
+});
 </script>
 
 <style scoped>

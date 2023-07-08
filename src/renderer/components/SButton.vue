@@ -37,8 +37,10 @@
   </button>
 </template>
 
-<script>
-export default {
+<script lang="ts">
+import { defineComponent } from "vue";
+
+export default defineComponent({
   name: 'SButton',
   props: {
     type: {
@@ -63,7 +65,7 @@ export default {
       this.$emit('click')
     }
   }
-}
+});
 </script>
 
 <style scoped>

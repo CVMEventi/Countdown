@@ -116,33 +116,37 @@ export interface WindowBounds {
   height: number
 }
 
+export interface CountdownSettings {
+  backgroundColor: string
+  backgroundColorOpacity: string,
+  textColor: string,
+  timerFinishedTextColor: string,
+  clockColor: string,
+  clockTextColor: string,
+  presets: number[],
+  stopTimerAtZero: boolean,
+  blackAtReset: boolean,
+  showHours: boolean,
+  pulseAtZero: boolean,
+  webServerEnabled: boolean,
+  webServerPort: number,
+  ndiEnabled: boolean,
+  ndiAlpha: boolean,
+  show: ShowSections,
+  font: string,
+  timerAlwaysOnTop: boolean,
+  setWindowAlwaysOnTop: boolean,
+  yellowAtOption: string,
+  yellowAtMinutes: number,
+  yellowAtPercent: number,
+  audioEnabled: boolean,
+}
+
+export interface CountdownStore {
+  settings: CountdownSettings,
+  window: WindowBounds,
+}
+
 export interface CountdownConfiguration {
-  defaults: {
-    settings: {
-      backgroundColor: string
-      backgroundColorOpacity: string,
-      textColor: string,
-      timerFinishedTextColor: string,
-      clockColor: string,
-      clockTextColor: string,
-      presets: number[],
-      stopTimerAtZero: boolean,
-      blackAtReset: boolean,
-      showHours: boolean,
-      pulseAtZero: boolean,
-      webServerEnabled: boolean,
-      webServerPort: number,
-      ndiEnabled: boolean,
-      ndiAlpha: boolean,
-      show: ShowSections,
-      font: string,
-      timerAlwaysOnTop: boolean,
-      setWindowAlwaysOnTop: boolean,
-      yellowAtOption: string,
-      yellowAtMinutes: number,
-      yellowAtPercent: number,
-      audioEnabled: boolean,
-    },
-    window: WindowBounds,
-  }
+  defaults: CountdownStore
 }

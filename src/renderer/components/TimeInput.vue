@@ -41,12 +41,13 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
+import {defineComponent} from "vue";
 import dayjs from 'dayjs'
 import duration from 'dayjs/plugin/duration'
 dayjs.extend(duration)
 
-export default {
+export default defineComponent({
   name: 'TimeInput',
   props: {
     modelValue: {
@@ -134,7 +135,7 @@ export default {
       }
     }
   }
-}
+});
 </script>
 
 <style scoped>

@@ -29,10 +29,11 @@
   </nav>
 </template>
 
-<script>
+<script lang="ts">
+import {defineComponent} from "vue";
 import TabButton from "./TabButton";
 
-export default {
+export default defineComponent({
   name: "Navigation",
   components: {
     TabButton,
@@ -40,7 +41,7 @@ export default {
   props: {
     selectedTab: String,
   }
-}
+});
 </script>
 
 <style scoped>

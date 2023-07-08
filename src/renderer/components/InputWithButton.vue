@@ -14,8 +14,10 @@
   </div>
 </template>
 
-<script>
-export default {
+<script lang="ts">
+import {defineComponent} from "vue";
+
+export default defineComponent({
   name: "InputWithButton",
   props: {
     modelValue: Number
@@ -24,7 +26,7 @@ export default {
     'input',
     'click'
   ]
-}
+});
 </script>
 
 <style scoped>

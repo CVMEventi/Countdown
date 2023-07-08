@@ -14,13 +14,15 @@
 </template>
 
 <script>
-export default {
+import {defineComponent} from "vue";
+
+export default defineComponent({
   name: "CheckBox",
   props: {
     modelValue: Boolean,
     id: String,
   }
-}
+});
 </script>
 
 <style scoped>
