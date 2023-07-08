@@ -29,6 +29,16 @@
       <check-box id="ndiEnabled" v-model="ndiEnabled">Enable</check-box>
       <check-box id="ndiAlpha" v-model="ndiAlpha">Alpha</check-box>
     </card>
+    <card class="inline-block flex flex-col w-[300px]">
+      <p class="text-2xl pb-2">OSC</p>
+      <check-box id="oscEnabled" v-model="oscEnabled">Enable</check-box>
+      <p>Port</p>
+      <input
+        @click="$event.target.select()"
+        @focus="$event.target.select()"
+        v-model="oscPort"
+        class="input text-black w-full">
+    </card>
   </div>
 </template>
 
@@ -41,7 +51,7 @@ import SButton from "./SButton";
 import Store from 'electron-store';
 import {
   DEFAULT_NDI_ALPHA,
-  DEFAULT_NDI_ENABLED, DEFAULT_STORE,
+  DEFAULT_NDI_ENABLED, DEFAULT_OSC_ENABLED, DEFAULT_OSC_PORT, DEFAULT_STORE,
   DEFAULT_WEBSERVER_ENABLED,
   DEFAULT_WEBSERVER_PORT
 } from "../../common/config";
@@ -63,6 +73,8 @@ export default defineComponent({
       httpServerPort: store.get('settings.webServerPort', DEFAULT_WEBSERVER_PORT),
       ndiEnabled: store.get('settings.ndiEnabled', DEFAULT_NDI_ENABLED),
       ndiAlpha: store.get('settings.ndiAlpha', DEFAULT_NDI_ALPHA),
+      oscEnabled: store.get('settings.oscEnabled', DEFAULT_OSC_ENABLED),
+      oscPort: store.get('settings.oscPort', DEFAULT_OSC_PORT),
       currentPort: '',
       isRunning: false,
       lastError: {
@@ -92,6 +104,8 @@ export default defineComponent({
       store.set('settings.webServerPort', parseInt(this.httpServerPort));
       store.set('settings.ndiEnabled', this.ndiEnabled);
       store.set('settings.ndiAlpha', this.ndiAlpha);
+      store.set('settings.oscEnabled', this.oscEnabled);
+      store.set('settings.oscPort', parseInt(this.oscPort));
 
       if (this.httpServerEnabled
         && parseInt(this.httpServerPort) !== parseInt(this.currentPort)

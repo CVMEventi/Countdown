@@ -13,6 +13,9 @@ const DEFAULT_WEBSERVER_PORT = 6565;
 const DEFAULT_NDI_ENABLED = false;
 const DEFAULT_NDI_ALPHA = false;
 
+const DEFAULT_OSC_ENABLED = false;
+const DEFAULT_OSC_PORT = 6566;
+
 const DEFAULT_STOP_TIMER_AT_ZERO = false;
 const DEFAULT_SHOW_HOURS = false;
 const DEFAULT_PULSE_AT_ZERO = false;
@@ -60,6 +63,8 @@ const DEFAULT_STORE: CountdownConfiguration = {
       webServerPort: DEFAULT_WEBSERVER_PORT,
       ndiEnabled: DEFAULT_NDI_ENABLED,
       ndiAlpha: DEFAULT_NDI_ALPHA,
+      oscEnabled: DEFAULT_OSC_ENABLED,
+      oscPort: DEFAULT_OSC_PORT,
       show: DEFAULT_SHOW_SECTIONS,
       font: DEFAULT_FONT,
       timerAlwaysOnTop: DEFAULT_TIMER_ALWAYS_ON_TOP,
@@ -85,6 +90,8 @@ export {
   DEFAULT_WEBSERVER_PORT,
   DEFAULT_NDI_ENABLED,
   DEFAULT_NDI_ALPHA,
+  DEFAULT_OSC_ENABLED,
+  DEFAULT_OSC_PORT,
   DEFAULT_PRESETS,
   DEFAULT_STOP_TIMER_AT_ZERO,
   DEFAULT_PULSE_AT_ZERO,
@@ -132,6 +139,8 @@ export interface CountdownSettings {
   webServerPort: number,
   ndiEnabled: boolean,
   ndiAlpha: boolean,
+  oscEnabled: boolean,
+  oscPort: number,
   show: ShowSections,
   font: string,
   timerAlwaysOnTop: boolean,

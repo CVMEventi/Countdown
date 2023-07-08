@@ -3,7 +3,7 @@ import {CountdownApp} from "../App";
 import {sleep} from "./utilities";
 import {
   DEFAULT_NDI_ALPHA,
-  DEFAULT_NDI_ENABLED,
+  DEFAULT_NDI_ENABLED, DEFAULT_OSC_ENABLED, DEFAULT_OSC_PORT,
   DEFAULT_TIMER_ALWAYS_ON_TOP,
   DEFAULT_WINDOW_BOUNDS
 } from "../../common/config";
@@ -56,6 +56,12 @@ export default function addIpcHandles(app: CountdownApp)
       app.ndiServer.start();
     } else {
       app.ndiServer.stop()
+    }
+    if (app.store.get('settings.oscEnabled', DEFAULT_OSC_ENABLED)) {
+      app.oscServer.port = app.store.get('settings.oscPort', DEFAULT_OSC_PORT);
+      app.oscServer.start();
+    } else {
+      app.oscServer.stop();
     }
     app.ndiServer.alpha = app.store.get('settings.ndiAlpha', DEFAULT_NDI_ALPHA);
   })

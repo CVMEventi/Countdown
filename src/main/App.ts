@@ -9,13 +9,14 @@ import {app, BrowserWindow, ipcMain, screen} from "electron";
 import createCountdownWindow from "./countdownWindow";
 import Store from "electron-store";
 import {
-  CountdownConfiguration, DEFAULT_NDI_ENABLED,
+  CountdownConfiguration, DEFAULT_NDI_ENABLED, DEFAULT_OSC_ENABLED, DEFAULT_OSC_PORT,
   DEFAULT_STORE, DEFAULT_TIMER_ALWAYS_ON_TOP,
   DEFAULT_WEBSERVER_ENABLED,
   DEFAULT_WEBSERVER_PORT
 } from "../common/config";
 import {sleep} from "./Utilities/utilities";
 import HTTP from "./Remotes/HTTP";
+import {OSC} from "./Remotes/OSC";
 import {TimerEngine} from "./TimerEngine";
 import {IpcTimerController} from "./Remotes/IpcTimerController";
 import {TimerEngineUpdate, TimerEngineWebSocketUpdate} from "../common/TimerInterfaces";
@@ -29,6 +30,7 @@ export class CountdownApp {
 
   ndiServer = new NDI("Countdown");
   webServer: HTTP = null;
+  oscServer: OSC = null;
 
   constructor() {
     addDefaultEvents();
@@ -95,6 +97,13 @@ export class CountdownApp {
 
       if (webServerEnabled) {
         this.webServer.start();
+      }
+
+      const oscEnabled = this.store.get('settings.oscEnabled', DEFAULT_OSC_ENABLED);
+      const oscPort = this.store.get('settings.oscPort', DEFAULT_OSC_PORT);
+      this.oscServer = new OSC(oscPort, this.timerEngine);
+      if (oscEnabled) {
+        this.oscServer.start();
       }
     })
 
