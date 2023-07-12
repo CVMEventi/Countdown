@@ -72,7 +72,7 @@ export class TimerEngine {
   }
 
   endsAt() {
-    if (!this.timerIsRunning) return null;
+    if (this.countSeconds() <= 0) return null;
     return dayjs().add(this._currentSeconds, 's').format('HH:mm');
   }
 
