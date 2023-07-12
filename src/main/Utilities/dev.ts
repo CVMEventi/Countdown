@@ -1,5 +1,10 @@
 import { app } from 'electron';
-import installExtension, { VUEJS3_DEVTOOLS } from 'electron-devtools-installer';
+import installExtension from 'electron-devtools-installer';
+
+const VUEJS3_DEVTOOLS = {
+  id: 'nhdogjmejiglipccpnnnanhbledajbpd',
+  electron: '>=1.2.1'
+}
 
 function enableDevMode() {
   app.whenReady().then(() => {
