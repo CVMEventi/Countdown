@@ -2,7 +2,7 @@ import {app, Menu, shell} from "electron";
 
 const isMac = process.platform === 'darwin'
 
-export default (mainWindowHandler) => {
+export default (mainWindowHandler, timerEngine) => {
   const template = [
     // { role: 'appMenu' }
     ...(isMac ? [{
@@ -27,14 +27,14 @@ export default (mainWindowHandler) => {
           label: 'Start/Pause',
           accelerator: 'Space',
           click: async () => {
-            mainWindowHandler.browserWindow.webContents.send('remote-command', 'startResumePause')
+            timerEngine.startResumePause();
           },
         },
         {
           label: 'Reset',
           accelerator: 'R',
           click: async () => {
-            mainWindowHandler.browserWindow.webContents.send('remote-command', 'reset')
+            timerEngine.reset();
           }
         }
       ]

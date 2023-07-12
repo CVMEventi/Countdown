@@ -5,16 +5,15 @@ import {enableDevMode, isDev} from "./Utilities/dev";
 import BrowserWinHandler from "./Utilities/BrowserWinHandler";
 import createMainWindow from "./mainWindow";
 import setMenu from "./Utilities/setMenu";
-import {app, BrowserWindow, ipcMain, screen} from "electron";
+import {app, BrowserWindow, screen} from "electron";
 import createCountdownWindow from "./countdownWindow";
 import Store from "electron-store";
 import {
-  CountdownConfiguration, DEFAULT_NDI_ENABLED, DEFAULT_OSC_ENABLED, DEFAULT_OSC_PORT,
+  DEFAULT_NDI_ENABLED, DEFAULT_OSC_ENABLED, DEFAULT_OSC_PORT,
   DEFAULT_STORE, DEFAULT_TIMER_ALWAYS_ON_TOP,
   DEFAULT_WEBSERVER_ENABLED,
   DEFAULT_WEBSERVER_PORT
 } from "../common/config";
-import {sleep} from "./Utilities/utilities";
 import HTTP from "./Remotes/HTTP";
 import {OSC} from "./Remotes/OSC";
 import {TimerEngine} from "./TimerEngine";
@@ -53,7 +52,7 @@ export class CountdownApp {
     this.mainWindowHandler = createMainWindow();
 
     this.mainWindowHandler.onCreated((browserWindow) => {
-      setMenu(this.mainWindowHandler);
+      setMenu(this.mainWindowHandler, this.timerEngine);
 
       const screensUpdated = (browserWindow: BrowserWindow) => {
         browserWindow.webContents.send('screens-updated');
