@@ -8,6 +8,7 @@ export interface TimerEngineUpdate {
   isRunning: boolean
   isReset: boolean
   isCountingUp: boolean
+  timerEndsAt: string
 }
 
 export interface TimerEngineWebSocketUpdate {
@@ -30,6 +31,7 @@ export interface TimerEngineWebSocketUpdate {
   timeSetOnCurrentTimerH?: string
   timeSetOnCurrentTimerM?: string
   timeSetOnCurrentTimerS?: string
+  timerEndsAt?: string
 }
 
 export type UpdateCallback = (update: TimerEngineUpdate) => void;

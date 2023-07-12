@@ -21,7 +21,14 @@
         <card class="clock-setup justify-center">
           <div class="uppercase text-white">Set</div>
           <time-input @update:modelValue="timerControl.set($event)" :modelValue="update.setSeconds" color="white"/>
-          <div class="uppercase mt-2 text-white">Count</div>
+          <div class="uppercase mt-2 text-white flex flex-row justify-between">
+            <span>Count</span>
+            <div class="flex flex-row items-center gap-1">
+              <play-pause-icon v-if="update.timerEndsAt" class="w-6 h-6 inline-flex" />
+              <span>{{ update.timerEndsAt }}</span>
+            </div>
+
+          </div>
           <time-input :modelValue="update.countSeconds" color="green" :disabled="true"/>
           <div class="uppercase mt-2 text-white">Extra</div>
           <time-input color="red" :modelValue="update.extraSeconds" :disabled="true"/>
@@ -113,7 +120,7 @@ import TabButton from '../components/TabButton'
 import SettingsTab from '../components/SettingsTab'
 import WindowsTab from "../components/WindowsTab";
 import Jog from "../components/Jog";
-import { PlusIcon, MinusIcon } from '@heroicons/vue/24/outline';
+import { PlayPauseIcon, PlusIcon, MinusIcon } from '@heroicons/vue/24/outline';
 import Navigation from "../components/Navigation";
 import { shell } from "electron";
 import dayjs from 'dayjs'
@@ -145,6 +152,7 @@ export default defineComponent({
     MinusIcon,
     Navigation,
     WindowsTab,
+    PlayPauseIcon
   },
   layout: 'default',
   props: {
@@ -161,6 +169,7 @@ export default defineComponent({
       isExpiring: false,
       isReset: true,
       isRunning: false,
+      timerEndsAt: null,
     };
 
     return {

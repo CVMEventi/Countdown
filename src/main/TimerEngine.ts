@@ -71,6 +71,11 @@ export class TimerEngine {
     return false;
   }
 
+  endsAt() {
+    if (!this.timerIsRunning) return null;
+    return dayjs().add(this._currentSeconds, 's').format('HH:mm');
+  }
+
   start() {
     this._secondsSetOnCurrentTimer = this.totalSeconds;
     this._audioRun = false;
@@ -137,6 +142,7 @@ export class TimerEngine {
   jogCurrent(seconds: number) {
     if (!this._timer.isRunning()) return;
     this._timer.add(seconds);
+    this._sendUpdate();
   }
 
   add(minutes: number) {
@@ -176,6 +182,7 @@ export class TimerEngine {
       isReset: this.isReset(),
       isRunning: this.timerIsRunning,
       isCountingUp: this.isCountingUp(),
+      timerEndsAt: this.endsAt(),
     })
   }
 
@@ -221,6 +228,7 @@ export class TimerEngine {
       timeSetOnCurrentTimerH: timeSetOnCurrentTimerDuration.format('HH'),
       timeSetOnCurrentTimerM: timeSetOnCurrentTimerDuration.format('mm'),
       timeSetOnCurrentTimerS: timeSetOnCurrentTimerDuration.format('ss'),
+      timerEndsAt: this.endsAt(),
     })
   }
 
