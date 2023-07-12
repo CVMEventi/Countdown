@@ -28,6 +28,7 @@ export class CountdownApp {
   ipcTimerController: IpcTimerController;
 
   ndiServer = new NDI("Countdown");
+  ndiTimer: NodeJS.Timer = null;
   webServer: HTTP = null;
   oscServer: OSC = null;
 
@@ -79,13 +80,13 @@ export class CountdownApp {
       alwaysOnTop: this.store.get('settings.timerAlwaysOnTop', DEFAULT_TIMER_ALWAYS_ON_TOP),
     });
 
-    this.countdownWindowHandler.onCreated(async function (browserWindow) {
+    this.countdownWindowHandler.onCreated(async function (browserWindow: BrowserWindow) {
       browserWindow.on('closed', () => {
         app.quit();
       })
 
       await setCountdownWindowPosition(this);
-    })
+    }.bind(this))
 
     const webServerEnabled = this.store.get('settings.webServerEnabled', DEFAULT_WEBSERVER_ENABLED)
     const port = this.store.get('settings.webServerPort', DEFAULT_WEBSERVER_PORT)
@@ -106,16 +107,34 @@ export class CountdownApp {
       }
     })
 
-    setInterval(async () => {
-      try {
-        const browserWindow = this.countdownWindowHandler.browserWindow
-        const image = await browserWindow.webContents.capturePage()
-        await this.ndiServer.sendFrame(image);
-      } catch (e) {
-        console.log(e);
-        return;
-      }
-    }, 100)
+    const ndiEnabled = this.store.get('settings.ndiEnabled');
+
+    if (ndiEnabled) {
+      this.startNdiTimer();
+    }
+  }
+
+  startNdiTimer() {
+    if (this.ndiTimer) return;
+    this.ndiTimer = setInterval(this.ndiIntervalCallback.bind(this), 100);
+  }
+
+  stopNdiTimer() {
+    if (!this.ndiTimer) return;
+    clearInterval(this.ndiTimer);
+    this.ndiTimer = null;
+  }
+
+  async ndiIntervalCallback() {
+    try {
+      if (!this.countdownWindowHandler) return;
+      const browserWindow = this.countdownWindowHandler.browserWindow
+      const image = await browserWindow.webContents.capturePage()
+      await this.ndiServer.sendFrame(image);
+    } catch (e) {
+      console.log(e);
+      return;
+    }
   }
 
   _timerEngineUpdate(update: TimerEngineUpdate) {

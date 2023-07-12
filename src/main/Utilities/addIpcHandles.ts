@@ -54,8 +54,10 @@ export default function addIpcHandles(app: CountdownApp)
 
     if (app.store.get('settings.ndiEnabled', DEFAULT_NDI_ENABLED)) {
       app.ndiServer.start();
+      app.startNdiTimer();
     } else {
       app.ndiServer.stop()
+      app.stopNdiTimer();
     }
     if (app.store.get('settings.oscEnabled', DEFAULT_OSC_ENABLED)) {
       app.oscServer.port = app.store.get('settings.oscPort', DEFAULT_OSC_PORT);
