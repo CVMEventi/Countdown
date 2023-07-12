@@ -9,8 +9,8 @@
       v-for="(window, index) in windows"
       class="draggable"
       @mousedown="startDrag($event, index)"
-      @mousemove="drag($event,  index)"
-      @mouseup="endDrag($event, index)"
+      @mousemove="drag($event, index)"
+      @mouseup="endDrag($event)"
       @mouseleave="endDrag"
       :x="windowCoordinates(index).x"
       :y="windowCoordinates(index).y"
@@ -104,8 +104,8 @@ export default defineComponent({
       const mouseCoordinates = this.getMousePosition(event);
 
       let newWindow = {
-        x: parseInt(mouseCoordinates.x - this.offset.x),
-        y: parseInt(mouseCoordinates.y - this.offset.y),
+        x: Math.round(mouseCoordinates.x - this.offset.x),
+        y: Math.round(mouseCoordinates.y - this.offset.y),
         width: this.windows[index].width,
         height: this.windows[index].height,
         fullscreenOn: this.windows[index].fullscreenOn,
@@ -128,7 +128,7 @@ export default defineComponent({
     windowCoordinates(index) {
       let window = {...this.windows[index]};
       if (window.fullscreenOn) {
-        const screen = this.screens.find((screen) => screen.id = window.fullscreenOn)
+        const screen = this.screens.find((screen) => screen.id == window.fullscreenOn)
         if (!screen) {
           return window;
         }
