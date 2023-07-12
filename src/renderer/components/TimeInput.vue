@@ -70,13 +70,12 @@ export default defineComponent({
       hours: 0,
     }
   },
+  mounted() {
+    this.updatedValue(this.modelValue);
+  },
   watch: {
     modelValue: function(newVal, oldVal) {
-      const duration = dayjs.duration(newVal, 'seconds')
-
-      this.seconds = duration.seconds()
-      this.minutes = duration.minutes()
-      this.hours = duration.hours()
+      this.updatedValue(newVal);
     }
   },
   computed: {
@@ -105,6 +104,13 @@ export default defineComponent({
   methods: {
     padNumber (number) {
       return ('00' + number).slice(-2)
+    },
+    updatedValue(newVal) {
+      const duration = dayjs.duration(newVal, 'seconds')
+
+      this.seconds = duration.seconds()
+      this.minutes = duration.minutes()
+      this.hours = duration.hours()
     },
     updateTime (unit, value) {
       let parsedValue = parseInt(value)
