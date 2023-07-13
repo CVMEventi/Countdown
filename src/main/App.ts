@@ -46,10 +46,6 @@ export class CountdownApp {
   }
 
   async run() {
-    if (this.store.get('settings.ndiEnabled', DEFAULT_NDI_ENABLED)) {
-      await this.ndiServer.start();
-    }
-
     this.mainWindowHandler = createMainWindow();
 
     this.mainWindowHandler.onCreated((browserWindow) => {
@@ -107,9 +103,8 @@ export class CountdownApp {
       }
     })
 
-    const ndiEnabled = this.store.get('settings.ndiEnabled');
-
-    if (ndiEnabled) {
+    if (this.store.get('settings.ndiEnabled', DEFAULT_NDI_ENABLED)) {
+      await this.ndiServer.start();
       this.startNdiTimer();
     }
   }
