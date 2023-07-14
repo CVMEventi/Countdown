@@ -17,6 +17,7 @@ export class OSC {
   }
 
   start() {
+    if (this.isRunning) return;
     this.oscServer = new Server(this.port, '0.0.0.0', () => {
       this.isRunning = true;
     })
@@ -25,6 +26,7 @@ export class OSC {
   }
 
   stop() {
+    if (!this.isRunning) return;
     this.oscServer.close();
     this.isRunning = false;
   }
