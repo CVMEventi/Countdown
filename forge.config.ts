@@ -24,6 +24,13 @@ const config: ForgeConfig = {
     asar: {
       unpack: "**/node_modules/grandiose/**/*",
     },
+    osxSign: {},
+    osxNotarize: {
+      tool: 'notarytool',
+      appleId: process.env.APPLE_ID,
+      appleIdPassword: process.env.APPLE_ID_PASSWORD,
+      teamId: process.env.APPLE_TEAM_ID
+    },
     icon: "icons/icon.icns",
     win32metadata: {
       "CompanyName": "CVM Eventi",
