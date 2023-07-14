@@ -4,6 +4,7 @@
   "version": "0.0.27",
   "description": "CVM Countdown",
   "main": ".webpack/main",
+  "repository": "CVMEventi/Countdown",
   "scripts": {
     "preinstall": "node -p \"'export const APP_VERSION: string = ' + JSON.stringify(require('./package.json').version) + ';'\" > src/version.ts",
     "start": "electron-forge start",
@@ -70,6 +71,7 @@
     "grandiose": "github:CVMEventi/grandiose#5db6bca",
     "howler": "^2.2.3",
     "node-osc": "^8.0.11",
+    "update-electron-app": "^2.0.1",
     "v8-compile-cache": "^2.3.0",
     "vue": "^3.2.31",
     "vue-router": "^4.0.14",
