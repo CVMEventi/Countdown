@@ -101,6 +101,10 @@ const config: ForgeConfig = {
           }
 
           result.artifacts = result.artifacts.map((artifact) => {
+            if (artifact.includes('RELEASES')) {
+              return artifact;
+            }
+
             let os = 'Unknown';
             if (artifact.includes('deb')
               || artifact.includes('rpm')) {
