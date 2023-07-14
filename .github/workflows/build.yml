@@ -25,9 +25,12 @@ jobs:
       - name: Install dependencies
         run: yarn
 
-      - name: Add MacOS certs
+      - name: Add macOS certs
         if: matrix.os == 'macos-latest'
         run: chmod +x ./.github/add-macos-certificate.sh && ./.github/add-macos-certificate.sh
+        env:
+          APPLE_CERTIFICATES: ${{ secrets.APPLE_CERTIFICATES }}
+          APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
 
       - name: Build
         run: |
