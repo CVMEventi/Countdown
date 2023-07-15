@@ -124,6 +124,8 @@ export default defineComponent({
       }
     },
     backgroundColor() {
+      // Check for hex with alpha #xxxxxxxx
+      if (this.settings.backgroundColor.length > 7) return this.settings.backgroundColor;
       return this.settings.backgroundColor + parseInt(this.settings.backgroundColorOpacity).toString(16).padStart(2, "0");
     },
     cssVars() {

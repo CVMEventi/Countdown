@@ -37,17 +37,21 @@
     <card class="inline-block border flex flex-col">
       <div class="flex flex-col" style="min-width: 220px">
         <p class="text-2xl">Colors</p>
-        <p class="text-base">Background</p>
-        <color-input v-model="settings.backgroundColor" default-value="#000000"/>
-        <input @input="realTimeSettingUpdated" v-model="settings.backgroundColorOpacity" type="range" min="0" max="255">
-        <p class="text-base">Text</p>
-        <color-input v-model="settings.textColor" default-value="#ffffff"/>
-        <p class="text-base">Text on timer finished</p>
-        <color-input v-model="settings.timerFinishedTextColor" default-value="#ff0000"/>
-        <p class="text-base">Clock</p>
-        <color-input v-model="settings.clockColor" default-value="#ffffff"/>
-        <p class="text-base">Clock Text</p>
-        <color-input v-model="settings.clockTextColor" default-value="#ffffff"/>
+        <color-input alpha-channel v-model="settings.backgroundColor" default-value="#000000ff">
+          Background
+        </color-input>
+        <color-input v-model="settings.textColor" default-value="#ffffff">
+          Text
+        </color-input>
+        <color-input v-model="settings.timerFinishedTextColor" default-value="#ff0000">
+          Text on timer finished
+        </color-input>
+        <color-input v-model="settings.clockColor" default-value="#ffffff">
+          Clock
+        </color-input>
+        <color-input v-model="settings.clockTextColor" default-value="#ffffff">
+          Clock Text
+        </color-input>
         <p class="text-2xl mt-3">Font</p>
         <select v-model="settings.font" class="input p-2 text-black">
           <option value="digital-7">digital-7</option>
@@ -61,6 +65,7 @@
 
 <script lang="ts">
 import {defineComponent} from "vue";
+import {ArrowsRightLeftIcon} from "@heroicons/vue/20/solid";
 import Store from 'electron-store'
 import {ipcRenderer} from 'electron'
 import draggable from 'vuedraggable'
@@ -106,6 +111,7 @@ export default defineComponent({
     SButton,
     Card,
     draggable,
+    ArrowsRightLeftIcon,
   },
   props: {
     screens: {
@@ -121,7 +127,6 @@ export default defineComponent({
     return {
       settings: {
         backgroundColor: store.get('settings.backgroundColor', DEFAULT_BACKGROUND_COLOR),
-        backgroundColorOpacity: store.get('settings.backgroundColorOpacity', DEFAULT_BACKGROUND_OPACITY),
         textColor: store.get('settings.textColor', DEFAULT_TEXT_COLOR),
         timerFinishedTextColor: store.get('settings.timerFinishedTextColor', DEFAULT_TIMER_FINISHED_TEXT_COLOR),
         clockColor: store.get('settings.clockColor', DEFAULT_CLOCK_COLOR),
@@ -192,7 +197,6 @@ export default defineComponent({
         yellowAtOption: self.settings.yellowAtOption,
         yellowAtMinutes: self.settings.yellowAtMinutes,
         yellowAtPercent: self.settings.yellowAtPercent,
-        backgroundColorOpacity: self.settings.backgroundColorOpacity,
         show: self.settings.show,
         font: self.settings.font,
         audioEnabled: self.settings.audioEnabled,
@@ -230,13 +234,6 @@ export default defineComponent({
     },
     deletePreset(index) {
       this.settings.presets.splice(index, 1)
-    },
-    realTimeSettingUpdated() {
-      let settings = {
-        backgroundColorOpacity: this.settings.backgroundColorOpacity,
-      };
-
-      ipcRenderer.send('temporary-settings-updated', settings);
     },
   },
 })

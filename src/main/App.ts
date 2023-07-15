@@ -19,6 +19,7 @@ import {OSC} from "./Remotes/OSC";
 import {TimerEngine} from "./TimerEngine";
 import {IpcTimerController} from "./Remotes/IpcTimerController";
 import {TimerEngineUpdate, TimerEngineWebSocketUpdate} from "../common/TimerInterfaces";
+import {applyMigrations} from "./Migrations/applyMigrations";
 
 export class CountdownApp {
   mainWindowHandler: BrowserWinHandler = null
@@ -33,6 +34,9 @@ export class CountdownApp {
   oscServer: OSC = null;
 
   constructor() {
+    const newConfig = applyMigrations(this.store.get(null));
+    this.store.set(newConfig);
+
     addDefaultEvents();
     addIpcHandles(this);
     if (isDev) {

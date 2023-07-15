@@ -51,3 +51,27 @@ html, body, #app, #app > div {
 #app {
   @apply overflow-x-hidden;
 }
+
+input[type="color"] {
+  -webkit-appearance: none;
+  @apply border border-gray-300 rounded;
+}
+
+input[type="color"]::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+input[type="color"]::-webkit-color-swatch {
+  border: none;
+}
+
+.vacp-color-picker {
+  @apply text-black;
+}
+
+.vacp-color-input {
+  @apply border border-gray-300 rounded;
+}
+
+.vacp-color-space {
+  @apply border border-gray-300;
+}
