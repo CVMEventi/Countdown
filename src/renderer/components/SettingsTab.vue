@@ -24,7 +24,7 @@
         @click="updateYellowOption"
         @input="updateYellowValue"
         :model-value="settings.yellowAtOption === 'minutes' ? settings.yellowAtMinutes : settings.yellowAtPercent">
-        {{ settings.yellowAtOption === 'minutes' ? 'm' : '%' }}
+        {{ settings.yellowAtOption === 'minutes' ? 'm' : '%' }} <arrows-right-left-icon class="ml-3 w-4 h-4" />
       </input-with-button>
       <p class="text-2xl">Show</p>
       <check-box id="showTimer" v-model="settings.show.timer">Timer</check-box>
