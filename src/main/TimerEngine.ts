@@ -23,8 +23,8 @@ export class TimerEngine {
   update: UpdateCallback = null;
   webSocketUpdate: WebSocketUpdateCallback = null;
 
-  constructor(update: UpdateCallback, webSocketUpdate: WebSocketUpdateCallback) {
-    this._timer = new Timer(this._timerTick.bind(this), this._timerStatusChanged.bind(this))
+  constructor(interval: number, update: UpdateCallback, webSocketUpdate: WebSocketUpdateCallback) {
+    this._timer = new Timer(interval, this._timerTick.bind(this), this._timerStatusChanged.bind(this))
     this.update = update;
     this.webSocketUpdate = webSocketUpdate;
   }
@@ -74,6 +74,11 @@ export class TimerEngine {
   endsAt() {
     if (this.countSeconds() <= 0) return null;
     return dayjs().add(this._currentSeconds, 's').format('HH:mm');
+  }
+
+  setTimerInterval(interval: number) {
+    this._timer.setInterval(interval);
+    this._timer.adjustingTimer.interval = interval;
   }
 
   start() {

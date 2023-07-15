@@ -1,21 +1,29 @@
 import AdjustingInterval from "./AdjustingInterval";
+import {DEFAULT_TIMER_DURATION} from "../../common/config";
 
 export class Timer {
-  interval: number = 1000;
-  adjustingTimer = new AdjustingInterval(this._timerTick.bind(this), this.interval);
+  interval: number;
+  adjustingTimer: AdjustingInterval;
   secondsSet = 0;
   seconds = 0;
   stopsAtZero = false;
   timerTickCallback: (seconds: number) => void = null;
   timerStatusChangeCallback: (status: string) => void = null;
 
-  constructor(timerTickCallback: (seconds: number) => void, timerStatusChangeCallback: (status: string) => void) {
+  constructor(interval: number = DEFAULT_TIMER_DURATION, timerTickCallback: (seconds: number) => void, timerStatusChangeCallback: (status: string) => void) {
+    this.interval = interval;
+    this.adjustingTimer = new AdjustingInterval(this._timerTick.bind(this), this.interval);
     this.timerTickCallback = timerTickCallback;
     this.timerStatusChangeCallback = timerStatusChangeCallback;
   }
 
   isRunning() {
     return this.adjustingTimer.isRunning();
+  }
+
+  setInterval(interval: number) {
+    this.interval = interval;
+    this.adjustingTimer.interval = interval;
   }
 
   start(seconds: number, stopsAtZero: boolean) {

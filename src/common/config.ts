@@ -30,6 +30,8 @@ const DEFAULT_FONT = 'digital-7';
 
 const DEFAULT_AUDIO_ENABLED = false;
 
+const DEFAULT_TIMER_DURATION = 1000;
+
 const DEFAULT_SHOW_SECTIONS: ShowSections = {
   timer: true,
   progress: true,
@@ -73,6 +75,7 @@ const DEFAULT_STORE: CountdownConfiguration = {
       yellowAtMinutes: DEFAULT_YELLOW_AT_MINUTES,
       yellowAtPercent: DEFAULT_YELLOW_AT_PERCENT,
       audioEnabled: DEFAULT_AUDIO_ENABLED,
+      timerDuration: DEFAULT_TIMER_DURATION,
     },
     window: DEFAULT_WINDOW_BOUNDS,
   }
@@ -106,6 +109,7 @@ export {
   DEFAULT_YELLOW_AT_OPTION,
   DEFAULT_YELLOW_AT_MINUTES,
   DEFAULT_AUDIO_ENABLED,
+  DEFAULT_TIMER_DURATION,
 };
 
 export interface ShowSections {
@@ -125,30 +129,31 @@ export interface WindowBounds {
 
 export interface CountdownSettings {
   backgroundColor: string
-  backgroundColorOpacity: string,
-  textColor: string,
-  timerFinishedTextColor: string,
-  clockColor: string,
-  clockTextColor: string,
-  presets: number[],
-  stopTimerAtZero: boolean,
-  blackAtReset: boolean,
-  showHours: boolean,
-  pulseAtZero: boolean,
-  webServerEnabled: boolean,
-  webServerPort: number,
-  ndiEnabled: boolean,
-  ndiAlpha: boolean,
-  oscEnabled: boolean,
-  oscPort: number,
-  show: ShowSections,
-  font: string,
-  timerAlwaysOnTop: boolean,
-  setWindowAlwaysOnTop: boolean,
-  yellowAtOption: string,
-  yellowAtMinutes: number,
-  yellowAtPercent: number,
-  audioEnabled: boolean,
+  backgroundColorOpacity: string
+  textColor: string
+  timerFinishedTextColor: string
+  clockColor: string
+  clockTextColor: string
+  presets: number[]
+  stopTimerAtZero: boolean
+  blackAtReset: boolean
+  showHours: boolean
+  pulseAtZero: boolean
+  webServerEnabled: boolean
+  webServerPort: number
+  ndiEnabled: boolean
+  ndiAlpha: boolean
+  oscEnabled: boolean
+  oscPort: number
+  show: ShowSections
+  font: string
+  timerAlwaysOnTop: boolean
+  setWindowAlwaysOnTop: boolean
+  yellowAtOption: string
+  yellowAtMinutes: number
+  yellowAtPercent: number
+  audioEnabled: boolean
+  timerDuration: number
 }
 
 export interface CountdownStore {

@@ -58,6 +58,8 @@
           <option value="B612">B612</option>
           <option value="Xanh">Xanh</option>
         </select>
+        <p class="text-sm mt-2">Milliseconds per second</p>
+        <input class="text-black focus:ring-indigo-500 focus:border-indigo-500 block rounded-md w-full text-center px-2 sm:text-sm border-gray-300" type="number" @input="(event) => settings.timerDuration = parseInt(event.target.value)" :value="settings.timerDuration">
       </div>
     </card>
   </div>
@@ -90,7 +92,7 @@ import {
   DEFAULT_YELLOW_AT_OPTION,
   DEFAULT_YELLOW_AT_MINUTES,
   DEFAULT_YELLOW_AT_PERCENT,
-  DEFAULT_AUDIO_ENABLED, DEFAULT_STORE, CountdownConfiguration, CountdownSettings,
+  DEFAULT_AUDIO_ENABLED, DEFAULT_STORE, CountdownConfiguration, CountdownSettings, DEFAULT_TIMER_DURATION,
 
 } from "../../common/config";
 import CheckBox from "./CheckBox";
@@ -141,6 +143,7 @@ export default defineComponent({
         yellowAtMinutes: store.get('settings.yellowAtMinutes', DEFAULT_YELLOW_AT_MINUTES),
         yellowAtPercent: store.get('settings.yellowAtPercent', DEFAULT_YELLOW_AT_PERCENT),
         audioEnabled: store.get('settings.audioEnabled', DEFAULT_AUDIO_ENABLED),
+        timerDuration: store.get('settings.timerDuration', DEFAULT_TIMER_DURATION),
       }
     }
   },
@@ -198,6 +201,7 @@ export default defineComponent({
         show: self.settings.show,
         font: self.settings.font,
         audioEnabled: self.settings.audioEnabled,
+        timerDuration: self.settings.timerDuration,
       }
 
       if (CSS.supports('color', self.settings.backgroundColor)) {
