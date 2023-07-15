@@ -1,14 +1,12 @@
 <template>
-  <div class="rounded-xl border-2 p-3">
+  <div class="rounded-lg border-2 p-3">
     <slot />
   </div>
 </template>
 
-<script lang="ts">
-import {defineComponent} from "vue";
-
-export default defineComponent({
-  name: 'Card'
+<script lang="ts" setup>
+defineOptions({
+  name: 'Card',
 });
 </script>
 
