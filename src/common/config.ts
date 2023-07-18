@@ -1,45 +1,45 @@
-const DEFAULT_BACKGROUND_COLOR = '#000000';
-const DEFAULT_BACKGROUND_OPACITY = '255';
-const DEFAULT_TEXT_COLOR = '#ffffff';
-const DEFAULT_TIMER_FINISHED_TEXT_COLOR = '#ff0000';
-const DEFAULT_CLOCK_COLOR = '#ffffff';
-const DEFAULT_CLOCK_TEXT_COLOR = '#ffffff';
+export const DEFAULT_BACKGROUND_COLOR = '#000000';
+export const DEFAULT_BACKGROUND_OPACITY = '255';
+export const DEFAULT_TEXT_COLOR = '#ffffff';
+export const DEFAULT_TIMER_FINISHED_TEXT_COLOR = '#ff0000';
+export const DEFAULT_CLOCK_COLOR = '#ffffff';
+export const DEFAULT_CLOCK_TEXT_COLOR = '#ffffff';
 
-const DEFAULT_PRESETS = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60];
+export const DEFAULT_PRESETS = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60];
 
-const DEFAULT_WEBSERVER_ENABLED = true;
-const DEFAULT_WEBSERVER_PORT = 6565;
+export const DEFAULT_WEBSERVER_ENABLED = true;
+export const DEFAULT_WEBSERVER_PORT = 6565;
 
-const DEFAULT_NDI_ENABLED = false;
-const DEFAULT_NDI_ALPHA = false;
+export const DEFAULT_NDI_ENABLED = false;
+export const DEFAULT_NDI_ALPHA = false;
 
-const DEFAULT_OSC_ENABLED = false;
-const DEFAULT_OSC_PORT = 6566;
+export const DEFAULT_OSC_ENABLED = false;
+export const DEFAULT_OSC_PORT = 6566;
 
-const DEFAULT_STOP_TIMER_AT_ZERO = false;
-const DEFAULT_SHOW_HOURS = false;
-const DEFAULT_PULSE_AT_ZERO = false;
-const DEFAULT_BLACK_AT_RESET = false;
-const DEFAULT_TIMER_ALWAYS_ON_TOP = false;
-const DEFAULT_SET_WINDOW_ALWAYS_ON_TOP = false;
-const DEFAULT_YELLOW_AT_OPTION = 'minutes';
-const DEFAULT_YELLOW_AT_MINUTES = 2;
-const DEFAULT_YELLOW_AT_PERCENT = 10;
+export const DEFAULT_STOP_TIMER_AT_ZERO = false;
+export const DEFAULT_SHOW_HOURS = false;
+export const DEFAULT_PULSE_AT_ZERO = false;
+export const DEFAULT_BLACK_AT_RESET = false;
+export const DEFAULT_TIMER_ALWAYS_ON_TOP = false;
+export const DEFAULT_SET_WINDOW_ALWAYS_ON_TOP = false;
+export const DEFAULT_YELLOW_AT_OPTION = 'minutes';
+export const DEFAULT_YELLOW_AT_MINUTES = 2;
+export const DEFAULT_YELLOW_AT_PERCENT = 10;
 
-const DEFAULT_FONT = 'digital-7';
+export const DEFAULT_FONT = 'digital-7';
 
-const DEFAULT_AUDIO_ENABLED = false;
+export const DEFAULT_AUDIO_ENABLED = false;
 
-const DEFAULT_TIMER_DURATION = 1000;
+export const DEFAULT_TIMER_DURATION = 1000;
 
-const DEFAULT_SHOW_SECTIONS: ShowSections = {
+export const DEFAULT_SHOW_SECTIONS: ShowSections = {
   timer: true,
   progress: true,
   clock: true,
   secondsOnClock: false,
 };
 
-const DEFAULT_WINDOW_BOUNDS: WindowBounds = {
+export const DEFAULT_WINDOW_BOUNDS: WindowBounds = {
   fullscreenOn: null,
   x: 100,
   y: 100,
@@ -47,7 +47,7 @@ const DEFAULT_WINDOW_BOUNDS: WindowBounds = {
   height: 720
 }
 
-const DEFAULT_STORE: CountdownConfiguration = {
+export const DEFAULT_STORE: CountdownConfiguration = {
   defaults: {
     settings: {
       backgroundColor: DEFAULT_BACKGROUND_COLOR,
@@ -80,37 +80,6 @@ const DEFAULT_STORE: CountdownConfiguration = {
     window: DEFAULT_WINDOW_BOUNDS,
   }
 }
-
-export {
-  DEFAULT_STORE,
-  DEFAULT_BACKGROUND_COLOR,
-  DEFAULT_BACKGROUND_OPACITY,
-  DEFAULT_TEXT_COLOR,
-  DEFAULT_TIMER_FINISHED_TEXT_COLOR,
-  DEFAULT_CLOCK_COLOR,
-  DEFAULT_CLOCK_TEXT_COLOR,
-  DEFAULT_WEBSERVER_ENABLED,
-  DEFAULT_WEBSERVER_PORT,
-  DEFAULT_NDI_ENABLED,
-  DEFAULT_NDI_ALPHA,
-  DEFAULT_OSC_ENABLED,
-  DEFAULT_OSC_PORT,
-  DEFAULT_PRESETS,
-  DEFAULT_STOP_TIMER_AT_ZERO,
-  DEFAULT_PULSE_AT_ZERO,
-  DEFAULT_SHOW_HOURS,
-  DEFAULT_WINDOW_BOUNDS,
-  DEFAULT_SHOW_SECTIONS,
-  DEFAULT_BLACK_AT_RESET,
-  DEFAULT_FONT,
-  DEFAULT_TIMER_ALWAYS_ON_TOP,
-  DEFAULT_SET_WINDOW_ALWAYS_ON_TOP,
-  DEFAULT_YELLOW_AT_PERCENT,
-  DEFAULT_YELLOW_AT_OPTION,
-  DEFAULT_YELLOW_AT_MINUTES,
-  DEFAULT_AUDIO_ENABLED,
-  DEFAULT_TIMER_DURATION,
-};
 
 export interface ShowSections {
   timer: boolean,
