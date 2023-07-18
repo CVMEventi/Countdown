@@ -2,7 +2,7 @@
   <div class="mt-1 flex rounded-md shadow-sm">
     <div class="-mr-px relative flex items-stretch flex-grow focus-within:z-10">
       <input :value="modelValue"
-             @input="$emit('input', $event.target.value)"
+             @input="$emit('input', ($event.target as HTMLInputElement).value)"
              type="number"
              max="100"
              min="0"
@@ -14,19 +14,21 @@
   </div>
 </template>
 
-<script lang="ts">
-import {defineComponent} from "vue";
-
-export default defineComponent({
-  name: "InputWithButton",
-  props: {
-    modelValue: Number
-  },
-  emits: [
-    'input',
-    'click'
-  ]
+<script lang="ts" setup>
+defineOptions({
+  name: 'InputWithButton',
 });
+
+export interface Props {
+  modelValue: number
+}
+
+defineProps<Props>();
+
+defineEmits<{
+  input: [value: string]
+  click: [],
+}>();
 </script>
 
 <style scoped>

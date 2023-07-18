@@ -19,26 +19,23 @@
   </a>
 </template>
 
-<script lang="ts">
-import {defineComponent} from "vue";
+<script lang="ts" setup>
 
-export default defineComponent({
+defineOptions({
   name: 'TabButton',
-  props: {
-    first: {
-      type: Boolean,
-      default: false
-    },
-    last: {
-      type: Boolean,
-      default: false
-    },
-    selected: {
-      type: Boolean,
-      default: false
-    }
-  }
-});
+})
+
+export interface Props {
+  first?: boolean,
+  last?: boolean,
+  selected?: boolean,
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  first: false,
+  last: false,
+  selected: false,
+})
 </script>
 
 <style scoped>

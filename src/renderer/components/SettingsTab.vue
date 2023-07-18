@@ -65,14 +65,14 @@
   </div>
 </template>
 
-<script lang="ts">
-import {defineComponent} from "vue";
+<script lang="ts" setup>
+import {computed, defineComponent, ref, watch} from "vue";
 import {ArrowsRightLeftIcon} from "@heroicons/vue/20/solid";
 import Store from 'electron-store'
 import {ipcRenderer} from 'electron'
 import draggable from 'vuedraggable'
-import Card from '../components/Card'
-import ColorInput from '../components/ColorInput'
+import Card from './Card'
+import ColorInput from './ColorInput'
 import SButton from './SButton'
 import InputWithButton from "./InputWithButton";
 import {
@@ -92,153 +92,134 @@ import {
   DEFAULT_YELLOW_AT_OPTION,
   DEFAULT_YELLOW_AT_MINUTES,
   DEFAULT_YELLOW_AT_PERCENT,
-  DEFAULT_AUDIO_ENABLED, DEFAULT_STORE, CountdownConfiguration, CountdownSettings, DEFAULT_TIMER_DURATION,
+  DEFAULT_AUDIO_ENABLED, DEFAULT_STORE, CountdownSettings, DEFAULT_TIMER_DURATION, CountdownStore,
 
 } from "../../common/config";
 import CheckBox from "./CheckBox";
 import EditPreset from "./EditPreset";
 import {debounce} from "debounce";
+import Display = Electron.Display;
 
-const store = new Store(DEFAULT_STORE);
-
-export default defineComponent({
+defineOptions({
   name: 'SettingsTab',
-  components: {
-    InputWithButton,
-    EditPreset,
-    CheckBox,
-    ColorInput,
-    SButton,
-    Card,
-    draggable,
-    ArrowsRightLeftIcon,
-  },
-  props: {
-    screens: {
-      type: Array,
-      default: () => []
-    },
-    selectedScreen: {
-      type: Object,
-      default: null
-    }
-  },
-  data() {
-    return {
-      settings: {
-        backgroundColor: store.get('settings.backgroundColor', DEFAULT_BACKGROUND_COLOR),
-        textColor: store.get('settings.textColor', DEFAULT_TEXT_COLOR),
-        timerFinishedTextColor: store.get('settings.timerFinishedTextColor', DEFAULT_TIMER_FINISHED_TEXT_COLOR),
-        clockColor: store.get('settings.clockColor', DEFAULT_CLOCK_COLOR),
-        clockTextColor: store.get('settings.clockTextColor', DEFAULT_CLOCK_TEXT_COLOR),
-        presets: store.get('settings.presets', DEFAULT_PRESETS),
-        stopTimerAtZero: store.get('settings.stopTimerAtZero', DEFAULT_STOP_TIMER_AT_ZERO),
-        showHours: store.get('settings.showHours', DEFAULT_SHOW_HOURS),
-        blackAtReset: store.get('settings.blackAtReset', DEFAULT_BLACK_AT_RESET),
-        pulseAtZero: store.get('settings.pulseAtZero', DEFAULT_PULSE_AT_ZERO),
-        show: store.get('settings.show', DEFAULT_SHOW_SECTIONS),
-        font: store.get('settings.font', DEFAULT_FONT),
-        timerAlwaysOnTop: store.get('settings.timerAlwaysOnTop', DEFAULT_TIMER_ALWAYS_ON_TOP),
-        yellowAtOption: store.get('settings.yellowAtOption', DEFAULT_YELLOW_AT_OPTION),
-        yellowAtMinutes: store.get('settings.yellowAtMinutes', DEFAULT_YELLOW_AT_MINUTES),
-        yellowAtPercent: store.get('settings.yellowAtPercent', DEFAULT_YELLOW_AT_PERCENT),
-        audioEnabled: store.get('settings.audioEnabled', DEFAULT_AUDIO_ENABLED),
-        timerDuration: store.get('settings.timerDuration', DEFAULT_TIMER_DURATION),
-      }
-    }
-  },
-  computed: {
-    currentScreen: {
-      get() {
-        return this.screens.find((screen) => screen.id === this.window.fullscreenOn);
-      },
-      set(newValue) {
-        this.settings.window.fullscreenOn = newValue !== null ? newValue.id : null;
-      }
-    }
-  },
-  watch: {
-    settings: {
-      handler() {
-        this.save(this);
-      },
-      deep: true
-    }
-  },
-  methods: {
-    updateYellowOption() {
-      if (this.settings.yellowAtOption === 'minutes') {
-        this.settings.yellowAtOption = 'percent';
-      } else {
-        this.settings.yellowAtOption = 'minutes';
-      }
-    },
-    updateYellowValue(value) {
-      if (value > 100) {
-        value = 100;
-      }
+});
 
-      if (this.settings.yellowAtOption === 'minutes') {
-        this.settings.yellowAtMinutes = parseInt(value);
-      } else {
-        this.settings.yellowAtPercent = parseInt(value);
-      }
-    },
-    save: debounce((self) => {
-      let oldSettings = store.get('settings', DEFAULT_STORE.defaults.settings);
+export interface Props {
+  screens: Display[]
+  selectedScreen: Display
+}
 
-      let newSettings: CountdownSettings = {
-        ...oldSettings,
-        presets: self.settings.presets,
-        blackAtReset: self.settings.blackAtReset,
-        stopTimerAtZero: self.settings.stopTimerAtZero,
-        showHours: self.settings.showHours,
-        pulseAtZero: self.settings.pulseAtZero,
-        timerAlwaysOnTop: self.settings.timerAlwaysOnTop,
-        yellowAtOption: self.settings.yellowAtOption,
-        yellowAtMinutes: self.settings.yellowAtMinutes,
-        yellowAtPercent: self.settings.yellowAtPercent,
-        show: self.settings.show,
-        font: self.settings.font,
-        audioEnabled: self.settings.audioEnabled,
-        timerDuration: self.settings.timerDuration,
-      }
-
-      if (CSS.supports('color', self.settings.backgroundColor)) {
-        newSettings.backgroundColor = self.settings.backgroundColor;
-      }
-
-      if (CSS.supports('color', self.settings.textColor)) {
-        newSettings.textColor = self.settings.textColor;
-      }
-
-      if (CSS.supports('color', self.settings.timerFinishedTextColor)) {
-        newSettings.timerFinishedTextColor = self.settings.timerFinishedTextColor;
-      }
-
-      if (CSS.supports('color', self.settings.clockColor)) {
-        newSettings.clockColor = self.settings.clockColor;
-      }
-
-      if (CSS.supports('color', self.settings.clockTextColor)) {
-        newSettings.clockTextColor = self.settings.clockTextColor;
-      }
-
-      store.set('settings', newSettings)
-
-      self.$emit('settings-updated')
-      ipcRenderer.send('settings-updated')
-
-      //this.$router.replace('/control/main')
-    }, 200, false),
-    addPreset() {
-      this.settings.presets.push(0)
-    },
-    deletePreset(index) {
-      this.settings.presets.splice(index, 1)
-    },
-  },
+const props = withDefaults(defineProps<Props>(), {
+  screens: () => [],
+  selectedScreen: null,
 })
+
+const emit = defineEmits<{
+  'settings-updated': [],
+}>();
+
+const store = new Store<CountdownStore>(DEFAULT_STORE);
+
+let settings = ref({
+  backgroundColor: store.get('settings.backgroundColor', DEFAULT_BACKGROUND_COLOR),
+  textColor: store.get('settings.textColor', DEFAULT_TEXT_COLOR),
+  timerFinishedTextColor: store.get('settings.timerFinishedTextColor', DEFAULT_TIMER_FINISHED_TEXT_COLOR),
+  clockColor: store.get('settings.clockColor', DEFAULT_CLOCK_COLOR),
+  clockTextColor: store.get('settings.clockTextColor', DEFAULT_CLOCK_TEXT_COLOR),
+  presets: store.get('settings.presets', DEFAULT_PRESETS),
+  stopTimerAtZero: store.get('settings.stopTimerAtZero', DEFAULT_STOP_TIMER_AT_ZERO),
+  showHours: store.get('settings.showHours', DEFAULT_SHOW_HOURS),
+  blackAtReset: store.get('settings.blackAtReset', DEFAULT_BLACK_AT_RESET),
+  pulseAtZero: store.get('settings.pulseAtZero', DEFAULT_PULSE_AT_ZERO),
+  show: store.get('settings.show', DEFAULT_SHOW_SECTIONS),
+  font: store.get('settings.font', DEFAULT_FONT),
+  timerAlwaysOnTop: store.get('settings.timerAlwaysOnTop', DEFAULT_TIMER_ALWAYS_ON_TOP),
+  yellowAtOption: store.get('settings.yellowAtOption', DEFAULT_YELLOW_AT_OPTION),
+  yellowAtMinutes: store.get('settings.yellowAtMinutes', DEFAULT_YELLOW_AT_MINUTES),
+  yellowAtPercent: store.get('settings.yellowAtPercent', DEFAULT_YELLOW_AT_PERCENT),
+  audioEnabled: store.get('settings.audioEnabled', DEFAULT_AUDIO_ENABLED),
+  timerDuration: store.get('settings.timerDuration', DEFAULT_TIMER_DURATION),
+});
+
+watch(settings, () => {
+  save();
+}, {deep: true});
+
+function updateYellowOption() {
+  if (settings.value.yellowAtOption === 'minutes') {
+    settings.value.yellowAtOption = 'percent';
+  } else {
+    settings.value.yellowAtOption = 'minutes';
+  }
+}
+
+function updateYellowValue(value: number) {
+  if (value > 100) {
+    value = 100;
+  }
+
+  if (settings.value.yellowAtOption === 'minutes') {
+    settings.value.yellowAtMinutes = value;
+  } else {
+    settings.value.yellowAtPercent = value;
+  }
+}
+
+const save = debounce(() => {
+  let oldSettings = store.get('settings', DEFAULT_STORE.defaults.settings);
+
+  let newSettings: CountdownSettings = {
+    ...oldSettings,
+    presets: settings.value.presets,
+    blackAtReset: settings.value.blackAtReset,
+    stopTimerAtZero: settings.value.stopTimerAtZero,
+    showHours: settings.value.showHours,
+    pulseAtZero: settings.value.pulseAtZero,
+    timerAlwaysOnTop: settings.value.timerAlwaysOnTop,
+    yellowAtOption: settings.value.yellowAtOption,
+    yellowAtMinutes: settings.value.yellowAtMinutes,
+    yellowAtPercent: settings.value.yellowAtPercent,
+    show: settings.value.show,
+    font: settings.value.font,
+    audioEnabled: settings.value.audioEnabled,
+    timerDuration: settings.value.timerDuration,
+  }
+
+  if (CSS.supports('color', settings.value.backgroundColor)) {
+    newSettings.backgroundColor = settings.value.backgroundColor;
+  }
+
+  if (CSS.supports('color', settings.value.textColor)) {
+    newSettings.textColor = settings.value.textColor;
+  }
+
+  if (CSS.supports('color', settings.value.timerFinishedTextColor)) {
+    newSettings.timerFinishedTextColor = settings.value.timerFinishedTextColor;
+  }
+
+  if (CSS.supports('color', settings.value.clockColor)) {
+    newSettings.clockColor = settings.value.clockColor;
+  }
+
+  if (CSS.supports('color', settings.value.clockTextColor)) {
+    newSettings.clockTextColor = settings.value.clockTextColor;
+  }
+
+  store.set('settings', newSettings)
+
+  emit('settings-updated')
+  ipcRenderer.send('settings-updated')
+
+  //this.$router.replace('/control/main')
+}, 200, false);
+
+function addPreset() {
+  settings.value.presets.push(0)
+}
+
+function deletePreset(index: number) {
+  settings.value.presets.splice(index, 1)
+}
 </script>
 
 <style scoped>

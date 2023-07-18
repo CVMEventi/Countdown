@@ -31,6 +31,7 @@
     "@electron-forge/plugin-webpack": "^6.2.1",
     "@electron-forge/publisher-github": "^6.2.1",
     "@timfish/forge-externals-plugin": "^0.2.1",
+    "@types/debounce": "^1.2.1",
     "@types/node": "^18",
     "@typescript-eslint/eslint-plugin": "^5.61.0",
     "@typescript-eslint/parser": "^5.61.0",

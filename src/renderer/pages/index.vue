@@ -20,7 +20,7 @@
       <div class="flex gap-2">
         <card class="clock-setup justify-center">
           <div class="uppercase text-white">Set</div>
-          <time-input @update:modelValue="timerControl.set($event)" :modelValue="update.setSeconds" color="white"/>
+          <time-input @update:modelValue="timerControl.set($event);" :modelValue="update.setSeconds" color="white"/>
           <div class="uppercase mt-2 text-white flex flex-row justify-between">
             <span>Count</span>
             <div class="flex flex-row items-center gap-1">
@@ -51,7 +51,7 @@
             Reset
           </s-button>
           <div class="flex gap-2 justify-center">
-            <jog @up-click="jog(1)" @down-click="jog(-1)">
+            <jog @up-click="jogMinutes(1)" @down-click="jogMinutes(-1)">
               <template v-slot:up>
                 <plus-icon class="w-5 h-5 inline-flex"></plus-icon>
               </template>
@@ -60,7 +60,7 @@
               </template>
               1m
             </jog>
-            <jog @up-click="jog(5)" @down-click="jog(-5)">
+            <jog @up-click="jogMinutes(5)" @down-click="jogMinutes(-5)">
               <template v-slot:up>
                 <plus-icon class="w-5 h-5 inline-flex"></plus-icon>
               </template>
@@ -69,7 +69,7 @@
               </template>
               5m
             </jog>
-            <jog @up-click="jog(10)" @down-click="jog(-10)">
+            <jog @up-click="jogMinutes(10)" @down-click="jogMinutes(-10)">
               <template v-slot:up>
                 <plus-icon class="w-5 h-5 inline-flex"></plus-icon>
               </template>
@@ -93,24 +93,22 @@
     </div>
     <settings-tab
       v-if="tab === 'settings'"
-      ref="settingsTab"
       :screens="screens"
       :selected-screen="selectedScreen"
       @settings-updated="settingsUpdated"
     />
     <remote-tab
       v-if="tab === 'remote'"
-      ref="remoteTab" />
+      ref="remoteTabRef" />
     <windows-tab
       :screens="screens"
       v-if="tab === 'windows'"
-      ref="windowsTab"
     />
   </div>
 </template>
 
-<script lang="ts">
-import {defineComponent} from "vue";
+<script lang="ts" setup>
+import {computed, defineComponent, onMounted, ref} from "vue";
 import {ipcRenderer} from 'electron'
 import Store from "electron-store"
 import Card from '../components/Card'
@@ -129,6 +127,8 @@ dayjs.extend(duration)
 import RemoteTab from "../components/RemoteTab";
 import {TimerEngineUpdate} from "../../common/TimerInterfaces";
 import {TimerControl} from "../TimerControl";
+import Display = Electron.Display;
+import {CountdownSettings} from "../../common/config";
 /*
 import { Howl } from "howler";
 import gong from "../assets/sounds/gong.mp3";
@@ -138,134 +138,79 @@ let sound = new Howl({
 */
 
 let store = new Store()
+const timerControl = new TimerControl(updateReceived);
 
-export default defineComponent({
-  components: {
-    RemoteTab,
-    Jog,
-    SettingsTab,
-    Card,
-    SButton,
-    TimeInput,
-    TabButton,
-    PlusIcon,
-    MinusIcon,
-    Navigation,
-    WindowsTab,
-    PlayPauseIcon
-  },
-  layout: 'default',
-  props: {
-    tab: String,
-  },
-  data() {
-    const update: TimerEngineUpdate = {
-      setSeconds: 0,
-      countSeconds: 0,
-      currentSeconds: 0,
-      extraSeconds: 0,
-      secondsSetOnCurrentTimer: 0,
-      isCountingUp: false,
-      isExpiring: false,
-      isReset: true,
-      isRunning: false,
-      timerEndsAt: null,
-    };
-
-    return {
-      externalContent: '',
-      countdownWindow: window,
-      selectedScreen: null,
-      screens: [],
-      currentSeconds: 0,
-      secondsSetOnCurrentTimer: 0,
-      timerIsRunning: false,
-      selectedTab: 'countdown',
-      settings: store.get('settings'),
-      audioRun: false,
-      update,
-      timerControl: new TimerControl(this.updateReceived.bind(this)),
-    }
-  },
-  computed: {
-    extraSeconds() {
-      if (this.currentSeconds > 0) {
-        return 0
-      }
-
-      return Math.abs(this.currentSeconds)
-    },
-    countSeconds() {
-      if (this.currentSeconds < 0) {
-        return 0
-      }
-
-      return this.currentSeconds
-    },
-    isReset () {
-      return this.$refs.timer.secondsSet === 0 && this.currentSeconds === 0
-    },
-    isCountingUp () {
-      return this.currentSeconds <= 0
-    },
-    isExpiring() {
-      if (this.isReset || this.isCountingUp) {
-        return false;
-      }
-
-      if (this.settings.yellowAtOption === 'minutes'
-        && this.settings.yellowAtMinutes >= this.currentSeconds / 60) {
-        return true;
-      }
-
-      if (this.settings.yellowAtOption === 'percent'
-        && this.settings.yellowAtPercent >= this.$refs.timer.secondsSet / 100 * this.currentSeconds) {
-        return true;
-      }
-
-      return false;
-    },
-  },
-  async mounted() {
-    this.screens = await ipcRenderer.invoke('get-screens')
-
-    ipcRenderer.on('screens-updated', async () => {
-      this.screens = await ipcRenderer.invoke('get-screens')
-    })
-  },
-  methods: {
-    jog(minutes: number) {
-      if (!this.update.isReset) {
-        this.timerControl.jogCurrent(minutes * 60);
-      } else {
-        this.timerControl.jogSet(minutes * 60);
-      }
-    },
-    updateReceived(update: TimerEngineUpdate) {
-      this.update = update;
-    },
-    setPresetTime(minutes: number) {
-      const secondsPerMinute = 60
-      this.timerControl.set(minutes * secondsPerMinute);
-    },
-    settingsUpdated() {
-      store = new Store()
-      this.settings = store.get('settings')
-    },
-    openURL(url) {
-      shell.openExternal(url);
-    },
-    save() {
-      if (this.tab === 'settings') {
-        this.$refs.settingsTab.save()
-      } else if (this.tab === 'remote') {
-        this.$refs.remoteTab.save()
-      } else {
-        this.$refs.windowsTab.save()
-      }
-    },
-  }
+defineOptions({
+  name: 'index',
 });
+
+export interface Props {
+  tab: string
+}
+
+const props = defineProps<Props>();
+
+let externalContent = ref('');
+let selectedScreen = ref(null);
+let screens = ref<Display[]>([]);
+let selectedTab = ref('countdown');
+let settings = ref<CountdownSettings>(store.get('settings') as CountdownSettings);
+let audioRun = false;
+let update = ref<TimerEngineUpdate>({
+  setSeconds: 0,
+  countSeconds: 0,
+  currentSeconds: 0,
+  extraSeconds: 0,
+  secondsSetOnCurrentTimer: 0,
+  isCountingUp: false,
+  isExpiring: false,
+  isReset: true,
+  isRunning: false,
+  timerEndsAt: null,
+});
+
+onMounted(async () => {
+  screens.value = await ipcRenderer.invoke('get-screens');
+
+  ipcRenderer.on('screens-updated', async () => {
+    screens.value = await ipcRenderer.invoke('get-screens');
+  })
+});
+
+function jogMinutes(minutes: number) {
+  if (!update.value.isReset) {
+    timerControl.jogCurrent(minutes * 60);
+  } else {
+    timerControl.jogSet(minutes * 60);
+  }
+}
+
+function updateReceived(newUpdate: TimerEngineUpdate) {
+  update.value = newUpdate;
+}
+
+function setPresetTime(minutes: number) {
+  console.log(minutes);
+  const secondsPerMinute = 60;
+  timerControl.set(minutes * secondsPerMinute);
+}
+
+function settingsUpdated() {
+  store = new Store();
+  settings.value = store.get('settings') as CountdownSettings;
+}
+
+function openURL(url: string) {
+  shell.openExternal(url);
+}
+
+let remoteTabRef = ref<RemoteTab>();
+
+function save() {
+  if (props.tab === 'remote') {
+    remoteTabRef.value.save()
+  }
+}
 </script>
 
 <style scoped>

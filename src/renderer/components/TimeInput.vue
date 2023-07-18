@@ -41,107 +41,101 @@
   </div>
 </template>
 
-<script lang="ts">
-import {defineComponent} from "vue";
-import dayjs from 'dayjs'
-import duration from 'dayjs/plugin/duration'
-dayjs.extend(duration)
+<script lang="ts" setup>
+import {computed, onMounted, ref, watch} from "vue";
+import dayjs from 'dayjs';
+import duration from 'dayjs/plugin/duration';
+dayjs.extend(duration);
 
-export default defineComponent({
+// Inits
+
+defineOptions({
   name: 'TimeInput',
-  props: {
-    modelValue: {
-      type: Number,
-      default: 0,
-    },
-    disabled: {
-      type: Boolean,
-      default: false
-    },
-    color: {
-      type: String,
-      default: 'gray'
-    }
-  },
-  data() {
-    return {
-      seconds: 0,
-      minutes: 0,
-      hours: 0,
-    }
-  },
-  mounted() {
-    this.updatedValue(this.modelValue);
-  },
-  watch: {
-    modelValue: function(newVal, oldVal) {
-      this.updatedValue(newVal);
-    }
-  },
-  computed: {
-    classes () {
-      return {
-        'bg-white': !this.disabled && this.color === 'white',
-        'bg-gray-100': this.disabled && this.color === 'white',
-        'bg-emerald-100': this.color === 'green',
-        'bg-red-100': this.color === 'red',
-        disabled: this.disabled
-      }
-    },
-    formattedSeconds() {
-      return this.padNumber(this.seconds)
-    },
-    formattedMinutes() {
-      return this.padNumber(this.minutes)
-    },
-    formattedHours() {
-      return this.padNumber(this.hours)
-    }
-  },
-  activated () {
-    this.setTime(this.seconds)
-  },
-  methods: {
-    padNumber (number) {
-      return ('00' + number).slice(-2)
-    },
-    updatedValue(newVal) {
-      const duration = dayjs.duration(newVal, 'seconds')
-
-      this.seconds = duration.seconds()
-      this.minutes = duration.minutes()
-      this.hours = duration.hours()
-    },
-    updateTime (unit, value) {
-      let parsedValue = parseInt(value)
-
-      if (parsedValue < 0) {
-        parsedValue = 0
-      }
-
-      const oldDuration = dayjs.duration(this.modelValue, 'seconds')
-
-      this.seconds = unit === 'seconds' ? parsedValue : oldDuration.seconds();
-      this.minutes = unit === 'minutes' ? parsedValue : oldDuration.minutes();
-      this.hours = unit === 'hours' ? parsedValue : oldDuration.hours();
-
-      const duration = dayjs.duration({
-        seconds: unit === 'seconds' ? parsedValue : oldDuration.seconds(),
-        minutes: unit === 'minutes' ? parsedValue : oldDuration.minutes(),
-        hours: unit === 'hours' ? parsedValue : oldDuration.hours()
-      })
-
-      console.log(duration.asHours());
-      if (duration.asHours() >= 24) {
-        let maxTime = 86399 // 23h 59m 59s as seconds
-
-        this.$emit('update:modelValue', maxTime)
-      } else {
-        this.$emit('update:modelValue', duration.asSeconds())
-      }
-    }
-  }
 });
+
+export interface Props {
+  modelValue: number
+  type?: number
+  disabled?: boolean
+  color: string
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  type: 0,
+  disabled: false,
+  color: '',
+});
+
+const emit = defineEmits(['update:model-value']);
+
+onMounted(() => {
+  updatedValue(props.modelValue);
+})
+
+let seconds = ref(0);
+let minutes = ref(0);
+let hours = ref(0);
+
+watch(() => props.modelValue, (newVal, oldVal) => {
+  updatedValue(newVal);
+})
+
+// Methods
+
+function updatedValue(newVal) {
+  const duration = dayjs.duration(newVal, 'seconds')
+
+  seconds.value = duration.seconds()
+  minutes.value = duration.minutes()
+  hours.value = duration.hours()
+}
+
+function padNumber (number) {
+  return ('00' + number).slice(-2)
+}
+function updateTime(unit, value) {
+  let parsedValue = parseInt(value)
+  console.log(parsedValue);
+
+  if (parsedValue < 0) {
+    parsedValue = 0
+  }
+
+  const oldDuration = dayjs.duration(props.modelValue, 'seconds')
+
+  seconds.value = unit === 'seconds' ? parsedValue : oldDuration.seconds();
+  minutes.value = unit === 'minutes' ? parsedValue : oldDuration.minutes();
+  hours.value = unit === 'hours' ? parsedValue : oldDuration.hours();
+
+  const duration = dayjs.duration({
+    seconds: unit === 'seconds' ? parsedValue : oldDuration.seconds(),
+    minutes: unit === 'minutes' ? parsedValue : oldDuration.minutes(),
+    hours: unit === 'hours' ? parsedValue : oldDuration.hours()
+  })
+
+  if (duration.asHours() >= 24) {
+    let maxTime = 86399 // 23h 59m 59s as seconds
+
+    emit('update:modelValue', maxTime)
+  } else {
+    emit('update:modelValue', duration.asSeconds())
+  }
+}
+
+// Computed properties
+
+const classes = computed(() => {
+  return {
+    'bg-white': !props.disabled && props.color === 'white',
+    'bg-gray-100': props.disabled && props.color === 'white',
+    'bg-emerald-100': props.color === 'green',
+    'bg-red-100': props.color === 'red',
+    disabled: props.disabled
+  }
+})
+const formattedSeconds = computed(() => padNumber(seconds.value));
+const formattedMinutes = computed(() => padNumber(minutes.value));
+const formattedHours = computed(() => padNumber(hours.value));
 </script>
 
 <style scoped>

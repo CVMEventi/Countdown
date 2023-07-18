@@ -29,19 +29,18 @@
   </nav>
 </template>
 
-<script lang="ts">
-import {defineComponent} from "vue";
-import TabButton from "./TabButton";
+<script lang="ts" setup>
+import TabButton from "./TabButton.vue";
 
-export default defineComponent({
-  name: "Navigation",
-  components: {
-    TabButton,
-  },
-  props: {
-    selectedTab: String,
-  }
+defineOptions({
+  name: 'Navigation',
 });
+
+export interface Props {
+  selectedTab: string
+}
+
+defineProps<Props>();
 </script>
 
 <style scoped>

@@ -50,59 +50,42 @@
   </div>
 </template>
 
-<script lang="ts">
-import {computed, defineComponent} from "vue";
+<script lang="ts" setup>
 import {ArrowPathIcon, DocumentDuplicateIcon} from '@heroicons/vue/24/outline';
-import {ColorPicker} from "vue-accessible-color-picker";
+import {ColorChangeEvent, ColorPicker} from "vue-accessible-color-picker";
 import {Popover, PopoverButton, PopoverPanel} from "@headlessui/vue";
 import {Float, FloatArrow} from "@headlessui-float/vue";
+import {computed} from "vue";
 
-export default defineComponent({
+defineOptions({
   name: 'ColorInput',
-  components: {
-    PopoverPanel,
-    PopoverButton,
-    Popover,
-    ArrowPathIcon,
-    ColorPicker,
-    Float,
-    FloatArrow,
-    DocumentDuplicateIcon,
-  },
-  props: {
-    label: {
-      type: String,
-      default: ''
-    },
-    modelValue: {
-      type: String,
-      default: ''
-    },
-    defaultValue: {
-      type: String,
-      default: ''
-    },
-    alphaChannel: {
-      type: Boolean,
-      default: false,
-    }
-  },
-  methods: {
-    computed,
-    updateColor(event) {
-      let value = event.colors.hex;
-      if (!this.alphaChannel && value.length > 7) {
-        value = value.slice(0, 7);
-      }
-      this.$emit('update:modelValue', value);
-    }
-  },
-  computed: {
-    stringAlphaChannel() {
-      if (this.alphaChannel) return 'show';
-      return 'hide';
-    }
+});
+
+export interface Props {
+  modelValue: string
+  defaultValue: string
+  alphaChannel?: boolean
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  modelValue: '',
+  defaultValue: '',
+  alphaChannel: false,
+});
+
+const emit = defineEmits(['update:modelValue']);
+
+function updateColor(event: ColorChangeEvent) {
+  let value = event.colors.hex;
+  if (!props.alphaChannel && value.length > 7) {
+    value = value.slice(0, 7);
   }
+  emit('update:modelValue', value);
+}
+
+const stringAlphaChannel = computed(() => {
+  if (props.alphaChannel) return 'show';
+  return 'hide';
 });
 </script>
 

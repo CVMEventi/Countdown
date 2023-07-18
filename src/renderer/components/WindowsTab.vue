@@ -45,14 +45,16 @@
   </div>
 </template>
 
-<script>
+<script lang="ts" setup>
 import ScreensDrag from "./ScreensDrag";
-import {DEFAULT_WINDOW_BOUNDS} from "../../common/config";
+import {DEFAULT_WINDOW_BOUNDS, WindowBounds} from "../../common/config";
 import Store from "electron-store";
 import { debounce } from "debounce";
 import {ipcRenderer} from "electron";
 import Card from "./Card";
 import SButton from "./SButton";
+import {computed, ref, watch} from "vue";
+import Display = Electron.Display;
 
 const store = new Store()
 
@@ -60,57 +62,41 @@ ipcRenderer.on('screens-updated', () => {
   console.log('display updated')
 })
 
-export default {
-  name: "WindowsTab",
-  components: {
-    ScreensDrag,
-    Card,
-    SButton
-  },
-  data() {
-    return {
-      window: store.get('window', DEFAULT_WINDOW_BOUNDS),
-    }
-  },
-  props: {
-    screens: Array,
-  },
-  computed: {
-    windows: {
-      get() {
-        return [
-          this.window,
-        ]
-      },
-      set(value) {
-        this.window = value[0];
-      },
-    }
-  },
-  methods: {
-    setAndSave: debounce((self) => {
-      store.set('window', {...self.window})
-      /*
-      store.set('window.x', parseInt(this.window.x))
-      store.set('window.y', parseInt(this.window.y))
-      store.set('window.width', parseInt(this.window.width))
-      store.set('window.height', parseInt(this.window.height))*/
+defineOptions({
+  name: 'WindowsTab',
+});
 
-      ipcRenderer.send('window-updated');
-    }, 50),
-    async getCountdownBounds() {
-      this.window = await ipcRenderer.invoke('countdown-bounds')
-    }
-  },
-  watch: {
-    window: {
-      handler() {
-        this.setAndSave(this)
-      },
-      deep: true,
-    },
-  }
+let window = ref<WindowBounds>(store.get('window', DEFAULT_WINDOW_BOUNDS) as WindowBounds);
+
+export interface Props {
+  screens: Display[]
 }
+
+const props = defineProps<Props>();
+let windows = computed({
+  get() {
+    return [
+      window.value,
+    ]
+  },
+  set(value) {
+    window.value = value[0];
+  },
+})
+
+const setAndSave = debounce(() => {
+  store.set('window', {...window.value});
+
+  ipcRenderer.send('window-updated');
+}, 50);
+
+async function getCountdownBounds() {
+  window.value = await ipcRenderer.invoke('countdown-bounds')
+}
+
+watch(window, () => {
+  setAndSave();
+}, {deep: true})
 </script>
 
 <style scoped>

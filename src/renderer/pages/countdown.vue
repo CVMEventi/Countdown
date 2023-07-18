@@ -19,7 +19,7 @@
         color: timerText
       }"
       :class="{
-        'animate-pulse-fast': !update.isReset && update.isCountingUp && this.settings.pulseAtZero
+        'animate-pulse-fast': !update.isReset && update.isCountingUp && settings.pulseAtZero
       }"
     >
       {{ time }}
@@ -32,7 +32,7 @@
         class="overflow-hidden progress-bar mb-4 text-xs flex rounded"
         :class="{
           'bg-red-200': update.isCountingUp && !update.isReset,
-          'bg-green-200': !update.isReset && !update.isReset && !this.update.isExpiring,
+          'bg-green-200': !update.isReset && !update.isReset && !update.isExpiring,
           'bg-yellow-200': update.isExpiring,
           'bg-gray-200': update.isReset
         }"
@@ -58,13 +58,13 @@
   </div>
 </template>
 
-<script lang="ts">
-import {defineComponent} from "vue";
+<script lang="ts" setup>
+import {computed, defineComponent, onMounted, ref} from "vue";
 import { ipcRenderer } from 'electron'
 import dayjs from 'dayjs'
 import duration from 'dayjs/plugin/duration'
 import Store from "electron-store"
-import { DEFAULT_STORE, DEFAULT_FONT } from "../../common/config";
+import {DEFAULT_STORE, DEFAULT_FONT, CountdownSettings} from "../../common/config";
 import { ClockIcon } from '@heroicons/vue/24/solid';
 import {TimerEngineUpdate} from "../../common/TimerInterfaces";
 
@@ -72,96 +72,92 @@ let store = new Store()
 
 dayjs.extend(duration)
 
-export default defineComponent({
+defineOptions({
   name: 'countdown',
-  components: {
-    ClockIcon,
-  },
-  data () {
-    const update: TimerEngineUpdate = {
-      setSeconds: 0,
-      countSeconds: 0,
-      currentSeconds: 0,
-      extraSeconds: 0,
-      secondsSetOnCurrentTimer: 0,
-      isCountingUp: false,
-      isExpiring: false,
-      isReset: true,
-      isRunning: false,
-    };
+});
 
-    return {
-      currentTimeTimerId: null,
-      currentTime: dayjs().format('HH:mm'),
-      update,
-      settings: store.get('settings', DEFAULT_STORE.defaults.settings)
-    }
-  },
-  computed: {
-    time () {
-      const currentTimeInSeconds = dayjs.duration(Math.abs(this.update.currentSeconds), 'seconds')
+let currentTimeTimerId: NodeJS.Timer = null;
+let currentTime = ref(dayjs().format('HH:mm'));
+let update = ref<TimerEngineUpdate>({
+  setSeconds: 0,
+  countSeconds: 0,
+  currentSeconds: 0,
+  extraSeconds: 0,
+  secondsSetOnCurrentTimer: 0,
+  isCountingUp: false,
+  isExpiring: false,
+  isReset: true,
+  isRunning: false,
+  timerEndsAt: null,
+});
+let settings = ref<CountdownSettings>(store.get('settings', DEFAULT_STORE.defaults.settings) as CountdownSettings);
 
-      if (this.settings.showHours) {
-        return currentTimeInSeconds.format('HH:mm:ss')
-      } else {
-        let minutes = String(Math.floor(currentTimeInSeconds.asMinutes())).padStart(2, '0');
-        let seconds = String(currentTimeInSeconds.seconds()).padStart(2, '0');
+const time = computed(() => {
+  const currentTimeInSeconds = dayjs.duration(Math.abs(update.value.currentSeconds), 'seconds')
 
-        return `${minutes}:${seconds}`;
-      }
-    },
-    progressBarPercent () {
-      if (this.update.secondsSetOnCurrentTimer === 0 || this.update.currentSeconds === 0) return '100%'
-      if (this.update.isCountingUp) return '100%'
-      const percentage = this.update.currentSeconds * 100 / this.update.secondsSetOnCurrentTimer
-      return `${percentage}%`
-    },
-    timerText () {
-      if (this.update.isCountingUp && !this.update.isReset) {
-        return this.settings.timerFinishedTextColor
-      } else {
-        return this.settings.textColor
-      }
-    },
-    backgroundColor() {
-      // Check for hex with alpha #xxxxxxxx
-      if (this.settings.backgroundColor.length > 7) return this.settings.backgroundColor;
-      return this.settings.backgroundColor + parseInt(this.settings.backgroundColorOpacity).toString(16).padStart(2, "0");
-    },
-    cssVars() {
-      return {
-        '--clock-font': this.settings.font || DEFAULT_FONT,
-      }
-    }
-  },
-  mounted () {
-    ipcRenderer.on('update', (event, arg) => {
-      this.update = arg
-    })
-    ipcRenderer.on('settings-updated', (event, arg) => {
-      store = new Store()
-      this.settings = store.get('settings')
-    })
-    ipcRenderer.on('temporary-settings-updated', (event, arg) => {
-      this.settings = {
-        ...this.settings,
-        ...arg,
-      }
-    })
-    if (this.currentTimeTimerId === null) {
-      setInterval(this.updateTime, 1000)
-    }
-  },
-  methods: {
-    updateTime () {
-      if (this.settings.show.secondsOnClock) {
-        this.currentTime = dayjs().format('HH:mm:ss')
-      } else {
-        this.currentTime = dayjs().format('HH:mm')
-      }
-    },
-  },
+  if (settings.value.showHours) {
+    return currentTimeInSeconds.format('HH:mm:ss')
+  } else {
+    let minutes = String(Math.floor(currentTimeInSeconds.asMinutes())).padStart(2, '0');
+    let seconds = String(currentTimeInSeconds.seconds()).padStart(2, '0');
+
+    return `${minutes}:${seconds}`;
+  }
+});
+
+const progressBarPercent = computed(() => {
+  if (update.value.secondsSetOnCurrentTimer === 0 || update.value.currentSeconds === 0) return '100%';
+  if (update.value.isCountingUp) return '100%';
+  const percentage = update.value.currentSeconds * 100 / update.value.secondsSetOnCurrentTimer;
+  return `${percentage}%`;
+});
+
+const timerText = computed(() => {
+  if (update.value.isCountingUp && !update.value.isReset) {
+    return settings.value.timerFinishedTextColor
+  } else {
+    return settings.value.textColor
+  }
 })
+
+const backgroundColor = computed(() => {
+  // Check for hex with alpha #xxxxxxxx
+  if (settings.value.backgroundColor.length > 7) return settings.value.backgroundColor;
+  return settings.value.backgroundColor + parseInt(settings.value.backgroundColorOpacity).toString(16).padStart(2, "0");
+})
+
+const cssVars = computed(() => {
+  return {
+    '--clock-font': settings.value.font || DEFAULT_FONT,
+  }
+});
+
+function updateTime() {
+  if (settings.value.show.secondsOnClock) {
+    currentTime.value = dayjs().format('HH:mm:ss');
+  } else {
+    currentTime.value = dayjs().format('HH:mm');
+  }
+}
+
+onMounted(() => {
+  ipcRenderer.on('update', (event, arg) => {
+    update.value = arg;
+  })
+  ipcRenderer.on('settings-updated', (event, arg) => {
+    store = new Store();
+    settings.value = store.get('settings') as CountdownSettings;
+  })
+  ipcRenderer.on('temporary-settings-updated', (event, arg) => {
+    settings.value = {
+      ...settings.value,
+      ...arg,
+    }
+  })
+  if (currentTimeTimerId === null) {
+    currentTimeTimerId = setInterval(updateTime, 1000)
+  }
+});
 </script>
 
 <style scoped>

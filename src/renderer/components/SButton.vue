@@ -1,7 +1,7 @@
 <template>
   <button
     @click.stop.prevent="click"
-    @focus="$event.target.blur();"
+    @focus="($event.target as HTMLButtonElement).blur();"
     :disabled="disabled"
     class="rounded text-white ring-transparent"
     :class="{
@@ -37,35 +37,29 @@
   </button>
 </template>
 
-<script lang="ts">
-import { defineComponent } from "vue";
-
-export default defineComponent({
+<script lang="ts" setup>
+defineOptions({
   name: 'SButton',
-  props: {
-    type: {
-      type: String,
-      default: 'success'
-    },
-    disabled: {
-      type: Boolean,
-      default: false
-    },
-    tiny: {
-      type: Boolean,
-      default: false
-    }
-  },
-  emits: [
-    'click',
-  ],
-  methods: {
-    click(event) {
-      event.target.blur();
-      this.$emit('click')
-    }
-  }
 });
+
+export interface Props {
+  type?: string
+  disabled?: boolean
+  tiny?: boolean
+}
+
+withDefaults(defineProps<Props>(), {
+  type: 'success',
+  disabled: false,
+  tiny: false
+})
+
+const emit = defineEmits(['click']);
+
+function click(event: MouseEvent) {
+  (event.target as HTMLButtonElement).blur();
+  emit('click');
+}
 </script>
 
 <style scoped>

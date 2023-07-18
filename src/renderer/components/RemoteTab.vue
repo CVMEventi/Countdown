@@ -1,18 +1,18 @@
 <template>
   <div class="flex flex-1 gap-2 p-1 min-h-0 text-white">
-    <card class="inline-block flex flex-col w-[300px]">
+    <card class="flex flex-col w-[300px]">
       <p class="text-2xl pb-2">HTTP Server</p>
       <check-box id="httpServerEnabled" v-model="httpServerEnabled">Enable</check-box>
       <p>Port</p>
       <input
-        @click="$event.target.select()"
-        @focus="$event.target.select()"
+        @click="($event.target as HTMLInputElement).select()"
+        @focus="($event.target as HTMLInputElement).select()"
         v-model="httpServerPort"
         class="input text-black w-full">
-      <p :class="[isRunning ? 'text-emerald-300' : 'text-red-300']">{{ this.isRunning ? `Server running on port ${currentPort}` : "Server not running" }}</p>
-      <p class="text-sm italic">Last error: {{ this.lastError }}</p>
+      <p :class="[isRunning ? 'text-emerald-300' : 'text-red-300']">{{ isRunning ? `Server running on port ${currentPort}` : "Server not running" }}</p>
+      <p class="text-sm italic">Last error: {{ lastError }}</p>
       <s-button
-        :disabled="!this.httpServerEnabled"
+        :disabled="!httpServerEnabled"
         class="uppercase mt-3"
         type="warning"
         @click="toggleHttpServer">
@@ -21,29 +21,29 @@
           <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
         </svg>
 
-        {{ !this.isLoading ? httpToggleText : '' }}
+        {{ !isLoading ? httpToggleText : '' }}
       </s-button>
     </card>
-    <card class="inline-block flex flex-col w-[300px]">
+    <card class="flex flex-col w-[300px]">
       <p class="text-2xl pb-2">NDI (Beta)</p>
       <check-box id="ndiEnabled" v-model="ndiEnabled">Enable</check-box>
       <check-box id="ndiAlpha" v-model="ndiAlpha">Alpha</check-box>
     </card>
-    <card class="inline-block flex flex-col w-[300px]">
+    <card class="flex flex-col w-[300px]">
       <p class="text-2xl pb-2">OSC</p>
       <check-box id="oscEnabled" v-model="oscEnabled">Enable</check-box>
       <p>Port</p>
       <input
-        @click="$event.target.select()"
-        @focus="$event.target.select()"
+        @click="($event.target as HTMLInputElement).select()"
+        @focus="($event.target as HTMLInputElement).select()"
         v-model="oscPort"
         class="input text-black w-full">
     </card>
   </div>
 </template>
 
-<script lang="ts">
-import {defineComponent} from "vue";
+<script lang="ts" setup>
+import {computed, defineComponent, defineOptions, onMounted, ref} from "vue";
 import Card from "./Card";
 import CheckBox from "./CheckBox";
 import { ipcRenderer } from "electron";
@@ -55,89 +55,78 @@ import {
   DEFAULT_WEBSERVER_ENABLED,
   DEFAULT_WEBSERVER_PORT
 } from "../../common/config";
-import ScreensDrag from "./ScreensDrag";
 
 const store = new Store(DEFAULT_STORE);
 
-export default defineComponent({
-  name: "RemoteTab",
-  components: {
-    ScreensDrag,
-    SButton,
-    Card,
-    CheckBox
-  },
-  data() {
-    return {
-      httpServerEnabled: store.get('settings.webServerEnabled', DEFAULT_WEBSERVER_ENABLED),
-      httpServerPort: store.get('settings.webServerPort', DEFAULT_WEBSERVER_PORT),
-      ndiEnabled: store.get('settings.ndiEnabled', DEFAULT_NDI_ENABLED),
-      ndiAlpha: store.get('settings.ndiAlpha', DEFAULT_NDI_ALPHA),
-      oscEnabled: store.get('settings.oscEnabled', DEFAULT_OSC_ENABLED),
-      oscPort: store.get('settings.oscPort', DEFAULT_OSC_PORT),
-      currentPort: '',
-      isRunning: false,
-      lastError: {
-        type: String,
-        required: false
-      },
-      isLoading: false,
-    }
-  },
-  async mounted() {
-    const update = await ipcRenderer.invoke('server-running');
-    this.updateReceived(update)
-
-    ipcRenderer.on('webserver-update', (event, update) => {
-      this.updateReceived(update)
-    })
-  },
-  methods: {
-    updateReceived(update) {
-      const { isRunning, lastError, port } = update;
-      this.isRunning =  isRunning;
-      this.lastError = lastError;
-      this.currentPort = port;
-    },
-    async save() {
-      store.set('settings.webServerEnabled', this.httpServerEnabled);
-      store.set('settings.webServerPort', parseInt(this.httpServerPort));
-      store.set('settings.ndiEnabled', this.ndiEnabled);
-      store.set('settings.ndiAlpha', this.ndiAlpha);
-      store.set('settings.oscEnabled', this.oscEnabled);
-      store.set('settings.oscPort', parseInt(this.oscPort));
-
-      if (this.httpServerEnabled
-        && parseInt(this.httpServerPort) !== parseInt(this.currentPort)
-        && this.isRunning) {
-        this.isRunning = await ipcRenderer.invoke('webserver-manager', 'stop')
-        this.isRunning = await ipcRenderer.invoke('webserver-manager', 'start')
-      }
-
-      if (!this.httpServerEnabled
-        && this.isRunning) {
-        this.isRunning = await ipcRenderer.invoke('webserver-manager', 'stop');
-      }
-
-      this.$emit('settings-updated')
-      ipcRenderer.send('settings-updated')
-    },
-    async toggleHttpServer() {
-      this.isLoading = true;
-      if (this.isRunning) {
-        this.isRunning = await ipcRenderer.invoke('webserver-manager', 'stop')
-      } else {
-        this.isRunning = await ipcRenderer.invoke('webserver-manager', 'start')
-      }
-      this.isLoading = false;
-    },
-  },
-  computed: {
-    httpToggleText() {
-      return this.isRunning ? "Stop" : "Start"
-    },
-  }
+defineOptions({
+  'name': 'RemoteTab',
 });
+
+const emit = defineEmits<{
+  'settings-updated': []
+}>();
+
+let httpServerEnabled = ref(store.get('settings.webServerEnabled', DEFAULT_WEBSERVER_ENABLED));
+let httpServerPort = ref(store.get('settings.webServerPort', DEFAULT_WEBSERVER_PORT));
+let ndiEnabled = ref(store.get('settings.ndiEnabled', DEFAULT_NDI_ENABLED));
+let ndiAlpha = ref(store.get('settings.ndiAlpha', DEFAULT_NDI_ALPHA));
+let oscEnabled = ref(store.get('settings.oscEnabled', DEFAULT_OSC_ENABLED));
+let oscPort = ref(store.get('settings.oscPort', DEFAULT_OSC_PORT));
+let currentPort = ref('');
+let isRunning = ref(false);
+let lastError = ref('');
+let isLoading = ref(false);
+
+onMounted(async () => {
+  const update = await ipcRenderer.invoke('server-running');
+  updateReceived(update)
+
+  ipcRenderer.on('webserver-update', (event, update) => {
+    updateReceived(update)
+  })
+});
+
+function updateReceived(update: any) {
+  isRunning.value =  update.isRunning;
+  lastError.value = update.lastError;
+  currentPort.value = update.port;
+}
+
+async function save() {
+  store.set('settings.webServerEnabled', httpServerEnabled.value);
+  store.set('settings.webServerPort', httpServerPort.value);
+  store.set('settings.ndiEnabled', ndiEnabled.value);
+  store.set('settings.ndiAlpha', ndiAlpha.value);
+  store.set('settings.oscEnabled', oscEnabled.value);
+  store.set('settings.oscPort', oscPort.value);
+
+  if (httpServerEnabled.value
+    && httpServerPort.value !== parseInt(currentPort.value)
+    && isRunning.value) {
+    isRunning.value = await ipcRenderer.invoke('webserver-manager', 'stop')
+    isRunning.value = await ipcRenderer.invoke('webserver-manager', 'start')
+  }
+
+  if (!httpServerEnabled.value
+    && isRunning.value) {
+    isRunning.value = await ipcRenderer.invoke('webserver-manager', 'stop');
+  }
+
+  emit('settings-updated')
+  ipcRenderer.send('settings-updated')
+}
+
+async function toggleHttpServer() {
+  isLoading.value = true;
+  if (isRunning.value) {
+    isRunning.value = await ipcRenderer.invoke('webserver-manager', 'stop')
+  } else {
+    isRunning.value = await ipcRenderer.invoke('webserver-manager', 'start')
+  }
+  isLoading.value = false;
+}
+
+let httpToggleText = computed(() => isRunning.value ? "Stop" : "Start");
 </script>
 
 <style scoped>

@@ -13,16 +13,19 @@
   </div>
 </template>
 
-<script>
-import {defineComponent} from "vue";
-
-export default defineComponent({
-  name: "CheckBox",
-  props: {
-    modelValue: Boolean,
-    id: String,
-  }
+<script lang="ts" setup>
+defineOptions({
+  name: 'CheckBox',
 });
+
+defineEmits(['update:modelValue']);
+
+export interface Props {
+  modelValue: boolean
+  id: string
+}
+
+defineProps<Props>();
 </script>
 
 <style scoped>

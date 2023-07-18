@@ -40,108 +40,122 @@
   </svg>
 </template>
 
-<script lang="ts">
-import {defineComponent} from "vue";
+<script lang="ts" setup>
+import {computed, ref} from "vue";
+import Display = Electron.Display;
+import {WindowBounds} from "../../common/config";
 
-export default defineComponent({
-  name: "ScreensDrag",
-  data() {
-    return {
-      dragging: null,
-      offset: {},
-    }
-  },
-  props: {
-    screens: Array,
-    windows: {
-      type: Array,
-      default: [],
-    },
-  },
-  computed: {
-    svgSize() {
-      let minX = 0;
-      let minY = 0;
-      let maxX = 0;
-      let maxY = 0;
+defineOptions({
+  name: 'ScreensDrag',
+});
 
-      let negativeOffsetX = 0;
-      let negativeOffsetY = 0;
+let dragging = ref(null);
+let offset = ref<{
+  x: number
+  y: number
+}>({
+  x: 0,
+  y: 0,
+});
+let svg = ref();
 
-      this.screens.forEach((screen) => {
-        negativeOffsetX = Math.min(negativeOffsetX, screen.bounds.x)
-        negativeOffsetY = Math.min(negativeOffsetY, screen.bounds.y)
-      });
+export interface Props {
+  screens: Display[]
+  windows: WindowBounds[]
+}
 
-      this.screens.forEach((screen) => {
-        minX = Math.min(minX, screen.bounds.x)
-        minY = Math.min(minY, screen.bounds.y)
-        maxX = Math.max(maxX, Math.abs(negativeOffsetX) + screen.bounds.x + screen.bounds.width);
-        maxY = Math.max(maxY, Math.abs(negativeOffsetY) + screen.bounds.y + screen.bounds.height)
-      })
+const props = withDefaults(defineProps<Props>(), {
+  windows: () => [],
+});
 
-      return `${minX - 10} ${minY - 10} ${maxX + 20} ${maxY + 20}`
-    }
-  },
-  methods: {
-    startDrag(event, index) {
-      if (this.windows[index].fullscreenOn) {
-        return;
-      }
-      this.dragging = index;
-      this.offset = this.getMousePosition(event);
-      this.offset.x -= parseFloat(event.target.getAttributeNS(null, "x"));
-      this.offset.y -= parseFloat(event.target.getAttributeNS(null, "y"));
-    },
-    drag(event, index) {
-      if (this.windows[index].fullscreenOn) {
-        return;
-      }
-      if (this.dragging !== index) {
-        return;
-      }
-      event.preventDefault();
-      const mouseCoordinates = this.getMousePosition(event);
+const emit = defineEmits<{
+  'update:windows': [windows: WindowBounds[]],
+}>();
 
-      let newWindow = {
-        x: Math.round(mouseCoordinates.x - this.offset.x),
-        y: Math.round(mouseCoordinates.y - this.offset.y),
-        width: this.windows[index].width,
-        height: this.windows[index].height,
-        fullscreenOn: this.windows[index].fullscreenOn,
-      }
+const svgSize = computed(() => {
+  let minX = 0;
+  let minY = 0;
+  let maxX = 0;
+  let maxY = 0;
 
-      let windows = this.windows;
-      windows[index] = newWindow;
-      this.$emit('update:windows', windows);
-    },
-    endDrag(event) {
-      this.dragging = null;
-    },
-    getMousePosition(event) {
-      const CTM = this.$refs.svg.getScreenCTM();
-      return {
-        x: (event.clientX - CTM.e) / CTM.a,
-        y: (event.clientY - CTM.f) / CTM.d
-      };
-    },
-    windowCoordinates(index) {
-      let window = {...this.windows[index]};
-      if (window.fullscreenOn) {
-        const screen = this.screens.find((screen) => screen.id == window.fullscreenOn)
-        if (!screen) {
-          return window;
-        }
-        window.x = screen.bounds.x;
-        window.y = screen.bounds.y;
-        window.width = screen.bounds.width;
-        window.height = screen.bounds.height;
-      }
+  let negativeOffsetX = 0;
+  let negativeOffsetY = 0;
 
+  props.screens.forEach((screen) => {
+    negativeOffsetX = Math.min(negativeOffsetX, screen.bounds.x)
+    negativeOffsetY = Math.min(negativeOffsetY, screen.bounds.y)
+  });
+
+  props.screens.forEach((screen) => {
+    minX = Math.min(minX, screen.bounds.x)
+    minY = Math.min(minY, screen.bounds.y)
+    maxX = Math.max(maxX, Math.abs(negativeOffsetX) + screen.bounds.x + screen.bounds.width);
+    maxY = Math.max(maxY, Math.abs(negativeOffsetY) + screen.bounds.y + screen.bounds.height)
+  })
+
+  return `${minX - 10} ${minY - 10} ${maxX + 20} ${maxY + 20}`
+})
+
+function startDrag(event: MouseEvent, index: number) {
+  if (props.windows[index].fullscreenOn) {
+    return;
+  }
+  dragging.value = index;
+  offset.value = getMousePosition(event);
+  offset.value.x -= parseFloat((event.target as HTMLElement).getAttributeNS(null, "x"));
+  offset.value.y -= parseFloat((event.target as HTMLElement).getAttributeNS(null, "y"));
+}
+
+function drag(event: MouseEvent, index: number) {
+  if (props.windows[index].fullscreenOn) {
+    return;
+  }
+  if (dragging.value !== index) {
+    return;
+  }
+  event.preventDefault();
+  const mouseCoordinates = getMousePosition(event);
+
+  let newWindow = {
+    x: Math.round(mouseCoordinates.x - offset.value.x),
+    y: Math.round(mouseCoordinates.y - offset.value.y),
+    width: props.windows[index].width,
+    height: props.windows[index].height,
+    fullscreenOn: props.windows[index].fullscreenOn,
+  }
+
+  let windows = props.windows;
+  windows[index] = newWindow;
+  emit('update:windows', windows);
+}
+
+function endDrag(event: MouseEvent) {
+  dragging.value = null;
+}
+
+function getMousePosition(event: MouseEvent) {
+  const CTM = (svg.value as SVGGraphicsElement).getScreenCTM();
+  return {
+    x: (event.clientX - CTM.e) / CTM.a,
+    y: (event.clientY - CTM.f) / CTM.d
+  };
+}
+
+function windowCoordinates(index: number) {
+  let window = {...props.windows[index]};
+  if (window.fullscreenOn) {
+    const screen = props.screens.find((screen) => screen.id == window.fullscreenOn)
+    if (!screen) {
       return window;
     }
+    window.x = screen.bounds.x;
+    window.y = screen.bounds.y;
+    window.width = screen.bounds.width;
+    window.height = screen.bounds.height;
   }
-});
+
+  return window;
+}
 </script>
 
 <style scoped>

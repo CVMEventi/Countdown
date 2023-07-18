@@ -17,43 +17,38 @@
   </div>
 </template>
 
-<script lang="ts">
-import {defineComponent} from "vue";
+<script lang="ts" setup>
 import { Bars3Icon, TrashIcon } from '@heroicons/vue/24/outline';
 
-export default defineComponent({
-  name: "EditPreset",
-  components: {
-    Bars3Icon,
-    TrashIcon,
-  },
-  emits: [
-    'delete',
-  ],
-  props: {
-    modelValue: {
-      type: Number,
-      required: true,
-    }
-  },
-  methods: {
-    input(event) {
-      let value = parseFloat(event.target.value)
-      if (!value) {
-        value = 0;
-      }
-      if (value < 0) {
-        value = 0;
-      }
-
-      if (value > 1440) {
-        value = 1440
-      }
-
-      this.$emit('update:modelValue', value)
-    }
-  }
+defineOptions({
+  'name': 'EditPreset',
 });
+
+export interface Props {
+  modelValue: number
+}
+
+defineProps<Props>();
+const emit = defineEmits<{
+  'update:modelValue': [modelValue: number]
+  delete: []
+}>()
+
+function input(event: InputEvent) {
+  let value = parseFloat((event.target as HTMLInputElement).value)
+  if (!value) {
+    value = 0;
+  }
+  if (value < 0) {
+    value = 0;
+  }
+
+  if (value > 1440) {
+    value = 1440;
+  }
+
+  emit('update:modelValue', value);
+}
 </script>
 
 <style scoped>
