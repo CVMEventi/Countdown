@@ -1,7 +1,7 @@
 import { rules } from './webpack.rules';
 import {VueLoaderPlugin} from "vue-loader";
-import * as MiniCssExtractPlugin from "mini-css-extract-plugin";
-import * as CssMinimizerPlugin from "css-minimizer-webpack-plugin";
+import MiniCssExtractPlugin from "mini-css-extract-plugin";
+import CssMinimizerPlugin from "css-minimizer-webpack-plugin";
 const isProd = process.env.NODE_ENV === 'production';
 import {Configuration} from 'webpack';
 
