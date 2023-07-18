@@ -100,7 +100,7 @@ export default class HTTP {
     })
 
     this.fastifyServer.register(async function (fastify) {
-      fastify.get('/ws', { websocket: true });
+      fastify.get('/ws', { websocket: true }, () => {});
     })
 
   }
