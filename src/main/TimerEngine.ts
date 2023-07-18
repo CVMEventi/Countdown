@@ -1,5 +1,4 @@
 import {Timer} from "./Utilities/Timer";
-import {ipcRenderer} from "electron";
 import dayjs from "dayjs";
 import duration from "dayjs/plugin/duration";
 import {
@@ -18,8 +17,8 @@ export class TimerEngine {
   timerIsRunning = false;
   stopsAtZero = false;
   audioEnabled = false;
-  yellowAtOption: string = 'minutes';
-  yellowAt: number = 0;
+  yellowAtOption = 'minutes';
+  yellowAt = 0;
   update: UpdateCallback = null;
   webSocketUpdate: WebSocketUpdateCallback = null;
 
@@ -237,7 +236,7 @@ export class TimerEngine {
     })
   }
 
-  _timerStatusChanged(status: string) {
+  _timerStatusChanged() {
     this.timerIsRunning = this._timer.isRunning();
   }
 }

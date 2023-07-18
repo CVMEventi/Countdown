@@ -15,8 +15,6 @@ import { APP_VERSION } from "./src/version";
 import MakerDMG from "@electron-forge/maker-dmg";
 import PublisherGithub from "@electron-forge/publisher-github";
 
-const packageJson = require("./package.json");
-
 const appName = "Countdown";
 
 const config: ForgeConfig = {

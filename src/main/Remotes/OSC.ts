@@ -1,13 +1,11 @@
-import {ArgumentType, Server} from "node-osc";
-import {BrowserWindow} from "electron";
-import {TimerControl} from "../../renderer/TimerControl";
+import {ArgumentType, Server} from "node-osc"; // eslint-disable-line import/no-unresolved
 import {TimerEngine} from "../TimerEngine";
 
 const secondsPerMinute = 60;
 const secondsPerHour = secondsPerMinute * 60;
 
 export class OSC {
-  isRunning: boolean = false;
+  isRunning = false;
   oscServer: Server = null;
   port: number = null;
   timerEngine: TimerEngine = null;

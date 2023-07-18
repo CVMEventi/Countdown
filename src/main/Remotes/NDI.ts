@@ -5,7 +5,7 @@ import ImageBufferAdjustment from "../Utilities/ImageBufferAdjustment";
 import NativeImage = Electron.NativeImage;
 
 export default class NDIManager {
-  name: string = "";
+  name = "";
   ndiSender: grandiose.Sender = null;
   timeStart: bigint = null;
   alpha = false;

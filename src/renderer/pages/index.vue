@@ -190,7 +190,6 @@ function updateReceived(newUpdate: TimerEngineUpdate) {
 }
 
 function setPresetTime(minutes: number) {
-  console.log(minutes);
   const secondsPerMinute = 60;
   timerControl.set(minutes * secondsPerMinute);
 }

@@ -4,6 +4,7 @@ import {BrowserWindow, ipcMain} from "electron";
 import Store from "electron-store";
 import {DEFAULT_STORE} from "../../common/config";
 import {TimerEngine} from "../TimerEngine";
+import {TimerEngineWebSocketUpdate} from "../../common/TimerInterfaces";
 
 const secondsPerMinute = 60;
 const secondsPerHour = secondsPerMinute * 60;
@@ -20,7 +21,7 @@ export default class HTTP {
   fastifyServer: FastifyInstance = null;
   timerEngine: TimerEngine = null;
   browserWindow: BrowserWindow = null;
-  isRunning: boolean = false;
+  isRunning = false;
   port: number = null;
 
   lastError: unknown = null;
@@ -99,14 +100,12 @@ export default class HTTP {
     })
 
     this.fastifyServer.register(async function (fastify) {
-      fastify.get('/ws', { websocket: true }, (connection /* SocketStream */, req /* FastifyRequest */) => {
-
-      })
+      fastify.get('/ws', { websocket: true });
     })
 
   }
 
-  sendToWebSocket(payload: any) {
+  sendToWebSocket(payload: TimerEngineWebSocketUpdate): void {
     if (!this.fastifyServer.websocketServer) {
       return;
     }
@@ -117,29 +116,30 @@ export default class HTTP {
     })
   }
 
-  setupIpc() {
+  setupIpc(): void {
 
     ipcMain.handle('server-running', () => {
       return this.buildStatusUpdateContent()
     })
 
-    ipcMain.handle('webserver-manager', async (event, command, arg) => {
+    ipcMain.handle('webserver-manager', async (event, command) => {
       switch (command) {
         case 'stop':
           await this.stop()
           return false
-        case 'start':
-          let store = new Store(DEFAULT_STORE);
+        case 'start': {
+          const store = new Store(DEFAULT_STORE);
           this.port = store.get('settings.webServerPort') == null
             ? 6565
             : store.get('settings.webServerPort')
           return await this.start()
+        }
       }
     })
   }
 
   async start () {
-    let promise = new Promise((resolve, reject) => {
+    const promise = new Promise((resolve) => {
       this.fastifyServer.listen({ port: this.port, host: '0.0.0.0' }, err => {
         if (err) {
           this.isRunning = false
@@ -159,7 +159,7 @@ export default class HTTP {
   }
 
   async stop () {
-    let promise = new Promise((resolve, reject) => {
+    const promise = new Promise((resolve) => {
       this.fastifyServer.close(() => {
         this.reset();
         this.isRunning = false

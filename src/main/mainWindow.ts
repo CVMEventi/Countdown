@@ -11,7 +11,7 @@ export default function createMainWindow (options: BrowserWindowConstructorOptio
 }) {
   const winHandler = new BrowserWinHandler(options)
 
-  winHandler.onCreated(async (_browserWindow) => {
+  winHandler.onCreated(async () => {
     await winHandler.loadPage('/control/main')
     // Or load custom url
     // _browserWindow.loadURL('https://google.com')

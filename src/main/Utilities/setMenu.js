@@ -111,7 +111,6 @@ export default (mainWindowHandler, timerEngine) => {
         {
           label: 'By CVM Eventi',
           click: async () => {
-            const { shell } = require('electron')
             await shell.openExternal('https://cvm.it')
           }
         }

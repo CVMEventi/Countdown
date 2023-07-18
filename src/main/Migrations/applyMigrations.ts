@@ -1,4 +1,5 @@
 import {MergeOpacityToBackgroundColor} from "./MergeOpacityToBackgroundColor";
+import {BaseMigration} from "./BaseMigration";
 
 const migrations: BaseMigration[] = [
   new MergeOpacityToBackgroundColor,

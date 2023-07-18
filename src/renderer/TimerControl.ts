@@ -20,7 +20,7 @@ export class TimerControl {
   }
 
   async set(seconds: number) {
-    let command: IpcSetSeconds = {
+    const command: IpcSetSeconds = {
       name: IpcTimerCommandName.SetSeconds,
       seconds,
     };
@@ -28,42 +28,42 @@ export class TimerControl {
   }
 
   async start() {
-    let command: IpcStart = {
+    const command: IpcStart = {
       name: IpcTimerCommandName.Start,
     };
     await ipcRenderer.invoke('command', command);
   }
 
   async reset() {
-    let command: IpcReset = {
+    const command: IpcReset = {
       name: IpcTimerCommandName.Reset,
     };
     await ipcRenderer.invoke('command', command);
   }
 
   async toggle() {
-    let command: IpcTogglePause = {
+    const command: IpcTogglePause = {
       name: IpcTimerCommandName.TogglePause,
     };
     await ipcRenderer.invoke('command', command);
   }
 
   async pause() {
-    let command: IpcPause = {
+    const command: IpcPause = {
       name: IpcTimerCommandName.Pause,
     };
     await ipcRenderer.invoke('command', command);
   }
 
   async resume() {
-    let command: IpcResume = {
+    const command: IpcResume = {
       name: IpcTimerCommandName.Resume,
     };
     await ipcRenderer.invoke('command', command);
   }
 
   async jogSet(seconds: number) {
-    let command: IpcJogSet = {
+    const command: IpcJogSet = {
       name: IpcTimerCommandName.JogSet,
       seconds,
     }
@@ -71,7 +71,7 @@ export class TimerControl {
   }
 
   async jogCurrent(seconds: number) {
-    let command: IpcJogCurrent = {
+    const command: IpcJogCurrent = {
       name: IpcTimerCommandName.JogCurrent,
       seconds,
     };

@@ -1,4 +1,4 @@
-import {BrowserWindow, ipcMain, screen} from "electron";
+import {ipcMain, screen} from "electron";
 import {CountdownApp} from "../App";
 import {sleep} from "./utilities";
 import {
@@ -33,11 +33,11 @@ export async function setCountdownWindowPosition(app: CountdownApp) {
 
 export default function addIpcHandles(app: CountdownApp)
 {
-  ipcMain.handle('get-screens', (event, ...args) => {
+  ipcMain.handle('get-screens', () => {
     return screen.getAllDisplays()
   })
 
-  ipcMain.on('window-updated', async (event, arg) => {
+  ipcMain.on('window-updated', async () => {
     await setCountdownWindowPosition(app)
   })
 
@@ -46,7 +46,7 @@ export default function addIpcHandles(app: CountdownApp)
     browserWindow.webContents.send('temporary-settings-updated', arg)
   })
 
-  ipcMain.on('settings-updated', (event, arg) => {
+  ipcMain.on('settings-updated', () => {
     const browserWindow = app.countdownWindowHandler.browserWindow
     browserWindow.webContents.send('settings-updated')
 
@@ -75,7 +75,7 @@ export default function addIpcHandles(app: CountdownApp)
     browserWindow.webContents.send('command', arg)
   })
 
-  ipcMain.handle('countdown-bounds', (event, args) => {
+  ipcMain.handle('countdown-bounds', () => {
     const browserWindow = app.countdownWindowHandler.browserWindow;
     return browserWindow.getBounds();
   })

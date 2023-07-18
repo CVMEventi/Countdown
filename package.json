@@ -6,12 +6,12 @@
   "main": ".webpack/main",
   "repository": "CVMEventi/Countdown",
   "scripts": {
-    "preinstall": "node -p \"'export const APP_VERSION: string = ' + JSON.stringify(require('./package.json').version) + ';'\" > src/version.ts",
+    "preinstall": "node -p \"'export const APP_VERSION = ' + JSON.stringify(require('./package.json').version) + ';'\" > src/version.ts",
     "start": "electron-forge start",
     "package": "cross-env NODE_ENV=production electron-forge package",
     "make": "cross-env NODE_ENV=production electron-forge make",
     "publish": "electron-forge publish",
-    "lint": "echo \"No linting configured\""
+    "lint": "eslint ."
   },
   "keywords": [],
   "author": {

@@ -1,10 +1,10 @@
 // https://stackoverflow.com/questions/29971898/how-to-create-an-accurate-timer-in-javascript
 
 export default class AdjustingInterval {
-  interval: number = 1000;
+  interval = 1000;
   callback: () => void = null;
   _timeout: NodeJS.Timeout = null;
-  _expected: number = 0;
+  _expected = 0;
 
   constructor(callback: () => void, interval: number) {
     this.callback = callback;
