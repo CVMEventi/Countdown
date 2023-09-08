@@ -9,7 +9,7 @@ import {app, BrowserWindow, screen} from "electron";
 import createCountdownWindow from "./countdownWindow";
 import Store from "electron-store";
 import {
-  DEFAULT_NDI_ENABLED, DEFAULT_OSC_ENABLED, DEFAULT_OSC_PORT,
+  DEFAULT_NDI_ENABLED, DEFAULT_OSC_ENABLED, DEFAULT_OSC_PORT, DEFAULT_SET_TIME_LIVE,
   DEFAULT_STORE, DEFAULT_TIMER_ALWAYS_ON_TOP, DEFAULT_TIMER_DURATION,
   DEFAULT_WEBSERVER_ENABLED,
   DEFAULT_WEBSERVER_PORT
@@ -44,6 +44,7 @@ export class CountdownApp {
     }
     this.timerEngine = new TimerEngine(
       this.store.get('settings.timerDuration', DEFAULT_TIMER_DURATION),
+      this.store.get('settings.setTimeLive', DEFAULT_SET_TIME_LIVE),
       this._timerEngineUpdate.bind(this),
       this._timerEngineWebSocketUpdate.bind(this)
     );

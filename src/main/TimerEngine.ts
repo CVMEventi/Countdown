@@ -19,11 +19,13 @@ export class TimerEngine {
   audioEnabled = false;
   yellowAtOption = 'minutes';
   yellowAt = 0;
+  setTimeLive = false;
   update: UpdateCallback = null;
   webSocketUpdate: WebSocketUpdateCallback = null;
 
-  constructor(interval: number, update: UpdateCallback, webSocketUpdate: WebSocketUpdateCallback) {
+  constructor(interval: number, setTimeLive: boolean, update: UpdateCallback, webSocketUpdate: WebSocketUpdateCallback) {
     this._timer = new Timer(interval, this._timerTick.bind(this), this._timerStatusChanged.bind(this))
+    this.setTimeLive = setTimeLive;
     this.update = update;
     this.webSocketUpdate = webSocketUpdate;
   }
@@ -176,9 +178,15 @@ export class TimerEngine {
   }
 
   private _sendUpdate() {
+    let currentSeconds = this._currentSeconds;
+
+    if (this.setTimeLive && this.isReset()) {
+      currentSeconds = this.totalSeconds;
+    }
+
     this.update({
       setSeconds: this.totalSeconds,
-      currentSeconds: this._currentSeconds,
+      currentSeconds: currentSeconds,
       countSeconds: this.countSeconds(),
       extraSeconds: this.extraSeconds(),
       secondsSetOnCurrentTimer: this._secondsSetOnCurrentTimer,

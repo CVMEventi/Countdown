@@ -19,6 +19,7 @@
       <check-box id="showHours" v-model="settings.showHours">Show hours</check-box>
       <check-box id="pulseAtZero" v-model="settings.pulseAtZero">Pulse at zero</check-box>
       <check-box id="timerAlwaysOnTop" v-model="settings.timerAlwaysOnTop">Window always on top</check-box>
+      <check-box id="setTimeLive" v-model="settings.setTimeLive">Set time live</check-box>
       <p class="text-sm mt-2">Yellow Bar at</p>
       <input-with-button
         @click="updateYellowOption"
@@ -92,6 +93,7 @@ import {
   DEFAULT_YELLOW_AT_OPTION,
   DEFAULT_YELLOW_AT_MINUTES,
   DEFAULT_YELLOW_AT_PERCENT,
+  DEFAULT_SET_TIME_LIVE,
   DEFAULT_AUDIO_ENABLED, DEFAULT_STORE, CountdownSettings, DEFAULT_TIMER_DURATION, CountdownStore,
 
 } from "../../common/config";
@@ -139,6 +141,7 @@ let settings = ref({
   yellowAtPercent: store.get('settings.yellowAtPercent', DEFAULT_YELLOW_AT_PERCENT),
   audioEnabled: store.get('settings.audioEnabled', DEFAULT_AUDIO_ENABLED),
   timerDuration: store.get('settings.timerDuration', DEFAULT_TIMER_DURATION),
+  setTimeLive: store.get('settings.setTimeLive', DEFAULT_SET_TIME_LIVE),
 });
 
 watch(settings, () => {
@@ -183,6 +186,7 @@ const save = debounce(() => {
     font: settings.value.font,
     audioEnabled: settings.value.audioEnabled,
     timerDuration: settings.value.timerDuration,
+    setTimeLive: settings.value.setTimeLive,
   }
 
   if (CSS.supports('color', settings.value.backgroundColor)) {

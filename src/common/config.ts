@@ -26,6 +26,8 @@ export const DEFAULT_YELLOW_AT_OPTION = 'minutes';
 export const DEFAULT_YELLOW_AT_MINUTES = 2;
 export const DEFAULT_YELLOW_AT_PERCENT = 10;
 
+export const DEFAULT_SET_TIME_LIVE = false;
+
 export const DEFAULT_FONT = 'digital-7';
 
 export const DEFAULT_AUDIO_ENABLED = false;
@@ -76,6 +78,7 @@ export const DEFAULT_STORE: CountdownConfiguration = {
       yellowAtPercent: DEFAULT_YELLOW_AT_PERCENT,
       audioEnabled: DEFAULT_AUDIO_ENABLED,
       timerDuration: DEFAULT_TIMER_DURATION,
+      setTimeLive: DEFAULT_SET_TIME_LIVE,
     },
     window: DEFAULT_WINDOW_BOUNDS,
   }
@@ -123,6 +126,7 @@ export interface CountdownSettings {
   yellowAtPercent: number
   audioEnabled: boolean
   timerDuration: number
+  setTimeLive: boolean
 }
 
 export interface CountdownStore {
