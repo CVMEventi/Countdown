@@ -3993,9 +3993,9 @@ graceful-fs@^4.1.2, graceful-fs@^4.1.6, graceful-fs@^4.2.0, graceful-fs@^4.2.4, 
   resolved "https://registry.yarnpkg.com/graceful-fs/-/graceful-fs-4.2.11.tgz#4183e4e8bf08bb6e05bbb2f7d2e0c8f712ca40e3"
   integrity sha512-RbJ5/jmFcNNCcDV5o9eTnBLJ/HszWV0P73bc+Ff4nS/rJj+YaS6IGyiOL0VoBYX+l1Wrl3k63h/KrH+nhJ0XvQ==
 
-"grandiose@github:CVMEventi/grandiose#cd37097":
+"grandiose@github:CVMEventi/grandiose#f0636b8":
   version "0.0.4"
-  resolved "https://codeload.github.com/CVMEventi/grandiose/tar.gz/cd37097bda7dac63c21c6ac13ce4da7dd87dbf37"
+  resolved "https://codeload.github.com/CVMEventi/grandiose/tar.gz/f0636b80d882eea1e407dc72807ace189efca88c"
   dependencies:
     bindings "1.5.0"
     cross-spawn "7.0.3"

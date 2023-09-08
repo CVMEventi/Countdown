@@ -71,7 +71,7 @@
     "electron-squirrel-startup": "^1.0.0",
     "electron-store": "^8.0.1",
     "fastify": "^4.0.3",
-    "grandiose": "github:CVMEventi/grandiose#cd37097",
+    "grandiose": "github:CVMEventi/grandiose#f0636b8",
     "howler": "^2.2.3",
     "node-osc": "^8.0.11",
     "update-electron-app": "^2.0.1",
