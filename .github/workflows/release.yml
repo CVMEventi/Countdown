@@ -21,6 +21,7 @@ jobs:
       - name: Install Node.js, NPM and Yarn
         uses: actions/setup-node@v3
         with:
+          cache: 'yarn'
           node-version: 18
 
       - name: Install dependencies
