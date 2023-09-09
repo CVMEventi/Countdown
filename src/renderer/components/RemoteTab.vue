@@ -127,6 +127,10 @@ async function toggleHttpServer() {
 }
 
 let httpToggleText = computed(() => isRunning.value ? "Stop" : "Start");
+
+defineExpose({
+  save,
+});
 </script>
 
 <style scoped>

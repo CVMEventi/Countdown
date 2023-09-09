@@ -108,7 +108,7 @@
 </template>
 
 <script lang="ts" setup>
-import {computed, defineComponent, onMounted, ref} from "vue";
+import {computed, defineComponent, nextTick, onMounted, ref} from "vue";
 import {ipcRenderer} from 'electron'
 import Store from "electron-store"
 import Card from '../components/Card'
@@ -203,12 +203,14 @@ function openURL(url: string) {
   shell.openExternal(url);
 }
 
-let remoteTabRef = ref<RemoteTab>();
+let remoteTabRef = ref<RemoteTab>(null);
 
 function save() {
-  if (props.tab === 'remote') {
-    remoteTabRef.value.save()
-  }
+  nextTick(() => {
+    if (props.tab === 'remote') {
+      remoteTabRef.value.save()
+    }
+  })
 }
 </script>
 
