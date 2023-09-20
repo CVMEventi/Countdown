@@ -138,6 +138,7 @@ export class TimerEngine {
   set(seconds: number) {
     this.totalSeconds = seconds;
     this._sendUpdate();
+    this._sendWebSocketUpdate();
   }
 
   jogSet(seconds: number) {
