@@ -24,6 +24,9 @@ jobs:
           cache: 'yarn'
           node-version: 18
 
+      - name: Install setuptools
+        run: pip install setuptools
+
       - name: Install dependencies
         run: yarn
 
