@@ -11,6 +11,10 @@ export interface TimerEngineUpdate {
   timerEndsAt: string
 }
 
+export interface MessageUpdate {
+  message?: string
+}
+
 export interface TimerEngineWebSocketUpdate {
   state: string
   setTime: number,
@@ -36,3 +40,4 @@ export interface TimerEngineWebSocketUpdate {
 
 export type UpdateCallback = (update: TimerEngineUpdate) => void;
 export type WebSocketUpdateCallback = (update: TimerEngineWebSocketUpdate) => void;
+export type MessageUpdateCallback = (update: MessageUpdate) => void;

@@ -13,6 +13,14 @@
     class="flex justify-center flex-col drag"
   >
     <div
+      :class="{
+        'message-box': true,
+        'message-box-fixed-height': settings.messageBoxFixedHeight || !!messageUpdate.message,
+      }"
+    >
+      {{ messageUpdate.message }}
+    </div>
+    <div
       v-if="settings.show.timer"
       class="text-center text-time font-digital-clock"
       :style="{
@@ -66,7 +74,8 @@ import duration from 'dayjs/plugin/duration'
 import Store from "electron-store"
 import {DEFAULT_STORE, DEFAULT_FONT, CountdownSettings} from "../../common/config";
 import { ClockIcon } from '@heroicons/vue/24/solid';
-import {TimerEngineUpdate} from "../../common/TimerInterfaces";
+import {MessageUpdate, TimerEngineUpdate} from "../../common/TimerInterfaces";
+import {message} from "memfs/lib/internal/errors";
 
 let store = new Store()
 
@@ -90,6 +99,9 @@ let update = ref<TimerEngineUpdate>({
   isRunning: false,
   timerEndsAt: null,
 });
+let messageUpdate = ref<MessageUpdate>({
+  message: null,
+})
 let settings = ref<CountdownSettings>(store.get('settings', DEFAULT_STORE.defaults.settings) as CountdownSettings);
 
 const time = computed(() => {
@@ -129,6 +141,8 @@ const backgroundColor = computed(() => {
 const cssVars = computed(() => {
   return {
     '--clock-font': settings.value.font || DEFAULT_FONT,
+    '--message-length': messageUpdate.value.message?.length ?? 1,
+    '--magic-number-font-size': 17,
   }
 });
 
@@ -143,6 +157,10 @@ function updateTime() {
 onMounted(() => {
   ipcRenderer.on('update', (event, arg) => {
     update.value = arg;
+  })
+  ipcRenderer.on('message', (event, arg) => {
+    console.log(arg);
+    messageUpdate.value = arg;
   })
   ipcRenderer.on('settings-updated', (event, arg) => {
     store = new Store();
@@ -186,4 +204,20 @@ onMounted(() => {
 .font-digital-clock {
   font-family: var(--clock-font), monospace;
 }
+
+.message-box {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: min(18vh, 12vw, calc(min(18vh, 12vw) * var(--magic-number-font-size) / var(--message-length)));
+  color: white;
+  text-align: center;
+  line-height: 1;
+}
+
+.message-box-fixed-height {
+  height: min(18vh, 12vw);
+}
 </style>
+
+10:14=x:25

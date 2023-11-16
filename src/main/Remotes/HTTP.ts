@@ -17,6 +17,12 @@ interface TimeRequest extends RequestGenericInterface {
   };
 }
 
+interface MessageRequest extends RequestGenericInterface {
+  Params: {
+    message: string,
+  }
+}
+
 export default class HTTP {
   fastifyServer: FastifyInstance = null;
   timerEngine: TimerEngine = null;
@@ -97,6 +103,15 @@ export default class HTTP {
 
       this.timerEngine.jogCurrent(hours * secondsPerHour + minutes * secondsPerMinute + seconds);
       res.send(200)
+    })
+
+    this.fastifyServer.get('/message', (req, res) => {
+      this.timerEngine.setMessage("");
+      res.send(200);
+    })
+    this.fastifyServer.get<MessageRequest>('/message/:message', (req, res) => {
+      this.timerEngine.setMessage(req.params.message);
+      res.send(200);
     })
 
     this.fastifyServer.register(async function (fastify) {

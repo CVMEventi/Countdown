@@ -24,14 +24,18 @@
       <input-with-button
         @click="updateYellowOption"
         @input="updateYellowValue"
+        type="number"
         :model-value="settings.yellowAtOption === 'minutes' ? settings.yellowAtMinutes : settings.yellowAtPercent">
         {{ settings.yellowAtOption === 'minutes' ? 'm' : '%' }} <arrows-right-left-icon class="ml-3 w-4 h-4" />
       </input-with-button>
-      <p class="text-2xl">Show</p>
+    </card>
+    <card class="inline-block border flex flex-col">
+      <p class="text-2xl">Timer UI</p>
       <check-box id="showTimer" v-model="settings.show.timer">Timer</check-box>
       <check-box id="showProgress" v-model="settings.show.progress">Progress</check-box>
       <check-box id="showClock" v-model="settings.show.clock">Clock</check-box>
       <check-box id="showSecondsOnClock" v-model="settings.show.secondsOnClock">Seconds on clock</check-box>
+      <check-box id="messageBoxFixedHeight" v-model="settings.messageBoxFixedHeight">Message box fixed height</check-box>
       <p class="text-2xl">Audio</p>
       <check-box id="audioEnabled" v-model="settings.audioEnabled">Enable</check-box>
     </card>
@@ -94,7 +98,12 @@ import {
   DEFAULT_YELLOW_AT_MINUTES,
   DEFAULT_YELLOW_AT_PERCENT,
   DEFAULT_SET_TIME_LIVE,
-  DEFAULT_AUDIO_ENABLED, DEFAULT_STORE, CountdownSettings, DEFAULT_TIMER_DURATION, CountdownStore,
+  DEFAULT_AUDIO_ENABLED,
+  DEFAULT_STORE,
+  CountdownSettings,
+  DEFAULT_TIMER_DURATION,
+  CountdownStore,
+  DEFAULT_MESSAGE_BOX_FIXED_HEIGHT,
 
 } from "../../common/config";
 import CheckBox from "./CheckBox";
@@ -142,6 +151,7 @@ let settings = ref({
   audioEnabled: store.get('settings.audioEnabled', DEFAULT_AUDIO_ENABLED),
   timerDuration: store.get('settings.timerDuration', DEFAULT_TIMER_DURATION),
   setTimeLive: store.get('settings.setTimeLive', DEFAULT_SET_TIME_LIVE),
+  messageBoxFixedHeight: store.get('settings.messageBoxFixedHeight', DEFAULT_MESSAGE_BOX_FIXED_HEIGHT),
 });
 
 watch(settings, () => {
@@ -187,6 +197,7 @@ const save = debounce(() => {
     audioEnabled: settings.value.audioEnabled,
     timerDuration: settings.value.timerDuration,
     setTimeLive: settings.value.setTimeLive,
+    messageBoxFixedHeight: settings.value.messageBoxFixedHeight,
   }
 
   if (CSS.supports('color', settings.value.backgroundColor)) {

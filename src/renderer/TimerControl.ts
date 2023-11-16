@@ -3,6 +3,7 @@ import {TimerEngineUpdate} from "../common/TimerInterfaces";
 import {
   IpcJogCurrent,
   IpcJogSet,
+  IpcMessage,
   IpcPause,
   IpcReset,
   IpcResume,
@@ -74,6 +75,14 @@ export class TimerControl {
     const command: IpcJogCurrent = {
       name: IpcTimerCommandName.JogCurrent,
       seconds,
+    };
+    await ipcRenderer.invoke('command', command);
+  }
+
+  async sendMessage(message: string) {
+    const command: IpcMessage = {
+      name: IpcTimerCommandName.Message,
+      message,
     };
     await ipcRenderer.invoke('command', command);
   }

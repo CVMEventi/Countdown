@@ -34,6 +34,8 @@ export const DEFAULT_AUDIO_ENABLED = false;
 
 export const DEFAULT_TIMER_DURATION = 1000;
 
+export const DEFAULT_MESSAGE_BOX_FIXED_HEIGHT = false;
+
 export const DEFAULT_SHOW_SECTIONS: ShowSections = {
   timer: true,
   progress: true,
@@ -79,6 +81,7 @@ export const DEFAULT_STORE: CountdownConfiguration = {
       audioEnabled: DEFAULT_AUDIO_ENABLED,
       timerDuration: DEFAULT_TIMER_DURATION,
       setTimeLive: DEFAULT_SET_TIME_LIVE,
+      messageBoxFixedHeight: DEFAULT_MESSAGE_BOX_FIXED_HEIGHT,
     },
     window: DEFAULT_WINDOW_BOUNDS,
   }
@@ -127,6 +130,7 @@ export interface CountdownSettings {
   audioEnabled: boolean
   timerDuration: number
   setTimeLive: boolean
+  messageBoxFixedHeight: boolean
 }
 
 export interface CountdownStore {

@@ -18,7 +18,7 @@ import HTTP from "./Remotes/HTTP";
 import {OSC} from "./Remotes/OSC";
 import {TimerEngine} from "./TimerEngine";
 import {IpcTimerController} from "./Remotes/IpcTimerController";
-import {TimerEngineUpdate, TimerEngineWebSocketUpdate} from "../common/TimerInterfaces";
+import {MessageUpdate, TimerEngineUpdate, TimerEngineWebSocketUpdate} from "../common/TimerInterfaces";
 import {applyMigrations} from "./Migrations/applyMigrations";
 
 export class CountdownApp {
@@ -46,7 +46,8 @@ export class CountdownApp {
       this.store.get('settings.timerDuration', DEFAULT_TIMER_DURATION),
       this.store.get('settings.setTimeLive', DEFAULT_SET_TIME_LIVE),
       this._timerEngineUpdate.bind(this),
-      this._timerEngineWebSocketUpdate.bind(this)
+      this._timerEngineWebSocketUpdate.bind(this),
+      this._timerEngineMessageUpdate.bind(this),
     );
     this.ipcTimerController = new IpcTimerController(this.timerEngine);
   }
@@ -147,5 +148,11 @@ export class CountdownApp {
 
   _timerEngineWebSocketUpdate(update: TimerEngineWebSocketUpdate) {
     this.webServer.sendToWebSocket(update);
+  }
+
+  _timerEngineMessageUpdate(update: MessageUpdate) {
+    const countdownWindow = this.countdownWindowHandler.browserWindow;
+    countdownWindow.webContents.send('message', update);
+    console.log(update);
   }
 }

@@ -84,11 +84,11 @@ let windows = computed({
   },
 })
 
-const setAndSave = debounce(() => {
+const setAndSave = async () => {
   store.set('window', {...window.value});
 
   ipcRenderer.send('window-updated');
-}, 50);
+};
 
 async function getCountdownBounds() {
   window.value = await ipcRenderer.invoke('countdown-bounds')

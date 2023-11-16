@@ -40,6 +40,9 @@ export class IpcTimerController {
       case  IpcTimerCommandName.JogCurrent:
         this.timerEngine.jogCurrent(command.seconds);
         break;
+      case IpcTimerCommandName.Message:
+        this.timerEngine.setMessage(command.message);
+        break;
     }
   }
 }

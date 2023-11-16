@@ -7,6 +7,7 @@ export enum IpcTimerCommandName {
   Resume,
   JogSet,
   JogCurrent,
+  Message,
 }
 
 export interface IpcSetSeconds {
@@ -44,4 +45,9 @@ export interface IpcJogCurrent {
   seconds: number
 }
 
-export type IpcTimerCommand = IpcSetSeconds | IpcStart | IpcReset | IpcTogglePause | IpcPause | IpcResume | IpcJogSet | IpcJogCurrent;
+export interface IpcMessage {
+  name: IpcTimerCommandName.Message
+  message?: string
+}
+
+export type IpcTimerCommand = IpcSetSeconds | IpcStart | IpcReset | IpcTogglePause | IpcPause | IpcResume | IpcJogSet | IpcJogCurrent | IpcMessage;

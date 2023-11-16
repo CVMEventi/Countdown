@@ -80,6 +80,10 @@
             </jog>
           </div>
         </card>
+        <card class="flex-1">
+          <div class="uppercase text-white">Message</div>
+          <input-with-button type="text" @input="value => message = value" :model-value="message" @click="sendMessage">Send</input-with-button>
+        </card>
       </div>
       <card class="presets inline-flex gap-2 overflow-x-auto">
         <s-button
@@ -129,6 +133,8 @@ import {TimerEngineUpdate} from "../../common/TimerInterfaces";
 import {TimerControl} from "../TimerControl";
 import Display = Electron.Display;
 import {CountdownSettings} from "../../common/config";
+import CheckBox from "../components/CheckBox.vue";
+import InputWithButton from "../components/InputWithButton.vue";
 /*
 import { Howl } from "howler";
 import gong from "../assets/sounds/gong.mp3";
@@ -168,6 +174,13 @@ let update = ref<TimerEngineUpdate>({
   isRunning: false,
   timerEndsAt: null,
 });
+let message = ref('');
+let lastMessage = ref('');
+
+function sendMessage() {
+  timerControl.sendMessage(message.value);
+  lastMessage.value = message.value;
+}
 
 onMounted(async () => {
   screens.value = await ipcRenderer.invoke('get-screens');

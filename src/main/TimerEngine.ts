@@ -2,6 +2,7 @@ import {Timer} from "./Utilities/Timer";
 import dayjs from "dayjs";
 import duration from "dayjs/plugin/duration";
 import {
+  MessageUpdateCallback,
   UpdateCallback,
   WebSocketUpdateCallback
 } from "../common/TimerInterfaces";
@@ -22,12 +23,14 @@ export class TimerEngine {
   setTimeLive = false;
   update: UpdateCallback = null;
   webSocketUpdate: WebSocketUpdateCallback = null;
+  messageUpdate: MessageUpdateCallback = null;
 
-  constructor(interval: number, setTimeLive: boolean, update: UpdateCallback, webSocketUpdate: WebSocketUpdateCallback) {
+  constructor(interval: number, setTimeLive: boolean, update: UpdateCallback, webSocketUpdate: WebSocketUpdateCallback, messageUpdate: MessageUpdateCallback) {
     this._timer = new Timer(interval, this._timerTick.bind(this), this._timerStatusChanged.bind(this))
     this.setTimeLive = setTimeLive;
     this.update = update;
     this.webSocketUpdate = webSocketUpdate;
+    this.messageUpdate = messageUpdate;
   }
 
   extraSeconds() {
@@ -170,6 +173,12 @@ export class TimerEngine {
     }
 
     this._sendUpdate();
+  }
+
+  setMessage(message?: string) {
+    this.messageUpdate({
+      message,
+    });
   }
 
   _timerTick(seconds: number) {
