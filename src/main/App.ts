@@ -153,6 +153,5 @@ export class CountdownApp {
   _timerEngineMessageUpdate(update: MessageUpdate) {
     const countdownWindow = this.countdownWindowHandler.browserWindow;
     countdownWindow.webContents.send('message', update);
-    console.log(update);
   }
 }
