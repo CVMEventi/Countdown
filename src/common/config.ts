@@ -20,6 +20,12 @@ export const DEFAULT_STOP_TIMER_AT_ZERO = false;
 export const DEFAULT_SHOW_HOURS = false;
 export const DEFAULT_PULSE_AT_ZERO = false;
 export const DEFAULT_BLACK_AT_RESET = false;
+export enum ContentAtReset {
+  Empty = "EMPTY",
+  Time = "TIME",
+  Full = "FULL",
+}
+export const DEFAULT_CONTENT_AT_RESET: ContentAtReset = ContentAtReset.Full;
 export const DEFAULT_TIMER_ALWAYS_ON_TOP = false;
 export const DEFAULT_SET_WINDOW_ALWAYS_ON_TOP = false;
 export const DEFAULT_YELLOW_AT_OPTION = 'minutes';
@@ -63,6 +69,7 @@ export const DEFAULT_STORE: CountdownConfiguration = {
       presets: DEFAULT_PRESETS,
       stopTimerAtZero: DEFAULT_STOP_TIMER_AT_ZERO,
       blackAtReset: DEFAULT_BLACK_AT_RESET,
+      contentAtReset: DEFAULT_CONTENT_AT_RESET,
       showHours: DEFAULT_SHOW_HOURS,
       pulseAtZero: DEFAULT_PULSE_AT_ZERO,
       webServerEnabled: DEFAULT_WEBSERVER_ENABLED,
@@ -112,6 +119,7 @@ export interface CountdownSettings {
   presets: number[]
   stopTimerAtZero: boolean
   blackAtReset: boolean
+  contentAtReset: ContentAtReset
   showHours: boolean
   pulseAtZero: boolean
   webServerEnabled: boolean

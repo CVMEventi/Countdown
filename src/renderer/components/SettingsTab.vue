@@ -14,7 +14,6 @@
     </card>
     <card class="inline-block border flex flex-col">
       <p class="text-2xl">Timer</p>
-      <check-box id="blackAtReset" v-model="settings.blackAtReset">Black at reset</check-box>
       <check-box id="stopTimerAtZero" v-model="settings.stopTimerAtZero">Stop timer at 0</check-box>
       <check-box id="showHours" v-model="settings.showHours">Show hours</check-box>
       <check-box id="pulseAtZero" v-model="settings.pulseAtZero">Pulse at zero</check-box>
@@ -28,6 +27,12 @@
         :model-value="settings.yellowAtOption === 'minutes' ? settings.yellowAtMinutes : settings.yellowAtPercent">
         {{ settings.yellowAtOption === 'minutes' ? 'm' : '%' }} <arrows-right-left-icon class="ml-3 w-4 h-4" />
       </input-with-button>
+      <p class="text-sm mt-2">Content at Reset</p>
+      <select v-model="settings.contentAtReset" class="input p-2 text-black">
+        <option :value="ContentAtReset.Empty">Empty</option>
+        <option :value="ContentAtReset.Time">Time</option>
+        <option :value="ContentAtReset.Full">Full</option>
+      </select>
     </card>
     <card class="inline-block border flex flex-col">
       <p class="text-2xl">Timer UI</p>
@@ -103,7 +108,7 @@ import {
   CountdownSettings,
   DEFAULT_TIMER_DURATION,
   CountdownStore,
-  DEFAULT_MESSAGE_BOX_FIXED_HEIGHT,
+  DEFAULT_MESSAGE_BOX_FIXED_HEIGHT, ContentAtReset, DEFAULT_CONTENT_AT_RESET,
 
 } from "../../common/config";
 import CheckBox from "./CheckBox";
@@ -152,6 +157,7 @@ let settings = ref({
   timerDuration: store.get('settings.timerDuration', DEFAULT_TIMER_DURATION),
   setTimeLive: store.get('settings.setTimeLive', DEFAULT_SET_TIME_LIVE),
   messageBoxFixedHeight: store.get('settings.messageBoxFixedHeight', DEFAULT_MESSAGE_BOX_FIXED_HEIGHT),
+  contentAtReset: store.get('settings.contentAtReset', DEFAULT_CONTENT_AT_RESET),
 });
 
 watch(settings, () => {
@@ -198,6 +204,7 @@ const save = debounce(() => {
     timerDuration: settings.value.timerDuration,
     setTimeLive: settings.value.setTimeLive,
     messageBoxFixedHeight: settings.value.messageBoxFixedHeight,
+    contentAtReset: settings.value.contentAtReset,
   }
 
   if (CSS.supports('color', settings.value.backgroundColor)) {

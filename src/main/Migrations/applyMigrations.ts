@@ -1,8 +1,10 @@
 import {MergeOpacityToBackgroundColor} from "./MergeOpacityToBackgroundColor";
 import {BaseMigration} from "./BaseMigration";
+import {MoveBlackAtResetToContentAtReset} from "./MoveBlackAtResetToContentAtReset";
 
 const migrations: BaseMigration[] = [
   new MergeOpacityToBackgroundColor,
+  new MoveBlackAtResetToContentAtReset,
 ];
 
 export function applyMigrations(oldConfig: {[key: string]: unknown}): {[key: string]: unknown} {
