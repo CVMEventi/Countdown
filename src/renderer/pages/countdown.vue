@@ -1,13 +1,13 @@
 <template>
   <div
     :style="{
-      backgroundColor: backgroundColor,
+      backgroundColor: update.isReset ? settings.resetBackgroundColor : backgroundColor,
     }"
     v-if="settings.contentAtReset === ContentAtReset.Empty && update.isReset" class="drag"></div>
   <div
     v-if="settings.contentAtReset !== ContentAtReset.Empty || (settings.contentAtReset === ContentAtReset.Empty && !update.isReset)"
     :style="{
-      backgroundColor: backgroundColor,
+      backgroundColor: update.isReset ? settings.resetBackgroundColor : backgroundColor,
       ...cssVars
     }"
     class="flex justify-center flex-col drag"

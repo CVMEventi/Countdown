@@ -50,6 +50,9 @@
         <color-input alpha-channel v-model="settings.backgroundColor" default-value="#000000ff">
           Background
         </color-input>
+        <color-input alpha-channel v-model="settings.resetBackgroundColor" default-value="#000000ff">
+          Background at reset
+        </color-input>
         <color-input v-model="settings.textColor" default-value="#ffffff">
           Text
         </color-input>
@@ -108,7 +111,7 @@ import {
   CountdownSettings,
   DEFAULT_TIMER_DURATION,
   CountdownStore,
-  DEFAULT_MESSAGE_BOX_FIXED_HEIGHT, ContentAtReset, DEFAULT_CONTENT_AT_RESET,
+  DEFAULT_MESSAGE_BOX_FIXED_HEIGHT, ContentAtReset, DEFAULT_CONTENT_AT_RESET, DEFAULT_RESET_BACKGROUND_COLOR,
 
 } from "../../common/config";
 import CheckBox from "./CheckBox";
@@ -138,6 +141,7 @@ const store = new Store<CountdownStore>(DEFAULT_STORE);
 
 let settings = ref({
   backgroundColor: store.get('settings.backgroundColor', DEFAULT_BACKGROUND_COLOR),
+  resetBackgroundColor: store.get('settings.resetBackgroundColor', DEFAULT_RESET_BACKGROUND_COLOR),
   textColor: store.get('settings.textColor', DEFAULT_TEXT_COLOR),
   timerFinishedTextColor: store.get('settings.timerFinishedTextColor', DEFAULT_TIMER_FINISHED_TEXT_COLOR),
   clockColor: store.get('settings.clockColor', DEFAULT_CLOCK_COLOR),
@@ -145,7 +149,6 @@ let settings = ref({
   presets: store.get('settings.presets', DEFAULT_PRESETS),
   stopTimerAtZero: store.get('settings.stopTimerAtZero', DEFAULT_STOP_TIMER_AT_ZERO),
   showHours: store.get('settings.showHours', DEFAULT_SHOW_HOURS),
-  blackAtReset: store.get('settings.blackAtReset', DEFAULT_BLACK_AT_RESET),
   pulseAtZero: store.get('settings.pulseAtZero', DEFAULT_PULSE_AT_ZERO),
   show: store.get('settings.show', DEFAULT_SHOW_SECTIONS),
   font: store.get('settings.font', DEFAULT_FONT),
@@ -190,7 +193,6 @@ const save = debounce(() => {
   let newSettings: CountdownSettings = {
     ...oldSettings,
     presets: settings.value.presets,
-    blackAtReset: settings.value.blackAtReset,
     stopTimerAtZero: settings.value.stopTimerAtZero,
     showHours: settings.value.showHours,
     pulseAtZero: settings.value.pulseAtZero,
@@ -209,6 +211,10 @@ const save = debounce(() => {
 
   if (CSS.supports('color', settings.value.backgroundColor)) {
     newSettings.backgroundColor = settings.value.backgroundColor;
+  }
+
+  if (CSS.supports('color', settings.value.resetBackgroundColor)) {
+    newSettings.resetBackgroundColor = settings.value.resetBackgroundColor;
   }
 
   if (CSS.supports('color', settings.value.textColor)) {

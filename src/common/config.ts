@@ -1,4 +1,5 @@
-export const DEFAULT_BACKGROUND_COLOR = '#000000';
+export const DEFAULT_BACKGROUND_COLOR = '#000000ff';
+export const DEFAULT_RESET_BACKGROUND_COLOR = '#000000ff';
 export const DEFAULT_BACKGROUND_OPACITY = '255';
 export const DEFAULT_TEXT_COLOR = '#ffffff';
 export const DEFAULT_TIMER_FINISHED_TEXT_COLOR = '#ff0000';
@@ -61,7 +62,7 @@ export const DEFAULT_STORE: CountdownConfiguration = {
   defaults: {
     settings: {
       backgroundColor: DEFAULT_BACKGROUND_COLOR,
-      backgroundColorOpacity: DEFAULT_BACKGROUND_OPACITY,
+      resetBackgroundColor: DEFAULT_RESET_BACKGROUND_COLOR,
       textColor: DEFAULT_TEXT_COLOR,
       timerFinishedTextColor: DEFAULT_TIMER_FINISHED_TEXT_COLOR,
       clockColor: DEFAULT_CLOCK_COLOR,
@@ -111,7 +112,7 @@ export interface WindowBounds {
 
 export interface CountdownSettings {
   backgroundColor: string
-  backgroundColorOpacity: string
+  resetBackgroundColor: string
   textColor: string
   timerFinishedTextColor: string
   clockColor: string
