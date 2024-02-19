@@ -35,6 +35,8 @@ export const DEFAULT_YELLOW_AT_PERCENT = 10;
 
 export const DEFAULT_SET_TIME_LIVE = false;
 
+export const DEFAULT_USE_12_HOUR_CLOCK = false;
+
 export const DEFAULT_FONT = 'digital-7';
 
 export const DEFAULT_AUDIO_ENABLED = false;
@@ -89,6 +91,7 @@ export const DEFAULT_STORE: CountdownConfiguration = {
       audioEnabled: DEFAULT_AUDIO_ENABLED,
       timerDuration: DEFAULT_TIMER_DURATION,
       setTimeLive: DEFAULT_SET_TIME_LIVE,
+      use12HourClock: DEFAULT_USE_12_HOUR_CLOCK,
       messageBoxFixedHeight: DEFAULT_MESSAGE_BOX_FIXED_HEIGHT,
     },
     window: DEFAULT_WINDOW_BOUNDS,
@@ -139,6 +142,7 @@ export interface CountdownSettings {
   audioEnabled: boolean
   timerDuration: number
   setTimeLive: boolean
+  use12HourClock: boolean
   messageBoxFixedHeight: boolean
 }
 

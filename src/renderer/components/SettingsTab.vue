@@ -41,6 +41,7 @@
       <check-box id="showClock" v-model="settings.show.clock">Clock</check-box>
       <check-box id="showSecondsOnClock" v-model="settings.show.secondsOnClock">Seconds on clock</check-box>
       <check-box id="messageBoxFixedHeight" v-model="settings.messageBoxFixedHeight">Message box fixed height</check-box>
+      <check-box id="use12HourClock" v-model="settings.use12HourClock">12-Hour Clock</check-box>
       <p class="text-2xl">Audio</p>
       <check-box id="audioEnabled" v-model="settings.audioEnabled">Enable</check-box>
     </card>
@@ -111,7 +112,11 @@ import {
   CountdownSettings,
   DEFAULT_TIMER_DURATION,
   CountdownStore,
-  DEFAULT_MESSAGE_BOX_FIXED_HEIGHT, ContentAtReset, DEFAULT_CONTENT_AT_RESET, DEFAULT_RESET_BACKGROUND_COLOR,
+  DEFAULT_MESSAGE_BOX_FIXED_HEIGHT,
+  ContentAtReset,
+  DEFAULT_CONTENT_AT_RESET,
+  DEFAULT_RESET_BACKGROUND_COLOR,
+  DEFAULT_USE_12_HOUR_CLOCK,
 
 } from "../../common/config";
 import CheckBox from "./CheckBox";
@@ -159,6 +164,7 @@ let settings = ref({
   audioEnabled: store.get('settings.audioEnabled', DEFAULT_AUDIO_ENABLED),
   timerDuration: store.get('settings.timerDuration', DEFAULT_TIMER_DURATION),
   setTimeLive: store.get('settings.setTimeLive', DEFAULT_SET_TIME_LIVE),
+  use12HourClock: store.get('settings.use12HourClock', DEFAULT_USE_12_HOUR_CLOCK),
   messageBoxFixedHeight: store.get('settings.messageBoxFixedHeight', DEFAULT_MESSAGE_BOX_FIXED_HEIGHT),
   contentAtReset: store.get('settings.contentAtReset', DEFAULT_CONTENT_AT_RESET),
 });
@@ -205,6 +211,7 @@ const save = debounce(() => {
     audioEnabled: settings.value.audioEnabled,
     timerDuration: settings.value.timerDuration,
     setTimeLive: settings.value.setTimeLive,
+    use12HourClock: settings.value.use12HourClock,
     messageBoxFixedHeight: settings.value.messageBoxFixedHeight,
     contentAtReset: settings.value.contentAtReset,
   }

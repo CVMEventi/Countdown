@@ -8,6 +8,7 @@ export interface Props {
   clockColor: string
   textColor: string
   secondsOnClock: boolean
+  use12HourClock: boolean
 }
 
 const props = defineProps<Props>();
@@ -15,8 +16,12 @@ const props = defineProps<Props>();
 let currentTimeTimerId: NodeJS.Timer = null;
 let currentTime = ref(dayjs().format('HH:mm'));
 function updateTime() {
-  if (props.secondsOnClock) {
+  if (props.secondsOnClock && !props.use12HourClock) {
     currentTime.value = dayjs().format('HH:mm:ss');
+  } else if (props.secondsOnClock && props.use12HourClock) {
+    currentTime.value = dayjs().format('hh:mm:ss a')
+  } else if (!props.secondsOnClock && props.use12HourClock) {
+    currentTime.value = dayjs().format('hh:mm a')
   } else {
     currentTime.value = dayjs().format('HH:mm');
   }

@@ -44,6 +44,7 @@
       :text-color="settings.clockTextColor"
       :is-big="settings.contentAtReset === ContentAtReset.Time && update.isReset"
       :seconds-on-clock="settings.show.secondsOnClock"
+      :use12-hour-clock="settings.use12HourClock"
     />
   </div>
 </template>
