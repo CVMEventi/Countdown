@@ -24,7 +24,6 @@ const config: ForgeConfig = {
     },
     osxSign: {},
     osxNotarize: {
-      tool: 'notarytool',
       appleId: process.env.APPLE_ID,
       appleIdPassword: process.env.APPLE_ID_PASSWORD,
       teamId: process.env.APPLE_TEAM_ID
