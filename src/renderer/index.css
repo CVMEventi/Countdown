@@ -64,6 +64,8 @@ input[type="color"]::-webkit-color-swatch {
   border: none;
 }
 
+@import url('vue-accessible-color-picker/styles');
+
 .vacp-color-picker {
   @apply text-black;
 }
