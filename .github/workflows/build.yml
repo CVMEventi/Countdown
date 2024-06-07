@@ -23,8 +23,14 @@ jobs:
           cache: 'yarn'
           node-version: 18
 
-      - name: Install setuptools
-        run: pip install setuptools
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+
+      - name: Install Python setup tools
+        run: |
+          pip install setuptools
 
       - name: Install dependencies
         run: yarn
