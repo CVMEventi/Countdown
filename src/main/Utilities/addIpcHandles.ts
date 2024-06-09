@@ -3,7 +3,7 @@ import {CountdownApp} from "../App";
 import {sleep} from "./utilities";
 import {
   DEFAULT_NDI_ALPHA,
-  DEFAULT_NDI_ENABLED, DEFAULT_OSC_ENABLED, DEFAULT_OSC_PORT,
+  DEFAULT_NDI_ENABLED, DEFAULT_OSC_ENABLED, DEFAULT_OSC_PORT, DEFAULT_SET_TIME_LIVE,
   DEFAULT_TIMER_ALWAYS_ON_TOP, DEFAULT_TIMER_DURATION,
   DEFAULT_WINDOW_BOUNDS
 } from "../../common/config";
@@ -68,6 +68,8 @@ export default function addIpcHandles(app: CountdownApp)
     app.ndiServer.alpha = app.store.get('settings.ndiAlpha', DEFAULT_NDI_ALPHA);
 
     app.timerEngine.setTimerInterval(app.store.get('settings.timerDuration', DEFAULT_TIMER_DURATION));
+
+    app.timerEngine.setTimeLive = app.store.get('settings.setTimeLive', DEFAULT_SET_TIME_LIVE);
   })
 
   ipcMain.on('send-to-countdown-window', (event, arg) => {
