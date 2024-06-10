@@ -2,7 +2,7 @@ import { Configuration } from 'webpack';
 import { rules } from "./webpack.rules";
 
 rules.push({
-  test: /\.(woff|woff2|eot|ttf|otf|png|jpeg|jpg|mp3)$/i,
+  test: /\.(woff|woff2|eot|ttf|otf|png|jpeg|jpg|mp3|ico)$/i,
   type: 'asset/resource',
 })
 
