@@ -5,10 +5,12 @@ import {enableDevMode, isDev} from "./Utilities/dev";
 import BrowserWinHandler from "./Utilities/BrowserWinHandler";
 import createMainWindow from "./mainWindow";
 import setMenu from "./Utilities/setMenu";
-import {app, BrowserWindow, screen} from "electron";
+import {app, BrowserWindow, screen, Tray, Menu, nativeImage, dialog} from "electron";
 import createCountdownWindow from "./countdownWindow";
 import Store from "electron-store";
 import {
+  CloseAction,
+  DEFAULT_CLOSE_ACTION,
   DEFAULT_NDI_ENABLED, DEFAULT_OSC_ENABLED, DEFAULT_OSC_PORT, DEFAULT_SET_TIME_LIVE,
   DEFAULT_STORE, DEFAULT_TIMER_ALWAYS_ON_TOP, DEFAULT_TIMER_DURATION,
   DEFAULT_WEBSERVER_ENABLED,
@@ -20,6 +22,14 @@ import {TimerEngine} from "./TimerEngine";
 import {IpcTimerController} from "./Remotes/IpcTimerController";
 import {MessageUpdate, TimerEngineUpdate, TimerEngineWebSocketUpdate} from "../common/TimerInterfaces";
 import {applyMigrations} from "./Migrations/applyMigrations";
+import macosTrayIcon from "../icons/tray/TrayTemplate.png"
+import macOsTrayIcon2x from "../icons/tray/TrayTemplate@2x.png"
+import otherOsTrayIcon from "../icons/icon.ico"
+import path from "path";
+import * as process from "node:process";
+
+// To be packaged, otherwise it doesn't work
+console.log(macOsTrayIcon2x)
 
 export class CountdownApp {
   mainWindowHandler: BrowserWinHandler = null
@@ -56,6 +66,40 @@ export class CountdownApp {
     this.mainWindowHandler = createMainWindow();
 
     this.mainWindowHandler.onCreated((browserWindow) => {
+
+      let appIcon: Tray
+      if (process.platform === 'darwin') {
+        const image = nativeImage.createFromPath(path.resolve(
+          __dirname,
+          macosTrayIcon,
+        ));
+        // Marks the image as a template image.
+        image.setTemplateImage(true);
+
+        appIcon = new Tray(image)
+      } else {
+        appIcon = new Tray(path.resolve(
+          __dirname,
+          otherOsTrayIcon,
+        ))
+      }
+
+      appIcon.on('right-click', (event, bounds) => {
+        const contextMenu = Menu.buildFromTemplate([
+          {label: 'Show Settings'},
+          {label: 'Quit', role: 'quit'}
+        ])
+
+        appIcon.popUpContextMenu(contextMenu);
+      })
+      appIcon.on('click', (event, bounds) => {
+        if (!this.mainWindowHandler.browserWindow.isVisible()) {
+          this.mainWindowHandler.browserWindow.show()
+        } else {
+          this.mainWindowHandler.browserWindow.focus()
+        }
+      })
+
       setMenu(this.mainWindowHandler, this.timerEngine);
 
       const screensUpdated = (browserWindow: BrowserWindow) => {
@@ -66,8 +110,49 @@ export class CountdownApp {
       screen.on('display-removed', () => screensUpdated(browserWindow))
       screen.on('display-metrics-changed', () => screensUpdated(browserWindow))
 
-      browserWindow.on('closed', () => {
-        app.quit();
+      app.on('before-quit', () => {
+        browserWindow.destroy()
+      })
+
+      browserWindow.on('close', async (event) => {
+        event.preventDefault()
+
+        const closeAction = this.store.get('settings.closeAction', DEFAULT_CLOSE_ACTION)
+
+        switch (closeAction) {
+          case CloseAction.Ask:
+            const result = await dialog.showMessageBox({
+              message: "Close?",
+              checkboxLabel: "Don't ask again",
+              buttons: [
+                "Cancel",
+                "Hide",
+                "Close"
+              ]
+            })
+
+            switch (result.response) {
+              case 1:
+                if (result.checkboxChecked) {
+                  this.store.set('settings.closeAction', CloseAction.Hide)
+                }
+                browserWindow.hide()
+                break;
+              case 2:
+                if (result.checkboxChecked) {
+                  this.store.set('settings.closeAction', CloseAction.Close)
+                }
+                app.quit()
+                break;
+            }
+            break;
+          case CloseAction.Hide:
+            browserWindow.hide()
+            break;
+          case CloseAction.Close:
+            app.quit()
+            break;
+        }
       })
     })
 

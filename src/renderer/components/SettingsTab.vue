@@ -74,6 +74,10 @@
         </select>
         <p class="text-sm mt-2">Milliseconds per second</p>
         <input class="text-black focus:ring-indigo-500 focus:border-indigo-500 block rounded-md w-full text-center px-2 sm:text-sm border-gray-300" type="number" @input="(event) => settings.timerDuration = parseInt(event.target.value)" :value="settings.timerDuration">
+        <p class="text-2xl mt-3">Close action</p>
+        <select v-model="settings.closeAction" class="input p-2 text-black">
+          <option v-for="action in CloseAction" :value="action">{{ getCloseActionLabel(action) }}</option>
+        </select>
       </div>
     </card>
   </div>
@@ -116,13 +120,14 @@ import {
   ContentAtReset,
   DEFAULT_CONTENT_AT_RESET,
   DEFAULT_RESET_BACKGROUND_COLOR,
-  DEFAULT_USE_12_HOUR_CLOCK,
+  DEFAULT_USE_12_HOUR_CLOCK, DEFAULT_CLOSE_ACTION,
 
 } from "../../common/config";
 import CheckBox from "./CheckBox";
 import EditPreset from "./EditPreset";
 import {debounce} from "debounce";
 import Display = Electron.Display;
+import {CloseAction} from "../../common/config";
 
 defineOptions({
   name: 'SettingsTab',
@@ -167,6 +172,7 @@ let settings = ref({
   use12HourClock: store.get('settings.use12HourClock', DEFAULT_USE_12_HOUR_CLOCK),
   messageBoxFixedHeight: store.get('settings.messageBoxFixedHeight', DEFAULT_MESSAGE_BOX_FIXED_HEIGHT),
   contentAtReset: store.get('settings.contentAtReset', DEFAULT_CONTENT_AT_RESET),
+  closeAction: store.get('settings.closeAction', DEFAULT_CLOSE_ACTION),
 });
 
 watch(settings, () => {
@@ -214,6 +220,7 @@ const save = debounce(() => {
     use12HourClock: settings.value.use12HourClock,
     messageBoxFixedHeight: settings.value.messageBoxFixedHeight,
     contentAtReset: settings.value.contentAtReset,
+    closeAction: settings.value.closeAction,
   }
 
   if (CSS.supports('color', settings.value.backgroundColor)) {
@@ -244,8 +251,6 @@ const save = debounce(() => {
 
   emit('settings-updated')
   ipcRenderer.send('settings-updated')
-
-  //this.$router.replace('/control/main')
 }, 200, false);
 
 function addPreset() {
@@ -254,6 +259,16 @@ function addPreset() {
 
 function deletePreset(index: number) {
   settings.value.presets.splice(index, 1)
+}
+
+function getCloseActionLabel(closeAction: CloseAction): string {
+  const labels = {
+    'ASK': 'Ask',
+    'HIDE': 'Hide',
+    'CLOSE': 'Close',
+  }
+
+  return labels[closeAction]
 }
 </script>
 

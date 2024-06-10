@@ -28,7 +28,7 @@ const config: ForgeConfig = {
       appleIdPassword: process.env.APPLE_ID_PASSWORD,
       teamId: process.env.APPLE_TEAM_ID
     },
-    icon: "icons/icon.icns",
+    icon: "src/icons/icon.icns",
     win32metadata: {
       "CompanyName": "CVM Eventi",
       "ProductName": "Countdown"
