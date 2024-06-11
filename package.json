@@ -1,7 +1,7 @@
 {
   "name": "countdown",
   "productName": "countdown",
-  "version": "0.0.37",
+  "version": "0.0.38",
   "description": "CVM Countdown",
   "main": ".webpack/main",
   "repository": "CVMEventi/Countdown",
