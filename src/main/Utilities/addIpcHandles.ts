@@ -3,9 +3,9 @@ import {CountdownApp} from "../App";
 import {sleep} from "./utilities";
 import {
   DEFAULT_NDI_ALPHA,
-  DEFAULT_NDI_ENABLED, DEFAULT_OSC_ENABLED, DEFAULT_OSC_PORT, DEFAULT_SET_TIME_LIVE,
+  DEFAULT_NDI_ENABLED, DEFAULT_OSC_ENABLED, DEFAULT_OSC_PORT, DEFAULT_SET_TIME_LIVE, DEFAULT_STOP_TIMER_AT_ZERO,
   DEFAULT_TIMER_ALWAYS_ON_TOP, DEFAULT_TIMER_DURATION,
-  DEFAULT_WINDOW_BOUNDS
+  DEFAULT_WINDOW_BOUNDS, DEFAULT_YELLOW_AT_MINUTES, DEFAULT_YELLOW_AT_OPTION, DEFAULT_YELLOW_AT_PERCENT
 } from "../../common/config";
 
 export async function setCountdownWindowPosition(app: CountdownApp) {
@@ -69,7 +69,24 @@ export default function addIpcHandles(app: CountdownApp)
 
     app.timerEngine.setTimerInterval(app.store.get('settings.timerDuration', DEFAULT_TIMER_DURATION));
 
-    app.timerEngine.setTimeLive = app.store.get('settings.setTimeLive', DEFAULT_SET_TIME_LIVE);
+
+    let yellowAt: number
+    const yellowAtOption = app.store.get('settings.yellowAtOption', DEFAULT_YELLOW_AT_OPTION)
+    if (yellowAtOption === 'minutes') {
+      yellowAt = app.store.get('settings.yellowAtMinutes', DEFAULT_YELLOW_AT_MINUTES)
+    } else {
+      yellowAt = app.store.get('settings.yellowAtPercent', DEFAULT_YELLOW_AT_PERCENT)
+    }
+
+    app.timerEngine.options = {
+      ...app.timerEngine.options,
+      ...{
+        yellowAt,
+        yellowAtOption,
+        setTimeLive: app.store.get('settings.setTimeLive', DEFAULT_SET_TIME_LIVE),
+        stopTimerAtZero: app.store.get('settings.stopTimerAtZero', DEFAULT_STOP_TIMER_AT_ZERO),
+      }
+    }
   })
 
   ipcMain.on('send-to-countdown-window', (event, arg) => {

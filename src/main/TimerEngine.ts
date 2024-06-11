@@ -6,7 +6,15 @@ import {
   UpdateCallback,
   WebSocketUpdateCallback
 } from "../common/TimerInterfaces";
+import {DEFAULT_SET_TIME_LIVE, DEFAULT_STOP_TIMER_AT_ZERO, DEFAULT_YELLOW_AT_OPTION} from "../common/config";
 dayjs.extend(duration);
+
+export interface TimerEngineOptions {
+  yellowAt?: number
+  yellowAtOption?: string
+  setTimeLive?: boolean
+  stopTimerAtZero?: boolean
+}
 
 export class TimerEngine {
   private _currentSeconds = 0;
@@ -14,20 +22,26 @@ export class TimerEngine {
   private _audioRun = false;
   private _timer: Timer;
 
+  options: TimerEngineOptions = {
+    stopTimerAtZero: DEFAULT_STOP_TIMER_AT_ZERO,
+    yellowAt: 0,
+    yellowAtOption: DEFAULT_YELLOW_AT_OPTION,
+    setTimeLive: DEFAULT_SET_TIME_LIVE,
+  }
   totalSeconds = 0;
   timerIsRunning = false;
-  stopsAtZero = false;
   audioEnabled = false;
-  yellowAtOption = 'minutes';
-  yellowAt = 0;
-  setTimeLive = false;
   update: UpdateCallback = null;
   webSocketUpdate: WebSocketUpdateCallback = null;
   messageUpdate: MessageUpdateCallback = null;
 
-  constructor(interval: number, setTimeLive: boolean, update: UpdateCallback, webSocketUpdate: WebSocketUpdateCallback, messageUpdate: MessageUpdateCallback) {
+  constructor(interval: number, options: TimerEngineOptions, update: UpdateCallback, webSocketUpdate: WebSocketUpdateCallback, messageUpdate: MessageUpdateCallback) {
     this._timer = new Timer(interval, this._timerTick.bind(this), this._timerStatusChanged.bind(this))
-    this.setTimeLive = setTimeLive;
+    this.options = {
+      ...this.options,
+      ...options,
+    }
+
     this.update = update;
     this.webSocketUpdate = webSocketUpdate;
     this.messageUpdate = messageUpdate;
@@ -62,13 +76,13 @@ export class TimerEngine {
       return false;
     }
 
-    if (this.yellowAtOption === 'minutes'
-        && this.yellowAt >= this._currentSeconds / 60) {
+    if (this.options.yellowAtOption === 'minutes'
+        && this.options.yellowAt >= this._currentSeconds / 60) {
       return true;
     }
 
-    if (this.yellowAtOption === 'percent'
-        && this.yellowAt >= this._timer.secondsSet / 100 * this._currentSeconds) {
+    if (this.options.yellowAtOption === 'percent'
+        && this.options.yellowAt >= this._timer.secondsSet / 100 * this._currentSeconds) {
       return true;
     }
 
@@ -88,7 +102,7 @@ export class TimerEngine {
   start() {
     this._secondsSetOnCurrentTimer = this.totalSeconds;
     this._audioRun = false;
-    this._timer.start(this.totalSeconds, this.stopsAtZero);
+    this._timer.start(this.totalSeconds, this.options.stopTimerAtZero);
     this._sendUpdate();
     this._sendWebSocketUpdate();
   }
@@ -190,7 +204,7 @@ export class TimerEngine {
   private _sendUpdate() {
     let currentSeconds = this._currentSeconds;
 
-    if (this.setTimeLive && this.isReset()) {
+    if (this.options.setTimeLive && this.isReset()) {
       currentSeconds = this.totalSeconds;
     }
 

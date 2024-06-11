@@ -11,10 +11,10 @@ import Store from "electron-store";
 import {
   CloseAction,
   DEFAULT_CLOSE_ACTION,
-  DEFAULT_NDI_ENABLED, DEFAULT_OSC_ENABLED, DEFAULT_OSC_PORT, DEFAULT_SET_TIME_LIVE,
+  DEFAULT_NDI_ENABLED, DEFAULT_OSC_ENABLED, DEFAULT_OSC_PORT, DEFAULT_SET_TIME_LIVE, DEFAULT_STOP_TIMER_AT_ZERO,
   DEFAULT_STORE, DEFAULT_TIMER_ALWAYS_ON_TOP, DEFAULT_TIMER_DURATION,
   DEFAULT_WEBSERVER_ENABLED,
-  DEFAULT_WEBSERVER_PORT
+  DEFAULT_WEBSERVER_PORT, DEFAULT_YELLOW_AT_MINUTES, DEFAULT_YELLOW_AT_OPTION, DEFAULT_YELLOW_AT_PERCENT
 } from "../common/config";
 import HTTP from "./Remotes/HTTP";
 import {OSC} from "./Remotes/OSC";
@@ -52,9 +52,23 @@ export class CountdownApp {
     if (isDev) {
       enableDevMode();
     }
+
+    let yellowAt: number
+    const yellowAtOption = this.store.get('settings.yellowAtOption', DEFAULT_YELLOW_AT_OPTION)
+    if (yellowAtOption === 'minutes') {
+      yellowAt = this.store.get('settings.yellowAtMinutes', DEFAULT_YELLOW_AT_MINUTES)
+    } else {
+      yellowAt = this.store.get('settings.yellowAtPercent', DEFAULT_YELLOW_AT_PERCENT)
+    }
+
     this.timerEngine = new TimerEngine(
       this.store.get('settings.timerDuration', DEFAULT_TIMER_DURATION),
-      this.store.get('settings.setTimeLive', DEFAULT_SET_TIME_LIVE),
+      {
+        yellowAt,
+        yellowAtOption,
+        setTimeLive: this.store.get('settings.setTimeLive', DEFAULT_SET_TIME_LIVE),
+        stopTimerAtZero: this.store.get('settings.stopTimerAtZero', DEFAULT_STOP_TIMER_AT_ZERO),
+      },
       this._timerEngineUpdate.bind(this),
       this._timerEngineWebSocketUpdate.bind(this),
       this._timerEngineMessageUpdate.bind(this),
