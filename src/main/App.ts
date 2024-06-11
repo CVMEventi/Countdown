@@ -11,10 +11,20 @@ import Store from "electron-store";
 import {
   CloseAction,
   DEFAULT_CLOSE_ACTION,
-  DEFAULT_NDI_ENABLED, DEFAULT_OSC_ENABLED, DEFAULT_OSC_PORT, DEFAULT_SET_TIME_LIVE, DEFAULT_STOP_TIMER_AT_ZERO,
-  DEFAULT_STORE, DEFAULT_TIMER_ALWAYS_ON_TOP, DEFAULT_TIMER_DURATION,
+  DEFAULT_NDI_ENABLED,
+  DEFAULT_OSC_ENABLED,
+  DEFAULT_OSC_PORT,
+  DEFAULT_SET_TIME_LIVE,
+  DEFAULT_START_HIDDEN,
+  DEFAULT_STOP_TIMER_AT_ZERO,
+  DEFAULT_STORE,
+  DEFAULT_TIMER_ALWAYS_ON_TOP,
+  DEFAULT_TIMER_DURATION,
   DEFAULT_WEBSERVER_ENABLED,
-  DEFAULT_WEBSERVER_PORT, DEFAULT_YELLOW_AT_MINUTES, DEFAULT_YELLOW_AT_OPTION, DEFAULT_YELLOW_AT_PERCENT
+  DEFAULT_WEBSERVER_PORT,
+  DEFAULT_YELLOW_AT_MINUTES,
+  DEFAULT_YELLOW_AT_OPTION,
+  DEFAULT_YELLOW_AT_PERCENT
 } from "../common/config";
 import HTTP from "./Remotes/HTTP";
 import {OSC} from "./Remotes/OSC";
@@ -77,7 +87,9 @@ export class CountdownApp {
   }
 
   async run() {
-    this.mainWindowHandler = createMainWindow();
+    this.mainWindowHandler = createMainWindow({
+      show: !this.store.get('settings.startHidden', DEFAULT_START_HIDDEN)
+    });
 
     this.mainWindowHandler.onCreated((browserWindow) => {
 
@@ -100,7 +112,6 @@ export class CountdownApp {
 
       appIcon.on('right-click', (event, bounds) => {
         const contextMenu = Menu.buildFromTemplate([
-          {label: 'Show Settings'},
           {label: 'Quit', role: 'quit'}
         ])
 

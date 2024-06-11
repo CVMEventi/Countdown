@@ -43,6 +43,8 @@ export const DEFAULT_TIMER_DURATION = 1000;
 
 export const DEFAULT_MESSAGE_BOX_FIXED_HEIGHT = false;
 
+export const DEFAULT_START_HIDDEN = false;
+
 export enum CloseAction {
   Ask = "ASK",
   Hide = "HIDE",
@@ -98,6 +100,7 @@ export const DEFAULT_STORE: CountdownConfiguration = {
       use12HourClock: DEFAULT_USE_12_HOUR_CLOCK,
       messageBoxFixedHeight: DEFAULT_MESSAGE_BOX_FIXED_HEIGHT,
       closeAction: DEFAULT_CLOSE_ACTION,
+      startHidden: DEFAULT_START_HIDDEN,
     },
     window: DEFAULT_WINDOW_BOUNDS,
   }
@@ -149,6 +152,7 @@ export interface CountdownSettings {
   use12HourClock: boolean
   messageBoxFixedHeight: boolean,
   closeAction: CloseAction,
+  startHidden: boolean,
 }
 
 export interface CountdownStore {

@@ -71,6 +71,7 @@
         <select v-model="settings.closeAction" class="input p-2 text-black">
           <option v-for="action in CloseAction" :value="action">{{ getCloseActionLabel(action) }}</option>
         </select>
+        <check-box id="startHidden" v-model="settings.startHidden">Start hidden</check-box>
       </div>
     </card>
   </div>
@@ -111,7 +112,7 @@ import {
   ContentAtReset,
   DEFAULT_CONTENT_AT_RESET,
   DEFAULT_RESET_BACKGROUND_COLOR,
-  DEFAULT_USE_12_HOUR_CLOCK, DEFAULT_CLOSE_ACTION,
+  DEFAULT_USE_12_HOUR_CLOCK, DEFAULT_CLOSE_ACTION, DEFAULT_START_HIDDEN,
 
 } from "../../common/config";
 import CheckBox from "./CheckBox";
@@ -163,6 +164,7 @@ let settings = ref({
   messageBoxFixedHeight: store.get('settings.messageBoxFixedHeight', DEFAULT_MESSAGE_BOX_FIXED_HEIGHT),
   contentAtReset: store.get('settings.contentAtReset', DEFAULT_CONTENT_AT_RESET),
   closeAction: store.get('settings.closeAction', DEFAULT_CLOSE_ACTION),
+  startHidden: store.get('settings.startHidden', DEFAULT_START_HIDDEN),
 });
 
 watch(settings, () => {
@@ -210,6 +212,7 @@ const save = debounce(() => {
     messageBoxFixedHeight: settings.value.messageBoxFixedHeight,
     contentAtReset: settings.value.contentAtReset,
     closeAction: settings.value.closeAction,
+    startHidden: settings.value.startHidden,
   }
 
   if (CSS.supports('color', settings.value.backgroundColor)) {
