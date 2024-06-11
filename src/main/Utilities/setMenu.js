@@ -25,7 +25,7 @@ export default (mainWindowHandler, timerEngine) => {
       submenu: [
         {
           label: 'Start/Pause',
-          accelerator: 'CommandOrControl+Space',
+          accelerator: 'CommandOrControl+Enter',
           click: async () => {
             timerEngine.startResumePause();
           },
