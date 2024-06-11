@@ -39,7 +39,7 @@ export class CountdownApp {
   ipcTimerController: IpcTimerController;
 
   ndiServer = new NDI("Countdown");
-  ndiTimer: NodeJS.Timer = null;
+  ndiTimer: NodeJS.Timeout = null;
   webServer: HTTP = null;
   oscServer: OSC = null;
 
