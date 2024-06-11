@@ -37,8 +37,6 @@ export const DEFAULT_SET_TIME_LIVE = false;
 
 export const DEFAULT_USE_12_HOUR_CLOCK = false;
 
-export const DEFAULT_FONT = 'digital-7';
-
 export const DEFAULT_AUDIO_ENABLED = false;
 
 export const DEFAULT_TIMER_DURATION = 1000;
@@ -89,7 +87,6 @@ export const DEFAULT_STORE: CountdownConfiguration = {
       oscEnabled: DEFAULT_OSC_ENABLED,
       oscPort: DEFAULT_OSC_PORT,
       show: DEFAULT_SHOW_SECTIONS,
-      font: DEFAULT_FONT,
       timerAlwaysOnTop: DEFAULT_TIMER_ALWAYS_ON_TOP,
       setWindowAlwaysOnTop: DEFAULT_SET_WINDOW_ALWAYS_ON_TOP,
       yellowAtOption: DEFAULT_YELLOW_AT_OPTION,
@@ -141,7 +138,6 @@ export interface CountdownSettings {
   oscEnabled: boolean
   oscPort: number
   show: ShowSections
-  font: string
   timerAlwaysOnTop: boolean
   setWindowAlwaysOnTop: boolean
   yellowAtOption: string

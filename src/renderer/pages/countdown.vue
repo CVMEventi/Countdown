@@ -55,7 +55,7 @@ import {ipcRenderer} from 'electron'
 import dayjs from 'dayjs'
 import duration from 'dayjs/plugin/duration'
 import Store from "electron-store"
-import {ContentAtReset, CountdownSettings, DEFAULT_FONT, DEFAULT_STORE} from "../../common/config";
+import {ContentAtReset, CountdownSettings, DEFAULT_STORE} from "../../common/config";
 import {MessageUpdate, TimerEngineUpdate} from "../../common/TimerInterfaces";
 import ProgressBar from "../components/ProgressBar.vue";
 import Clock from "../components/Clock.vue";
@@ -128,7 +128,6 @@ const backgroundColor = computed(() => {
 
 const cssVars = computed(() => {
   return {
-    '--clock-font': settings.value.font || DEFAULT_FONT,
     '--message-length': messageUpdate.value.message?.length ?? 1,
     '--magic-number-font-size': 17,
   }
@@ -166,7 +165,7 @@ onMounted(() => {
 }
 
 .font-digital-clock {
-  font-family: var(--clock-font), monospace;
+  font-family: digital-7, monospace;
 }
 
 .message-box {

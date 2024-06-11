@@ -33,6 +33,8 @@
         <option :value="ContentAtReset.Time">Time</option>
         <option :value="ContentAtReset.Full">Full</option>
       </select>
+      <p class="text-sm mt-2">Milliseconds per second</p>
+      <input class="text-black focus:ring-indigo-500 focus:border-indigo-500 block rounded-md w-full text-center px-2 sm:text-sm border-gray-300" type="number" @input="(event) => settings.timerDuration = parseInt(event.target.value)" :value="settings.timerDuration">
     </card>
     <card class="inline-block border flex flex-col">
       <p class="text-2xl">Timer UI</p>
@@ -42,8 +44,6 @@
       <check-box id="showSecondsOnClock" v-model="settings.show.secondsOnClock">Seconds on clock</check-box>
       <check-box id="messageBoxFixedHeight" v-model="settings.messageBoxFixedHeight">Message box fixed height</check-box>
       <check-box id="use12HourClock" v-model="settings.use12HourClock">12-Hour Clock</check-box>
-      <p class="text-2xl">Audio</p>
-      <check-box id="audioEnabled" v-model="settings.audioEnabled">Enable</check-box>
     </card>
     <card class="inline-block border flex flex-col">
       <div class="flex flex-col" style="min-width: 220px">
@@ -66,14 +66,7 @@
         <color-input v-model="settings.clockTextColor" default-value="#ffffff">
           Clock Text
         </color-input>
-        <p class="text-2xl mt-3">Font</p>
-        <select v-model="settings.font" class="input p-2 text-black">
-          <option value="digital-7">digital-7</option>
-          <option value="B612">B612</option>
-          <option value="Xanh">Xanh</option>
-        </select>
-        <p class="text-sm mt-2">Milliseconds per second</p>
-        <input class="text-black focus:ring-indigo-500 focus:border-indigo-500 block rounded-md w-full text-center px-2 sm:text-sm border-gray-300" type="number" @input="(event) => settings.timerDuration = parseInt(event.target.value)" :value="settings.timerDuration">
+        <hr class="mt-4 -mx-3 border-t-2"/>
         <p class="text-2xl mt-3">Close action</p>
         <select v-model="settings.closeAction" class="input p-2 text-black">
           <option v-for="action in CloseAction" :value="action">{{ getCloseActionLabel(action) }}</option>
@@ -104,8 +97,6 @@ import {
   DEFAULT_SHOW_HOURS,
   DEFAULT_PULSE_AT_ZERO,
   DEFAULT_SHOW_SECTIONS,
-  DEFAULT_BLACK_AT_RESET,
-  DEFAULT_FONT,
   DEFAULT_TIMER_ALWAYS_ON_TOP,
   DEFAULT_YELLOW_AT_OPTION,
   DEFAULT_YELLOW_AT_MINUTES,
@@ -161,7 +152,6 @@ let settings = ref({
   showHours: store.get('settings.showHours', DEFAULT_SHOW_HOURS),
   pulseAtZero: store.get('settings.pulseAtZero', DEFAULT_PULSE_AT_ZERO),
   show: store.get('settings.show', DEFAULT_SHOW_SECTIONS),
-  font: store.get('settings.font', DEFAULT_FONT),
   timerAlwaysOnTop: store.get('settings.timerAlwaysOnTop', DEFAULT_TIMER_ALWAYS_ON_TOP),
   yellowAtOption: store.get('settings.yellowAtOption', DEFAULT_YELLOW_AT_OPTION),
   yellowAtMinutes: store.get('settings.yellowAtMinutes', DEFAULT_YELLOW_AT_MINUTES),
@@ -213,7 +203,6 @@ const save = debounce(() => {
     yellowAtMinutes: settings.value.yellowAtMinutes,
     yellowAtPercent: settings.value.yellowAtPercent,
     show: settings.value.show,
-    font: settings.value.font,
     audioEnabled: settings.value.audioEnabled,
     timerDuration: settings.value.timerDuration,
     setTimeLive: settings.value.setTimeLive,
