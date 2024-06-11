@@ -265,7 +265,7 @@ function getCloseActionLabel(closeAction: CloseAction): string {
   const labels = {
     'ASK': 'Ask',
     'HIDE': 'Hide',
-    'CLOSE': 'Close',
+    'CLOSE': 'Quit',
   }
 
   return labels[closeAction]

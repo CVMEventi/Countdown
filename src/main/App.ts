@@ -122,7 +122,7 @@ export class CountdownApp {
         switch (closeAction) {
           case CloseAction.Ask:
             const result = await dialog.showMessageBox({
-              message: "Close?",
+              message: "Choose an action",
               checkboxLabel: "Don't ask again",
               buttons: [
                 "Cancel",
