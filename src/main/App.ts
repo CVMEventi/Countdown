@@ -127,7 +127,7 @@ export class CountdownApp {
               buttons: [
                 "Cancel",
                 "Hide",
-                "Close"
+                "Quit"
               ]
             })
 
