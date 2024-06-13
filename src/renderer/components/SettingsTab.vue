@@ -117,7 +117,7 @@ import {
 } from "../../common/config";
 import CheckBox from "./CheckBox";
 import EditPreset from "./EditPreset";
-import {debounce} from "debounce";
+import debounce from "debounce";
 import Display = Electron.Display;
 import {CloseAction} from "../../common/config";
 
@@ -243,7 +243,7 @@ const save = debounce(() => {
 
   emit('settings-updated')
   ipcRenderer.send('settings-updated')
-}, 200, false);
+}, 200, {immediate: false});
 
 function addPreset() {
   settings.value.presets.push(0)

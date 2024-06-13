@@ -49,7 +49,6 @@
 import ScreensDrag from "./ScreensDrag";
 import {DEFAULT_WINDOW_BOUNDS, WindowBounds} from "../../common/config";
 import Store from "electron-store";
-import { debounce } from "debounce";
 import {ipcRenderer} from "electron";
 import Card from "./Card";
 import SButton from "./SButton";
