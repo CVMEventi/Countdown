@@ -82,6 +82,6 @@
     "vue-accessible-color-picker": "^5.0.1",
     "vue-router": "^4.0.14",
     "vuedraggable": "^4.1.0",
-    "ws": "^8.5.0"
+    "ws": "^8.17.1"
   }
 }
