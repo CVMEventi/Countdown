@@ -1,13 +1,13 @@
 <template>
   <div
     :style="{
-      backgroundColor: update.isReset ? settings.resetBackgroundColor : backgroundColor,
+      backgroundColor: update.isReset ? settings.colors.resetBackground : backgroundColor,
     }"
     v-if="settings.contentAtReset === ContentAtReset.Empty && update.isReset" class="drag"></div>
   <div
     v-if="settings.contentAtReset !== ContentAtReset.Empty || (settings.contentAtReset === ContentAtReset.Empty && !update.isReset)"
     :style="{
-      backgroundColor: update.isReset ? settings.resetBackgroundColor : backgroundColor,
+      backgroundColor: update.isReset ? settings.colors.resetBackground : backgroundColor,
       ...cssVars
     }"
     class="flex justify-center flex-col drag"
@@ -40,8 +40,8 @@
       :value="progressBarPercent" />
     <clock
       v-if="showClock"
-      :clock-color="settings.clockColor"
-      :text-color="settings.clockTextColor"
+      :clock-color="settings.colors.clock"
+      :text-color="settings.colors.clockText"
       :is-big="settings.contentAtReset === ContentAtReset.Time && update.isReset"
       :seconds-on-clock="settings.show.secondsOnClock"
       :use12-hour-clock="settings.use12HourClock"
@@ -55,10 +55,17 @@ import {ipcRenderer} from 'electron'
 import dayjs from 'dayjs'
 import duration from 'dayjs/plugin/duration'
 import Store from "electron-store"
-import {ContentAtReset, CountdownSettings, DEFAULT_STORE} from "../../common/config";
+import {
+  ContentAtReset,
+  CountdownSettings,
+  DEFAULT_STORE,
+  DEFAULT_WINDOW_SETTINGS,
+  WindowSettings
+} from "../../common/config";
 import {MessageUpdate, TimerEngineUpdate} from "../../common/TimerInterfaces";
 import ProgressBar from "../components/ProgressBar.vue";
 import Clock from "../components/Clock.vue";
+import {IpcGetWindowSettingsArgs} from "../../common/IpcInterfaces";
 
 let store = new Store()
 
@@ -83,12 +90,12 @@ let update = ref<TimerEngineUpdate>({
 let messageUpdate = ref<MessageUpdate>({
   message: null,
 })
-let settings = ref<CountdownSettings>(store.get('settings', DEFAULT_STORE.defaults.settings) as CountdownSettings);
+let settings = ref<WindowSettings>(DEFAULT_WINDOW_SETTINGS);
 
 const timer = computed(() => {
   const currentTimeInSeconds = dayjs.duration(Math.abs(update.value.currentSeconds), 'seconds')
 
-  if (settings.value.showHours) {
+  if (settings.value.show.hours) {
     return currentTimeInSeconds.format('HH:mm:ss')
   } else {
     let minutes = String(Math.floor(currentTimeInSeconds.asMinutes())).padStart(2, '0');
@@ -114,16 +121,14 @@ const progressBarPercent = computed(() => {
 
 const timerText = computed(() => {
   if (update.value.isCountingUp && !update.value.isReset) {
-    return settings.value.timerFinishedTextColor
+    return settings.value.colors.timerFinishedText
   } else {
-    return settings.value.textColor
+    return settings.value.colors.text
   }
 })
 
 const backgroundColor = computed(() => {
-  // Check for hex with alpha #xxxxxxxx
-  if (settings.value.backgroundColor.length > 7) return settings.value.backgroundColor;
-  return settings.value.backgroundColor + parseInt(settings.value.backgroundColorOpacity).toString(16).padStart(2, "0");
+  return settings.value.colors.background;
 })
 
 const cssVars = computed(() => {
@@ -133,7 +138,18 @@ const cssVars = computed(() => {
   }
 });
 
-onMounted(() => {
+const queryString = new URLSearchParams(window.location.search);
+const timerId = ref(+queryString.get('timer'))
+const windowId = ref(+queryString.get('window'))
+
+onMounted(async () => {
+
+  const args: IpcGetWindowSettingsArgs = {
+    timerId: timerId.value,
+    windowId: windowId.value,
+  }
+  settings.value = await ipcRenderer.invoke('settings:get-window', args)
+
   ipcRenderer.on('update', (event, arg) => {
     update.value = arg;
   })
@@ -141,11 +157,7 @@ onMounted(() => {
     console.log(arg);
     messageUpdate.value = arg;
   })
-  ipcRenderer.on('settings-updated', (event, arg) => {
-    store = new Store();
-    settings.value = store.get('settings') as CountdownSettings;
-  })
-  ipcRenderer.on('temporary-settings-updated', (event, arg) => {
+  ipcRenderer.on('settings:updated', (event, arg) => {
     settings.value = {
       ...settings.value,
       ...arg,

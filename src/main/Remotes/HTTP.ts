@@ -1,10 +1,8 @@
 import fastify, {FastifyInstance, RequestGenericInterface} from 'fastify';
 import FastifyWebSocket from '@fastify/websocket';
 import {BrowserWindow, ipcMain} from "electron";
-import Store from "electron-store";
-import {DEFAULT_STORE} from "../../common/config";
-import {TimerEngine} from "../TimerEngine";
 import {TimerEngineWebSocketUpdate} from "../../common/TimerInterfaces";
+import {TimersOrchestrator} from "../Utilities/TimersOrchestrator";
 
 const secondsPerMinute = 60;
 const secondsPerHour = secondsPerMinute * 60;
@@ -25,15 +23,15 @@ interface MessageRequest extends RequestGenericInterface {
 
 export default class HTTP {
   fastifyServer: FastifyInstance = null;
-  timerEngine: TimerEngine = null;
+  timersOrchestrator: TimersOrchestrator = null;
   browserWindow: BrowserWindow = null;
   isRunning = false;
   port: number = null;
 
   lastError: unknown = null;
 
-  constructor (timerEngine: TimerEngine, browserWindow: BrowserWindow) {
-    this.timerEngine = timerEngine;
+  constructor (timersOrchestrator: TimersOrchestrator, browserWindow: BrowserWindow) {
+    this.timersOrchestrator = timersOrchestrator;
     this.browserWindow = browserWindow;
     this.reset()
     this.setupIpc();
@@ -56,7 +54,7 @@ export default class HTTP {
       const minutes = parseInt(req.params.minutes);
       const seconds = parseInt(req.params.seconds);
 
-      this.timerEngine.set(hours * secondsPerHour + minutes * secondsPerMinute + seconds);
+      this.timersOrchestrator.timers[0].engine.set(hours * secondsPerHour + minutes * secondsPerMinute + seconds);
       res.send(200)
     })
     this.fastifyServer.get<TimeRequest>('/start/:hours/:minutes/:seconds', (req, res) => {
@@ -64,28 +62,28 @@ export default class HTTP {
       const minutes = parseInt(req.params.minutes);
       const seconds = parseInt(req.params.seconds);
 
-      this.timerEngine.set(hours * secondsPerHour + minutes * secondsPerMinute + seconds);
-      this.timerEngine.start();
+      this.timersOrchestrator.timers[0].engine.set(hours * secondsPerHour + minutes * secondsPerMinute + seconds);
+      this.timersOrchestrator.timers[0].engine.start();
       res.send(200)
     })
     this.fastifyServer.get('/start', (req, res) => {
-      this.timerEngine.start();
+      this.timersOrchestrator.timers[0].engine.start();
       res.send(200)
     })
     this.fastifyServer.get('/toggle-pause', (req, res) => {
-      this.timerEngine.toggleTimer();
+      this.timersOrchestrator.timers[0].engine.toggleTimer();
       res.send(200)
     })
     this.fastifyServer.get('/pause', (req, res) => {
-      this.timerEngine.pause()
+      this.timersOrchestrator.timers[0].engine.pause()
       res.send(200)
     })
     this.fastifyServer.get('/resume', (req, res) => {
-      this.timerEngine.resume();
+      this.timersOrchestrator.timers[0].engine.resume();
       res.send(200)
     })
     this.fastifyServer.get('/reset', (req, res) => {
-      this.timerEngine.reset();
+      this.timersOrchestrator.timers[0].engine.reset();
       res.send(200)
     })
     this.fastifyServer.get<TimeRequest>('/jog-set/:hours/:minutes/:seconds', (req, res) => {
@@ -93,7 +91,7 @@ export default class HTTP {
       const minutes = parseInt(req.params.minutes);
       const seconds = parseInt(req.params.seconds);
 
-      this.timerEngine.jogSet(hours * secondsPerHour + minutes * secondsPerMinute + seconds);
+      this.timersOrchestrator.timers[0].engine.jogSet(hours * secondsPerHour + minutes * secondsPerMinute + seconds);
       res.send(200)
     })
     this.fastifyServer.get<TimeRequest>('/jog-current/:hours/:minutes/:seconds', (req, res) => {
@@ -101,16 +99,16 @@ export default class HTTP {
       const minutes = parseInt(req.params.minutes);
       const seconds = parseInt(req.params.seconds);
 
-      this.timerEngine.jogCurrent(hours * secondsPerHour + minutes * secondsPerMinute + seconds);
+      this.timersOrchestrator.timers[0].engine.jogCurrent(hours * secondsPerHour + minutes * secondsPerMinute + seconds);
       res.send(200)
     })
 
     this.fastifyServer.get('/message', (req, res) => {
-      this.timerEngine.setMessage("");
+      this.timersOrchestrator.timers[0].engine.setMessage("");
       res.send(200);
     })
     this.fastifyServer.get<MessageRequest>('/message/:message', (req, res) => {
-      this.timerEngine.setMessage(req.params.message);
+      this.timersOrchestrator.timers[0].engine.setMessage(req.params.message);
       res.send(200);
     })
 
@@ -124,7 +122,7 @@ export default class HTTP {
     if (!this.fastifyServer.websocketServer) {
       return;
     }
-    this.fastifyServer.websocketServer.clients.forEach(function each(client) {
+    this.fastifyServer.websocketServer.clients.forEach(function each(client: any) {
       if (client.readyState === 1) {
         client.send(JSON.stringify(payload))
       }
@@ -137,16 +135,13 @@ export default class HTTP {
       return this.buildStatusUpdateContent()
     })
 
-    ipcMain.handle('webserver-manager', async (event, command) => {
+    ipcMain.handle('webserver-manager', async (event, command, port) => {
       switch (command) {
         case 'stop':
           await this.stop()
           return false
         case 'start': {
-          const store = new Store(DEFAULT_STORE);
-          this.port = store.get('settings.webServerPort') == null
-            ? 6565
-            : store.get('settings.webServerPort')
+          this.port = parseInt(port) ?? 6565
           return await this.start()
         }
       }

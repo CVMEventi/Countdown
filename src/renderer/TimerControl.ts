@@ -23,6 +23,7 @@ export class TimerControl {
   async set(seconds: number) {
     const command: IpcSetSeconds = {
       name: IpcTimerCommandName.SetSeconds,
+      timerId: 0,
       seconds,
     };
     await ipcRenderer.invoke('command', command);
@@ -31,6 +32,7 @@ export class TimerControl {
   async start() {
     const command: IpcStart = {
       name: IpcTimerCommandName.Start,
+      timerId: 0,
     };
     await ipcRenderer.invoke('command', command);
   }
@@ -38,6 +40,7 @@ export class TimerControl {
   async reset() {
     const command: IpcReset = {
       name: IpcTimerCommandName.Reset,
+      timerId: 0,
     };
     await ipcRenderer.invoke('command', command);
   }
@@ -45,6 +48,7 @@ export class TimerControl {
   async toggle() {
     const command: IpcTogglePause = {
       name: IpcTimerCommandName.TogglePause,
+      timerId: 0,
     };
     await ipcRenderer.invoke('command', command);
   }
@@ -52,6 +56,7 @@ export class TimerControl {
   async pause() {
     const command: IpcPause = {
       name: IpcTimerCommandName.Pause,
+      timerId: 0,
     };
     await ipcRenderer.invoke('command', command);
   }
@@ -59,6 +64,7 @@ export class TimerControl {
   async resume() {
     const command: IpcResume = {
       name: IpcTimerCommandName.Resume,
+      timerId: 0,
     };
     await ipcRenderer.invoke('command', command);
   }
@@ -66,6 +72,7 @@ export class TimerControl {
   async jogSet(seconds: number) {
     const command: IpcJogSet = {
       name: IpcTimerCommandName.JogSet,
+      timerId: 0,
       seconds,
     }
     await ipcRenderer.invoke('command', command);
@@ -74,6 +81,7 @@ export class TimerControl {
   async jogCurrent(seconds: number) {
     const command: IpcJogCurrent = {
       name: IpcTimerCommandName.JogCurrent,
+      timerId: 0,
       seconds,
     };
     await ipcRenderer.invoke('command', command);
@@ -82,6 +90,7 @@ export class TimerControl {
   async sendMessage(message: string) {
     const command: IpcMessage = {
       name: IpcTimerCommandName.Message,
+      timerId: 0,
       message,
     };
     await ipcRenderer.invoke('command', command);

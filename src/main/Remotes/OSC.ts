@@ -1,5 +1,7 @@
 import {ArgumentType, Server} from "node-osc"; // eslint-disable-line import/no-unresolved
 import {TimerEngine} from "../TimerEngine";
+import {TimersOrchestrator} from "../Utilities/TimersOrchestrator";
+import * as timers from "node:timers";
 
 const secondsPerMinute = 60;
 const secondsPerHour = secondsPerMinute * 60;
@@ -8,10 +10,10 @@ export class OSC {
   isRunning = false;
   oscServer: Server = null;
   port: number = null;
-  timerEngine: TimerEngine = null;
-  constructor(port: number, timerEngine: TimerEngine) {
+  timersOrchestrator: TimersOrchestrator = null;
+  constructor(port: number, timersOrchestrator: TimersOrchestrator) {
     this.port = port;
-    this.timerEngine = timerEngine;
+    this.timersOrchestrator = timersOrchestrator;
   }
 
   start() {
@@ -30,41 +32,43 @@ export class OSC {
   }
 
   _messageReceived(message: [string, ...ArgumentType[]]) {
+    console.log(message)
     const [messageType, ...args] = message;
     const hours = +args[0];
     const minutes = +args[1];
     const seconds = +args[2];
+
     switch (messageType) {
       case '/start':
         if (args.length === 3) {
 
 
-          this.timerEngine.set(hours * secondsPerHour + minutes * secondsPerMinute + seconds);
-          this.timerEngine.start();
+          this.timersOrchestrator.timers[0].engine.set(hours * secondsPerHour + minutes * secondsPerMinute + seconds);
+          this.timersOrchestrator.timers[0].engine.start();
         } else {
-          this.timerEngine.start();
+          this.timersOrchestrator.timers[0].engine.start();
         }
         break;
       case '/set':
-        this.timerEngine.set(hours * secondsPerHour + minutes * secondsPerMinute + seconds);
+        this.timersOrchestrator.timers[0].engine.set(hours * secondsPerHour + minutes * secondsPerMinute + seconds);
         break;
       case '/toggle-pause':
-        this.timerEngine.toggleTimer();
+        this.timersOrchestrator.timers[0].engine.toggleTimer();
         break;
       case '/pause':
-        this.timerEngine.pause();
+        this.timersOrchestrator.timers[0].engine.pause();
         break;
       case '/resume':
-        this.timerEngine.resume();
+        this.timersOrchestrator.timers[0].engine.resume();
         break;
       case '/reset':
-        this.timerEngine.reset();
+        this.timersOrchestrator.timers[0].engine.reset();
         break;
       case '/jog-set':
-        this.timerEngine.jogSet(hours * secondsPerHour + minutes * secondsPerMinute + seconds);
+        this.timersOrchestrator.timers[0].engine.jogSet(hours * secondsPerHour + minutes * secondsPerMinute + seconds);
         break;
       case '/jog-current':
-        this.timerEngine.jogCurrent(hours * secondsPerHour + minutes * secondsPerMinute + seconds);
+        this.timersOrchestrator.timers[0].engine.jogCurrent(hours * secondsPerHour + minutes * secondsPerMinute + seconds);
         break;
     }
   }

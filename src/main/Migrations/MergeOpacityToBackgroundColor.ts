@@ -4,6 +4,8 @@ export class MergeOpacityToBackgroundColor implements BaseMigration {
   migrate(oldConfig: { [key: string]: unknown }): { [key: string]: unknown } {
     const settings = oldConfig.settings as {[key: string]: unknown};
 
+    if (oldConfig.version) return oldConfig;
+
     if (!settings.backgroundColorOpacity) return oldConfig;
     if (!settings.backgroundColor) return oldConfig;
     if ((settings.backgroundColor as string).length > 8) return oldConfig;

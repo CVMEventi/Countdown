@@ -112,29 +112,26 @@
 </template>
 
 <script lang="ts" setup>
-import {computed, defineComponent, nextTick, onMounted, ref} from "vue";
+import {nextTick, onMounted, ref} from "vue";
 import {ipcRenderer} from 'electron'
-import Store from "electron-store"
-import Card from '../components/Card'
-import SButton from '../components/SButton'
-import TimeInput from '../components/TimeInput'
-import TabButton from '../components/TabButton'
-import SettingsTab from '../components/SettingsTab'
-import WindowsTab from "../components/WindowsTab";
-import Jog from "../components/Jog";
+import Card from '../components/Card.vue'
+import SButton from '../components/SButton.vue'
+import TimeInput from '../components/TimeInput.vue'
+import SettingsTab from '../components/SettingsTab.vue'
+import WindowsTab from "../components/WindowsTab.vue";
+import Jog from "../components/Jog.vue";
 import { PlayPauseIcon, PlusIcon, MinusIcon } from '@heroicons/vue/24/outline';
-import Navigation from "../components/Navigation";
+import Navigation from "../components/Navigation.vue";
 import { shell } from "electron";
 import dayjs from 'dayjs'
 import duration from 'dayjs/plugin/duration'
 dayjs.extend(duration)
-import RemoteTab from "../components/RemoteTab";
+import RemoteTab from "../components/RemoteTab.vue";
 import {TimerEngineUpdate} from "../../common/TimerInterfaces";
 import {TimerControl} from "../TimerControl";
 import Display = Electron.Display;
-import {CountdownSettings} from "../../common/config";
-import CheckBox from "../components/CheckBox.vue";
 import InputWithButton from "../components/InputWithButton.vue";
+import {CountdownSettings, DEFAULT_STORE} from "../../common/config";
 /*
 import { Howl } from "howler";
 import gong from "../assets/sounds/gong.mp3";
@@ -143,7 +140,6 @@ let sound = new Howl({
 })
 */
 
-let store = new Store()
 const timerControl = new TimerControl(updateReceived);
 
 defineOptions({
@@ -160,7 +156,7 @@ let externalContent = ref('');
 let selectedScreen = ref(null);
 let screens = ref<Display[]>([]);
 let selectedTab = ref('countdown');
-let settings = ref<CountdownSettings>(store.get('settings') as CountdownSettings);
+let settings = ref<CountdownSettings>(DEFAULT_STORE.defaults.settings);
 let audioRun = false;
 let update = ref<TimerEngineUpdate>({
   setSeconds: 0,
@@ -183,6 +179,7 @@ function sendMessage() {
 }
 
 onMounted(async () => {
+  settings.value = await ipcRenderer.invoke('settings:get')
   screens.value = await ipcRenderer.invoke('get-screens');
 
   ipcRenderer.on('screens-updated', async () => {
@@ -207,16 +204,15 @@ function setPresetTime(minutes: number) {
   timerControl.set(minutes * secondsPerMinute);
 }
 
-function settingsUpdated() {
-  store = new Store();
-  settings.value = store.get('settings') as CountdownSettings;
+async function settingsUpdated() {
+  settings.value = await ipcRenderer.invoke('settings:get')
 }
 
 function openURL(url: string) {
   shell.openExternal(url);
 }
 
-let remoteTabRef = ref<RemoteTab>(null);
+let remoteTabRef = ref<typeof RemoteTab>(null);
 
 function save() {
   nextTick(() => {

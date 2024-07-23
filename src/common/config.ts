@@ -1,3 +1,5 @@
+export const CURRENT_CONFIG_VERSION: number = 2
+
 export const DEFAULT_BACKGROUND_COLOR = '#000000ff';
 export const DEFAULT_RESET_BACKGROUND_COLOR = '#000000ff';
 export const DEFAULT_BACKGROUND_OPACITY = '255';
@@ -57,6 +59,7 @@ export const DEFAULT_SHOW_SECTIONS: ShowSections = {
   progress: true,
   clock: true,
   secondsOnClock: false,
+  hours: DEFAULT_SHOW_HOURS
 };
 
 export const DEFAULT_WINDOW_BOUNDS: WindowBounds = {
@@ -67,50 +70,64 @@ export const DEFAULT_WINDOW_BOUNDS: WindowBounds = {
   height: 720
 }
 
+export const DEFAULT_TIMER_COLORS: WindowColors = {
+  background: DEFAULT_BACKGROUND_COLOR,
+  resetBackground: DEFAULT_RESET_BACKGROUND_COLOR,
+  text: DEFAULT_TEXT_COLOR,
+  timerFinishedText: DEFAULT_TIMER_FINISHED_TEXT_COLOR,
+  clock: DEFAULT_CLOCK_COLOR,
+  clockText: DEFAULT_CLOCK_TEXT_COLOR,
+}
+
+export const DEFAULT_WINDOW_SETTINGS: WindowSettings = {
+  alwaysOnTop: DEFAULT_TIMER_ALWAYS_ON_TOP,
+  bounds: DEFAULT_WINDOW_BOUNDS,
+  show: DEFAULT_SHOW_SECTIONS,
+  messageBoxFixedHeight: DEFAULT_MESSAGE_BOX_FIXED_HEIGHT,
+  contentAtReset: DEFAULT_CONTENT_AT_RESET,
+  colors: DEFAULT_TIMER_COLORS,
+  pulseAtZero: DEFAULT_PULSE_AT_ZERO,
+  use12HourClock: DEFAULT_USE_12_HOUR_CLOCK,
+}
+
+export const DEFAULT_TIMER_SETTINGS: TimerSettings = {
+  yellowAtOption: DEFAULT_YELLOW_AT_OPTION,
+  yellowAtMinutes: DEFAULT_YELLOW_AT_MINUTES,
+  yellowAtPercent: DEFAULT_YELLOW_AT_PERCENT,
+  timerDuration: DEFAULT_TIMER_DURATION,
+  setTimeLive: DEFAULT_SET_TIME_LIVE,
+  stopTimerAtZero: DEFAULT_STOP_TIMER_AT_ZERO,
+  windows: [DEFAULT_WINDOW_SETTINGS],
+}
+
+export const DEFAULT_REMOTE_SETTINGS: RemoteSettings = {
+  webServerEnabled: DEFAULT_WEBSERVER_ENABLED,
+  webServerPort: DEFAULT_WEBSERVER_PORT,
+  ndiEnabled: DEFAULT_NDI_ENABLED,
+  ndiAlpha: DEFAULT_NDI_ALPHA,
+  oscEnabled: DEFAULT_OSC_ENABLED,
+  oscPort: DEFAULT_OSC_PORT,
+}
+
 export const DEFAULT_STORE: CountdownConfiguration = {
   defaults: {
     settings: {
-      backgroundColor: DEFAULT_BACKGROUND_COLOR,
-      resetBackgroundColor: DEFAULT_RESET_BACKGROUND_COLOR,
-      textColor: DEFAULT_TEXT_COLOR,
-      timerFinishedTextColor: DEFAULT_TIMER_FINISHED_TEXT_COLOR,
-      clockColor: DEFAULT_CLOCK_COLOR,
-      clockTextColor: DEFAULT_CLOCK_TEXT_COLOR,
       presets: DEFAULT_PRESETS,
-      stopTimerAtZero: DEFAULT_STOP_TIMER_AT_ZERO,
-      blackAtReset: DEFAULT_BLACK_AT_RESET,
-      contentAtReset: DEFAULT_CONTENT_AT_RESET,
-      showHours: DEFAULT_SHOW_HOURS,
-      pulseAtZero: DEFAULT_PULSE_AT_ZERO,
-      webServerEnabled: DEFAULT_WEBSERVER_ENABLED,
-      webServerPort: DEFAULT_WEBSERVER_PORT,
-      ndiEnabled: DEFAULT_NDI_ENABLED,
-      ndiAlpha: DEFAULT_NDI_ALPHA,
-      oscEnabled: DEFAULT_OSC_ENABLED,
-      oscPort: DEFAULT_OSC_PORT,
-      show: DEFAULT_SHOW_SECTIONS,
-      timerAlwaysOnTop: DEFAULT_TIMER_ALWAYS_ON_TOP,
+      remote: DEFAULT_REMOTE_SETTINGS,
       setWindowAlwaysOnTop: DEFAULT_SET_WINDOW_ALWAYS_ON_TOP,
-      yellowAtOption: DEFAULT_YELLOW_AT_OPTION,
-      yellowAtMinutes: DEFAULT_YELLOW_AT_MINUTES,
-      yellowAtPercent: DEFAULT_YELLOW_AT_PERCENT,
-      audioEnabled: DEFAULT_AUDIO_ENABLED,
-      timerDuration: DEFAULT_TIMER_DURATION,
-      setTimeLive: DEFAULT_SET_TIME_LIVE,
-      use12HourClock: DEFAULT_USE_12_HOUR_CLOCK,
-      messageBoxFixedHeight: DEFAULT_MESSAGE_BOX_FIXED_HEIGHT,
       closeAction: DEFAULT_CLOSE_ACTION,
       startHidden: DEFAULT_START_HIDDEN,
+      timers: [DEFAULT_TIMER_SETTINGS],
     },
-    window: DEFAULT_WINDOW_BOUNDS,
   }
 }
 
 export interface ShowSections {
-  timer: boolean,
-  progress: boolean,
-  clock: boolean,
-  secondsOnClock: boolean,
+  timer: boolean
+  progress: boolean
+  clock: boolean
+  secondsOnClock: boolean
+  hours: boolean
 }
 
 export interface WindowBounds {
@@ -121,43 +138,57 @@ export interface WindowBounds {
   height: number
 }
 
-export interface CountdownSettings {
-  backgroundColor: string
-  resetBackgroundColor: string
-  textColor: string
-  timerFinishedTextColor: string
-  clockColor: string
-  clockTextColor: string
-  presets: number[]
-  stopTimerAtZero: boolean
-  blackAtReset: boolean
+export interface WindowColors {
+  background: string
+  resetBackground: string
+  text: string
+  timerFinishedText: string
+  clock: string
+  clockText: string
+}
+
+export interface WindowSettings {
+  alwaysOnTop: boolean
+  bounds: WindowBounds
+  show: ShowSections
+  messageBoxFixedHeight: boolean
   contentAtReset: ContentAtReset
-  showHours: boolean
+  colors: WindowColors
   pulseAtZero: boolean
+  use12HourClock: boolean
+}
+
+export interface TimerSettings {
+  yellowAtOption: string
+  yellowAtMinutes: number
+  yellowAtPercent: number
+  timerDuration: number
+  setTimeLive: boolean
+  stopTimerAtZero: boolean
+  windows: WindowSettings[]
+}
+
+export interface RemoteSettings {
   webServerEnabled: boolean
   webServerPort: number
   ndiEnabled: boolean
   ndiAlpha: boolean
   oscEnabled: boolean
   oscPort: number
-  show: ShowSections
-  timerAlwaysOnTop: boolean
+}
+
+export interface CountdownSettings {
+  presets: number[]
+  remote: RemoteSettings
   setWindowAlwaysOnTop: boolean
-  yellowAtOption: string
-  yellowAtMinutes: number
-  yellowAtPercent: number
-  audioEnabled: boolean
-  timerDuration: number
-  setTimeLive: boolean
-  use12HourClock: boolean
-  messageBoxFixedHeight: boolean,
   closeAction: CloseAction,
   startHidden: boolean,
+  timers: TimerSettings[]
 }
 
 export interface CountdownStore {
+  version?: number
   settings: CountdownSettings,
-  window: WindowBounds,
 }
 
 export interface CountdownConfiguration {

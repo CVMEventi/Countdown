@@ -43,20 +43,18 @@
 </template>
 
 <script lang="ts" setup>
-import {computed, defineComponent, defineOptions, onMounted, ref} from "vue";
-import Card from "./Card";
-import CheckBox from "./CheckBox";
+import {computed, defineComponent, defineOptions, onBeforeMount, onMounted, ref} from "vue";
+import Card from "./Card.vue";
+import CheckBox from "./CheckBox.vue";
 import { ipcRenderer } from "electron";
-import SButton from "./SButton";
-import Store from 'electron-store';
+import SButton from "./SButton.vue";
 import {
   DEFAULT_NDI_ALPHA,
   DEFAULT_NDI_ENABLED, DEFAULT_OSC_ENABLED, DEFAULT_OSC_PORT, DEFAULT_STORE,
   DEFAULT_WEBSERVER_ENABLED,
-  DEFAULT_WEBSERVER_PORT
+  DEFAULT_WEBSERVER_PORT, RemoteSettings
 } from "../../common/config";
-
-const store = new Store(DEFAULT_STORE);
+import * as http from "node:http";
 
 defineOptions({
   'name': 'RemoteTab',
@@ -66,21 +64,31 @@ const emit = defineEmits<{
   'settings-updated': []
 }>();
 
-let httpServerEnabled = ref(store.get('settings.webServerEnabled', DEFAULT_WEBSERVER_ENABLED));
-let httpServerPort = ref(store.get('settings.webServerPort', DEFAULT_WEBSERVER_PORT));
-let ndiEnabled = ref(store.get('settings.ndiEnabled', DEFAULT_NDI_ENABLED));
-let ndiAlpha = ref(store.get('settings.ndiAlpha', DEFAULT_NDI_ALPHA));
-let oscEnabled = ref(store.get('settings.oscEnabled', DEFAULT_OSC_ENABLED));
-let oscPort = ref(store.get('settings.oscPort', DEFAULT_OSC_PORT));
+let httpServerEnabled = ref(DEFAULT_WEBSERVER_ENABLED);
+let httpServerPort = ref(DEFAULT_WEBSERVER_PORT);
+let ndiEnabled = ref(DEFAULT_NDI_ENABLED);
+let ndiAlpha = ref(DEFAULT_NDI_ALPHA);
+let oscEnabled = ref(DEFAULT_OSC_ENABLED);
+let oscPort = ref(DEFAULT_OSC_PORT);
 let currentPort = ref('');
 let isRunning = ref(false);
 let lastError = ref('');
 let isLoading = ref(false);
 
-onMounted(async () => {
+onBeforeMount(async () => {
+  const remoteSettings: RemoteSettings = await ipcRenderer.invoke('settings:get', 'remote')
+  httpServerEnabled.value = remoteSettings.webServerEnabled
+  httpServerPort.value = remoteSettings.webServerPort
+  ndiEnabled.value = remoteSettings.ndiEnabled
+  ndiAlpha.value = remoteSettings.ndiAlpha
+  oscEnabled.value = remoteSettings.oscEnabled
+  oscPort.value = remoteSettings.oscPort
+
   const update = await ipcRenderer.invoke('server-running');
   updateReceived(update)
+})
 
+onMounted(async () => {
   ipcRenderer.on('webserver-update', (event, update) => {
     updateReceived(update)
   })
@@ -93,18 +101,22 @@ function updateReceived(update: any) {
 }
 
 async function save() {
-  store.set('settings.webServerEnabled', httpServerEnabled.value);
-  store.set('settings.webServerPort', httpServerPort.value);
-  store.set('settings.ndiEnabled', ndiEnabled.value);
-  store.set('settings.ndiAlpha', ndiAlpha.value);
-  store.set('settings.oscEnabled', oscEnabled.value);
-  store.set('settings.oscPort', oscPort.value);
+  const newRemoteSettings: RemoteSettings = {
+    webServerEnabled: httpServerEnabled.value,
+    webServerPort: httpServerPort.value,
+    ndiEnabled: ndiEnabled.value,
+    ndiAlpha: ndiAlpha.value,
+    oscEnabled: oscEnabled.value,
+    oscPort: oscPort.value,
+  }
+
+  await ipcRenderer.invoke('settings:set', 'remote', JSON.stringify(newRemoteSettings));
 
   if (httpServerEnabled.value
     && httpServerPort.value !== parseInt(currentPort.value)
     && isRunning.value) {
     isRunning.value = await ipcRenderer.invoke('webserver-manager', 'stop')
-    isRunning.value = await ipcRenderer.invoke('webserver-manager', 'start')
+    isRunning.value = await ipcRenderer.invoke('webserver-manager', 'start', httpServerPort.value)
   }
 
   if (!httpServerEnabled.value
@@ -113,7 +125,6 @@ async function save() {
   }
 
   emit('settings-updated')
-  ipcRenderer.send('settings-updated')
 }
 
 async function toggleHttpServer() {
@@ -121,7 +132,7 @@ async function toggleHttpServer() {
   if (isRunning.value) {
     isRunning.value = await ipcRenderer.invoke('webserver-manager', 'stop')
   } else {
-    isRunning.value = await ipcRenderer.invoke('webserver-manager', 'start')
+    isRunning.value = await ipcRenderer.invoke('webserver-manager', 'start', httpServerPort.value)
   }
   isLoading.value = false;
 }

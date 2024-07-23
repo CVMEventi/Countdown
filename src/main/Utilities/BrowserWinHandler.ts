@@ -80,10 +80,16 @@ export default class BrowserWinHandler {
     })
   }
 
-  async loadPage(pagePath: string) {
+  async loadPage(pagePath: string, query?: Record<string, string>) {
     if (!this.browserWindow) return Promise.reject(new Error('The page could not be loaded before win \'created\' event'))
     const serverUrl = MAIN_WINDOW_WEBPACK_ENTRY;
-    const fullPath = serverUrl + '#' + pagePath;
+    const urlSearchParams = new URLSearchParams(query);
+    let queryString = urlSearchParams.toString()
+    if (queryString !== "") {
+      queryString = "?" + queryString
+    }
+    console.log(queryString)
+    const fullPath = serverUrl + queryString + '#' + pagePath;
     await this.browserWindow.loadURL(fullPath)
   }
 
