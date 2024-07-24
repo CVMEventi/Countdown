@@ -1,4 +1,4 @@
-import BrowserWinHandler from './Utilities/BrowserWinHandler'
+import BrowserWinHandler from './Utilities/BrowserWinHandler.ts'
 import BrowserWindowConstructorOptions = Electron.BrowserWindowConstructorOptions;
 
 export default function createCountdownWindow (timerId: number, windowId: number, options: BrowserWindowConstructorOptions) {

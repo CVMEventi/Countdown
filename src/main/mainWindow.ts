@@ -1,7 +1,7 @@
-import BrowserWinHandler from './Utilities/BrowserWinHandler'
-import { isDev } from './Utilities/dev'
+import BrowserWinHandler from './Utilities/BrowserWinHandler.ts'
+import { isDev } from './Utilities/dev.ts'
 import BrowserWindowConstructorOptions = Electron.BrowserWindowConstructorOptions;
-import {APP_VERSION} from "../version";
+import {APP_VERSION} from "../version.ts";
 
 export default function createMainWindow (options: BrowserWindowConstructorOptions = {}) {
   options = {

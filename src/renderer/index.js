@@ -1,9 +1,9 @@
 import "v8-compile-cache";
 import './index.css';
 import { createApp } from 'vue';
-import Index from './pages/index';
-import Countdown from './pages/countdown';
-import App from './App';
+import Index from './pages/index.vue';
+import Countdown from './pages/countdown.vue';
+import App from './App.vue';
 import { createRouter, createWebHashHistory } from 'vue-router';
 
 const routes = [

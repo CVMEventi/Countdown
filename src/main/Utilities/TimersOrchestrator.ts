@@ -1,19 +1,15 @@
 import {
-  DEFAULT_TIMER_ALWAYS_ON_TOP,
-  DEFAULT_WINDOW_BOUNDS,
   TimerSettings,
   WindowBounds,
   WindowSettings
-} from "../../common/config";
-import {TimerEngine, TimerEngineOptions} from "../TimerEngine";
-import BrowserWinHandler from "./BrowserWinHandler";
-import {Config} from "./Config";
-import createCountdownWindow from "../countdownWindow";
+} from "../../common/config.ts";
+import {TimerEngine, TimerEngineOptions} from "../TimerEngine.ts";
+import BrowserWinHandler from "./BrowserWinHandler.ts";
+import createCountdownWindow from "../countdownWindow.ts";
 import {app, BrowserWindow, screen} from "electron";
-import {setCountdownWindowPosition} from "./addIpcHandles";
-import {MessageUpdate, TimerEngineUpdate, TimerEngineWebSocketUpdate} from "../../common/TimerInterfaces";
-import {CountdownApp} from "../App";
-import {sleep} from "./utilities";
+import {MessageUpdate, TimerEngineUpdate, TimerEngineWebSocketUpdate} from "../../common/TimerInterfaces.ts";
+import {CountdownApp} from "../App.ts";
+import {sleep} from "./utilities.ts";
 
 interface SingleTimer {
   settings: TimerSettings
@@ -27,7 +23,7 @@ export class TimersOrchestrator {
 
   constructor(app: CountdownApp) {
     this.app = app
-    app.config.settings.timers.forEach((timer, timerId) => {
+    app.config.settings.timers.forEach((timer: TimerSettings, timerId: number) => {
       const options: TimerEngineOptions = {
         yellowAtOption: timer.yellowAtOption,
         yellowAt: timer.yellowAtOption === 'minutes' ? timer.yellowAtMinutes : timer.yellowAtPercent,
@@ -38,13 +34,13 @@ export class TimersOrchestrator {
       const timerEngine = new TimerEngine(
         timer.timerDuration,
         options,
-        (update) => {
+        (update: TimerEngineUpdate) => {
           this._timerEngineUpdate(timerId, update)
         },
-        (update) => {
+        (update: TimerEngineWebSocketUpdate) => {
           this._timerEngineWebSocketUpdate(timerId, update)
         },
-        (update) => {
+        (update: MessageUpdate) => {
           this._timerEngineMessageUpdate(timerId, update)
         }
       )
@@ -127,7 +123,7 @@ export class TimersOrchestrator {
   }
 
   configUpdated() {
-    this.app.config.settings.timers.forEach((timer, timerId) => {
+    this.app.config.settings.timers.forEach((timer: TimerSettings, timerId: number) => {
       const options: TimerEngineOptions = {
         yellowAtOption: timer.yellowAtOption,
         yellowAt: timer.yellowAtOption === 'minutes' ? timer.yellowAtMinutes : timer.yellowAtPercent,

@@ -1,8 +1,9 @@
 import fastify, {FastifyInstance, RequestGenericInterface} from 'fastify';
 import FastifyWebSocket from '@fastify/websocket';
 import {BrowserWindow, ipcMain} from "electron";
-import {TimerEngineWebSocketUpdate} from "../../common/TimerInterfaces";
-import {TimersOrchestrator} from "../Utilities/TimersOrchestrator";
+import {TimerEngineWebSocketUpdate} from "../../common/TimerInterfaces.ts";
+import {TimersOrchestrator} from "../Utilities/TimersOrchestrator.ts";
+import {WebSocket} from "ws";
 
 const secondsPerMinute = 60;
 const secondsPerHour = secondsPerMinute * 60;
@@ -122,7 +123,7 @@ export default class HTTP {
     if (!this.fastifyServer.websocketServer) {
       return;
     }
-    this.fastifyServer.websocketServer.clients.forEach(function each(client: any) {
+    this.fastifyServer.websocketServer.clients.forEach(function each(client: WebSocket) {
       if (client.readyState === 1) {
         client.send(JSON.stringify(payload))
       }

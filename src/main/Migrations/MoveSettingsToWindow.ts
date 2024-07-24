@@ -1,5 +1,7 @@
-import {BaseMigration} from "./BaseMigration";
-import {CloseAction, CountdownStore} from "../../common/config";
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-nocheck
+import {BaseMigration} from "./BaseMigration.ts";
+import {CloseAction} from "../../common/config.ts";
 
 export class MoveSettingsToWindow implements BaseMigration {
   migrate(oldConfig: { [key: string]: unknown }): { [key: string]: unknown } {
@@ -7,53 +9,51 @@ export class MoveSettingsToWindow implements BaseMigration {
 
     if (oldConfig.version as number >= 2) return oldConfig
 
-    const newConfig: CountdownStore = {
+    return {
       version: 2,
       settings: {
-        presets: settings.presets as any,
+        presets: settings.presets,
         remote: {
-          webServerEnabled: settings.webServerEnabled as any,
-          webServerPort: settings.webServerPort as any,
-          ndiEnabled: settings.ndiEnabled as any,
-          ndiAlpha: settings.ndiAlpha as any,
-          oscEnabled: settings.oscEnabled as any,
-          oscPort: settings.oscPort as any,
+          webServerEnabled: settings.webServerEnabled,
+          webServerPort: settings.webServerPort,
+          ndiEnabled: settings.ndiEnabled,
+          ndiAlpha: settings.ndiAlpha,
+          oscEnabled: settings.oscEnabled,
+          oscPort: settings.oscPort,
         },
-        setWindowAlwaysOnTop: settings.setWindowAlwaysOnTop as any,
-        closeAction: settings.closeAction as any ?? CloseAction.Ask,
-        startHidden: settings.startHidden as any ?? false,
+        setWindowAlwaysOnTop: settings.setWindowAlwaysOnTop,
+        closeAction: settings.closeAction ?? CloseAction.Ask,
+        startHidden: settings.startHidden ?? false,
         timers: [{
-          yellowAtOption: settings.yellowAtOption as any,
-          yellowAtMinutes: settings.yellowAtMinutes as any,
-          yellowAtPercent: settings.yellowAtPercent as any,
-          timerDuration: settings.timerDuration as any,
-          setTimeLive: settings.setTimeLive as any,
-          stopTimerAtZero: settings.stopTimerAtZero as any,
+          yellowAtOption: settings.yellowAtOption,
+          yellowAtMinutes: settings.yellowAtMinutes,
+          yellowAtPercent: settings.yellowAtPercent,
+          timerDuration: settings.timerDuration,
+          setTimeLive: settings.setTimeLive,
+          stopTimerAtZero: settings.stopTimerAtZero,
           windows: [{
-            alwaysOnTop: settings.timerAlwaysOnTop as any,
-            bounds: oldConfig.window as any,
+            alwaysOnTop: settings.timerAlwaysOnTop,
+            bounds: oldConfig.window,
             show: {
-              ...(settings.show as any),
-              hours: settings.showHours as any,
+              ...(settings.show),
+              hours: settings.showHours,
             },
-            messageBoxFixedHeight: settings.messageBoxFixedHeight as any,
-            contentAtReset: settings.contentAtReset as any,
+            messageBoxFixedHeight: settings.messageBoxFixedHeight,
+            contentAtReset: settings.contentAtReset,
             colors: {
-              background: settings.backgroundColor as any,
-              resetBackground: settings.resetBackgroundColor as any,
-              text: settings.textColor as any,
-              timerFinishedText: settings.timerFinishedTextColor as any,
-              clock: settings.clockColor as any,
-              clockText: settings.clockTextColor as any,
+              background: settings.backgroundColor,
+              resetBackground: settings.resetBackgroundColor,
+              text: settings.textColor,
+              timerFinishedText: settings.timerFinishedTextColor,
+              clock: settings.clockColor,
+              clockText: settings.clockTextColor,
             },
-            pulseAtZero: settings.pulseAtZero as any,
-            use12HourClock: settings.use12HourClock as any,
+            pulseAtZero: settings.pulseAtZero,
+            use12HourClock: settings.use12HourClock,
           }]
         }]
       }
-    }
-
-    return newConfig as any;
+    };
   }
 
 }

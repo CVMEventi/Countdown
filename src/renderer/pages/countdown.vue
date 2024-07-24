@@ -54,11 +54,8 @@ import {computed, onMounted, ref} from "vue";
 import {ipcRenderer} from 'electron'
 import dayjs from 'dayjs'
 import duration from 'dayjs/plugin/duration'
-import Store from "electron-store"
 import {
   ContentAtReset,
-  CountdownSettings,
-  DEFAULT_STORE,
   DEFAULT_WINDOW_SETTINGS,
   WindowSettings
 } from "../../common/config";
@@ -66,8 +63,6 @@ import {MessageUpdate, TimerEngineUpdate} from "../../common/TimerInterfaces";
 import ProgressBar from "../components/ProgressBar.vue";
 import Clock from "../components/Clock.vue";
 import {IpcGetWindowSettingsArgs} from "../../common/IpcInterfaces";
-
-let store = new Store()
 
 dayjs.extend(duration)
 

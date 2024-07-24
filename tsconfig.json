@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "allowImportingTsExtensions": true,
     "target": "ES6",
     "allowJs": true,
     "module": "node16",
@@ -10,6 +11,7 @@
     "baseUrl": ".",
     "outDir": "dist",
     "moduleResolution": "node16",
+    "noEmit": true,
     "resolveJsonModule": true,
     "paths": {
       "*": ["node_modules/*"]

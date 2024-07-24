@@ -1,5 +1,6 @@
 import eslint from '@eslint/js'
 import tselint from 'typescript-eslint'
+import importPlugin from 'eslint-plugin-import'
 import globals from 'globals'
 
 export default tselint.config(
@@ -7,6 +8,9 @@ export default tselint.config(
     ignores: [".webpack/", ".vite/"],
   },
   {
+    plugins: {
+      import: importPlugin
+    },
     extends: [
       eslint.configs.recommended,
       ...tselint.configs.recommended,
@@ -17,7 +21,9 @@ export default tselint.config(
         ...globals.node,
       }
     },
-    rules:
+    rules: {
+      "import/extensions": ["error", "always"]
+    },
     settings: {
       "import/resolver": {
         node: {

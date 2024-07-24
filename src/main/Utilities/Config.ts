@@ -1,6 +1,6 @@
-import {CountdownSettings, CountdownStore, DEFAULT_STORE} from "../../common/config";
+import {CountdownSettings, DEFAULT_STORE} from "../../common/config.ts";
 import Store from "electron-store";
-import {applyMigrations} from "../Migrations/applyMigrations";
+import {applyMigrations} from "../Migrations/applyMigrations.ts";
 import {getProperty, setProperty} from "dot-prop";
 
 
@@ -15,17 +15,18 @@ export class Config {
   }
 
   constructor(updatedConfig: () => void) {
-    const newConfig = applyMigrations(this.store.get(null));
-    this.store.set(newConfig);
+    this.updatedConfig = updatedConfig
+    const newConfig = applyMigrations(this.store.get(null))
+    this.store.set(newConfig)
 
     this._settings = this.store.get('settings')
   }
 
-  set(key: string, value: any) {
+  set(key: string, value: unknown) {
     if (key) {
       setProperty(this._settings, key, value)
     } else {
-      this._settings = value
+      this._settings = value as CountdownSettings
     }
     this.store.set('settings', this._settings)
     if (this.updatedConfig) {
@@ -34,7 +35,7 @@ export class Config {
     return this._settings
   }
 
-  get(key?: string): any {
+  get(key?: string): unknown {
     if (!key) return this._settings
     return getProperty(this._settings, key)
   }

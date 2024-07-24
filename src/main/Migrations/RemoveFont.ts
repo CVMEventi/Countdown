@@ -1,4 +1,4 @@
-import {BaseMigration} from "./BaseMigration";
+import {BaseMigration} from "./BaseMigration.ts";
 
 export class RemoveFont implements BaseMigration {
   migrate(oldConfig: { [key: string]: unknown }): { [key: string]: unknown } {

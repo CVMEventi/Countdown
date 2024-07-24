@@ -1,8 +1,8 @@
-import {MergeOpacityToBackgroundColor} from "./MergeOpacityToBackgroundColor";
-import {BaseMigration} from "./BaseMigration";
-import {MoveBlackAtResetToContentAtReset} from "./MoveBlackAtResetToContentAtReset";
-import {RemoveFont} from "./RemoveFont";
-import {MoveSettingsToWindow} from "./MoveSettingsToWindow";
+import {MergeOpacityToBackgroundColor} from "./MergeOpacityToBackgroundColor.ts";
+import {BaseMigration} from "./BaseMigration.ts";
+import {MoveBlackAtResetToContentAtReset} from "./MoveBlackAtResetToContentAtReset.ts";
+import {RemoveFont} from "./RemoveFont.ts";
+import {MoveSettingsToWindow} from "./MoveSettingsToWindow.ts";
 
 const migrations: BaseMigration[] = [
   new MergeOpacityToBackgroundColor,

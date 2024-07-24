@@ -1,7 +1,5 @@
-import {ArgumentType, Server} from "node-osc"; // eslint-disable-line import/no-unresolved
-import {TimerEngine} from "../TimerEngine";
-import {TimersOrchestrator} from "../Utilities/TimersOrchestrator";
-import * as timers from "node:timers";
+import {ArgumentType, Server} from "node-osc";
+import {TimersOrchestrator} from "../Utilities/TimersOrchestrator.ts";
 
 const secondsPerMinute = 60;
 const secondsPerHour = secondsPerMinute * 60;
@@ -10,7 +8,7 @@ export class OSC {
   isRunning = false;
   oscServer: Server = null;
   port: number = null;
-  timersOrchestrator: TimersOrchestrator = null;
+  timersOrchestrator: TimersOrchestrator = null
   constructor(port: number, timersOrchestrator: TimersOrchestrator) {
     this.port = port;
     this.timersOrchestrator = timersOrchestrator;

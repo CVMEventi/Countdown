@@ -1,5 +1,5 @@
 import {ipcRenderer} from "electron";
-import {TimerEngineUpdate} from "../common/TimerInterfaces";
+import {TimerEngineUpdate} from "../common/TimerInterfaces.ts";
 import {
   IpcJogCurrent,
   IpcJogSet,
@@ -11,7 +11,7 @@ import {
   IpcStart,
   IpcTimerCommandName,
   IpcTogglePause
-} from "../common/IpcInterfaces";
+} from "../common/IpcInterfaces.ts";
 
 export class TimerControl {
   constructor(updateCallback: (update: TimerEngineUpdate) => void) {

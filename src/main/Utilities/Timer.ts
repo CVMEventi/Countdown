@@ -1,5 +1,5 @@
-import AdjustingInterval from "./AdjustingInterval";
-import {DEFAULT_TIMER_DURATION} from "../../common/config";
+import AdjustingInterval from "./AdjustingInterval.ts";
+import {DEFAULT_TIMER_DURATION} from "../../common/config.ts";
 
 export class Timer {
   interval: number;

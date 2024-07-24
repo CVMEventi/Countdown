@@ -1,12 +1,12 @@
-import {Timer} from "./Utilities/Timer";
+import {Timer} from "./Utilities/Timer.ts";
 import dayjs from "dayjs";
-import duration from "dayjs/plugin/duration";
+import duration from "dayjs/plugin/duration.js";
 import {
   MessageUpdateCallback,
   UpdateCallback,
   WebSocketUpdateCallback
-} from "../common/TimerInterfaces";
-import {DEFAULT_SET_TIME_LIVE, DEFAULT_STOP_TIMER_AT_ZERO, DEFAULT_YELLOW_AT_OPTION} from "../common/config";
+} from "../common/TimerInterfaces.ts";
+import {DEFAULT_SET_TIME_LIVE, DEFAULT_STOP_TIMER_AT_ZERO, DEFAULT_YELLOW_AT_OPTION} from "../common/config.ts";
 dayjs.extend(duration);
 
 export interface TimerEngineOptions {

@@ -1,8 +1,7 @@
 import {ipcMain} from "electron";
-import {TimerEngine} from "../TimerEngine";
-import {IpcTimerCommand, IpcTimerCommandName} from "../../common/IpcInterfaces";
+import {IpcTimerCommand, IpcTimerCommandName} from "../../common/IpcInterfaces.ts";
 import IpcMainInvokeEvent = Electron.IpcMainInvokeEvent;
-import {TimersOrchestrator} from "../Utilities/TimersOrchestrator";
+import {TimersOrchestrator} from "../Utilities/TimersOrchestrator.ts";
 
 
 export class IpcTimerController {

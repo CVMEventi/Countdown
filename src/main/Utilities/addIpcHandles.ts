@@ -1,6 +1,6 @@
 import {ipcMain, screen} from "electron";
-import {CountdownApp} from "../App";
-import {IpcGetWindowSettingsArgs} from "../../common/IpcInterfaces";
+import {CountdownApp} from "../App.ts";
+import {IpcGetWindowSettingsArgs} from "../../common/IpcInterfaces.ts";
 
 export default function addIpcHandles(app: CountdownApp)
 {
@@ -30,7 +30,7 @@ export default function addIpcHandles(app: CountdownApp)
     return app.config.get(key)
   })
 
-  ipcMain.handle('settings:set', (event, key: string, value: any) => {
+  ipcMain.handle('settings:set', (event, key: string, value: string) => {
     const newSettings = app.config.set(key, JSON.parse(value))
 
     app.timersOrchestrator.configUpdated()

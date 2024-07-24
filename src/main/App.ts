@@ -1,10 +1,10 @@
-import NDI from "./Remotes/NDI";
-import addDefaultEvents from "./Utilities/addDefaultEvents";
-import addIpcHandles from "./Utilities/addIpcHandles";
-import {enableDevMode, isDev} from "./Utilities/dev";
-import BrowserWinHandler from "./Utilities/BrowserWinHandler";
-import createMainWindow from "./mainWindow";
-import setMenu from "./Utilities/setMenu";
+import NDI from "./Remotes/NDI.ts";
+import addDefaultEvents from "./Utilities/addDefaultEvents.ts";
+import addIpcHandles from "./Utilities/addIpcHandles.ts";
+import {enableDevMode, isDev} from "./Utilities/dev.ts";
+import BrowserWinHandler from "./Utilities/BrowserWinHandler.ts";
+import createMainWindow from "./mainWindow.ts";
+import setMenu from "./Utilities/setMenu.js";
 import {app, BrowserWindow, screen, Tray, Menu, nativeImage, dialog} from "electron";
 import {
   CloseAction,
@@ -12,22 +12,19 @@ import {
   DEFAULT_NDI_ENABLED,
   DEFAULT_OSC_ENABLED,
   DEFAULT_OSC_PORT,
-  DEFAULT_START_HIDDEN,
-  DEFAULT_STORE,
   DEFAULT_WEBSERVER_ENABLED,
   DEFAULT_WEBSERVER_PORT,
-} from "../common/config";
-import HTTP from "./Remotes/HTTP";
-import {OSC} from "./Remotes/OSC";
-import {IpcTimerController} from "./Remotes/IpcTimerController";
-import {applyMigrations} from "./Migrations/applyMigrations";
+} from "../common/config.ts";
+import HTTP from "./Remotes/HTTP.ts";
+import {OSC} from "./Remotes/OSC.ts";
+import {IpcTimerController} from "./Remotes/IpcTimerController.ts";
 import macosTrayIcon from "../icons/tray/TrayTemplate.png"
 import macOsTrayIcon2x from "../icons/tray/TrayTemplate@2x.png"
 import otherOsTrayIcon from "../icons/icon.ico"
 import path from "path";
 import * as process from "node:process";
-import {Config} from "./Utilities/Config";
-import {TimersOrchestrator} from "./Utilities/TimersOrchestrator";
+import {Config} from "./Utilities/Config.ts";
+import {TimersOrchestrator} from "./Utilities/TimersOrchestrator.ts";
 
 // To be packaged, otherwise it doesn't work
 console.log(macOsTrayIcon2x)
@@ -79,14 +76,14 @@ export class CountdownApp {
         ))
       }
 
-      appIcon.on('right-click', (event, bounds) => {
+      appIcon.on('right-click', () => {
         const contextMenu = Menu.buildFromTemplate([
           {label: 'Quit', role: 'quit'}
         ])
 
         appIcon.popUpContextMenu(contextMenu);
       })
-      appIcon.on('click', (event, bounds) => {
+      appIcon.on('click', () => {
         if (!this.mainWindowHandler.browserWindow.isVisible()) {
           this.mainWindowHandler.browserWindow.show()
         } else {
@@ -112,7 +109,7 @@ export class CountdownApp {
         event.preventDefault()
 
         switch (this.config.settings.closeAction ?? DEFAULT_CLOSE_ACTION) {
-          case CloseAction.Ask:
+          case CloseAction.Ask: {
             const result = await dialog.showMessageBox({
               message: "Choose an action",
               checkboxLabel: "Don't ask again",
@@ -138,6 +135,7 @@ export class CountdownApp {
                 break;
             }
             break;
+          }
           case CloseAction.Hide:
             browserWindow.hide()
             break;

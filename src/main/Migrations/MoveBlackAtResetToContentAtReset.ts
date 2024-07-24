@@ -1,5 +1,5 @@
-import {BaseMigration} from "./BaseMigration";
-import {ContentAtReset} from "../../common/config";
+import {BaseMigration} from "./BaseMigration.ts";
+import {ContentAtReset} from "../../common/config.ts";
 
 export class MoveBlackAtResetToContentAtReset implements BaseMigration {
   migrate(oldConfig: { [key: string]: unknown }): { [key: string]: unknown } {
