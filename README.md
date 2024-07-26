@@ -6,6 +6,15 @@ Simple countdown for live events
 
 _Companion module in beta version (compatible with v0.0.15 and later)_
 
+### Features
+
+- NDI support
+- OSC support
+- HTTP/Companion support
+- Send messages
+- Custom colors
+- Many customization options
+
 ### Download
 
 You can download latest release from [releases](https://github.com/CVMEventi/Countdown/releases)
@@ -13,9 +22,9 @@ You can download latest release from [releases](https://github.com/CVMEventi/Cou
 ### APIs
 
 - [HTTP APIs](https://github.com/CVMEventi/Countdown/wiki/HTTP-APIs)
-- OSC (Soon)
+- OSC
 
-### Images
+### Images (To be updated)
 Main window to set timer
 ![Main Window](./docs/images/main.png)
 
