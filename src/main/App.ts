@@ -166,6 +166,7 @@ export class CountdownApp {
     })
 
     if (this.config.settings.remote.ndiEnabled ?? DEFAULT_NDI_ENABLED) {
+      this.ndiServer.alpha = this.config.settings.remote.ndiAlpha;
       await this.ndiServer.start();
       this.startNdiTimer();
     }
