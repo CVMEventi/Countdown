@@ -82,7 +82,7 @@ export class TimerEngine {
     }
 
     if (this.options.yellowAtOption === 'percent'
-        && this.options.yellowAt >= this._timer.secondsSet / 100 * this._currentSeconds) {
+        && this.options.yellowAt >= this._currentSeconds * 100 / this._timer.secondsSet) {
       return true;
     }
 
