@@ -16,7 +16,7 @@ export class Config {
 
   constructor(updatedConfig: () => void) {
     this.updatedConfig = updatedConfig
-    const newConfig = applyMigrations(this.store.get(null))
+    const newConfig = applyMigrations(this.store.get(null, DEFAULT_STORE.defaults))
     this.store.set(newConfig)
 
     this._settings = this.store.get('settings')

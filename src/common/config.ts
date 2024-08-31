@@ -119,6 +119,7 @@ export const DEFAULT_STORE: CountdownConfiguration = {
       startHidden: DEFAULT_START_HIDDEN,
       timers: [DEFAULT_TIMER_SETTINGS],
     },
+    version: 2
   }
 }
 
