@@ -41,9 +41,18 @@ jobs:
           APPLE_CERTIFICATES: ${{ secrets.APPLE_CERTIFICATES }}
           APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
 
-      - name: Build
+      - name: Build Windows/Linux
+        if: ${{ runner.os != 'macOS' }}
         run: |
-          yarn make -- --arch x64
+          yarn make --arch x64
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      - name: Build macOS
+        if: ${{ runner.os == 'macOS' }}
+        run: |
+          yarn make --arch x64,arm64
         env:
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
