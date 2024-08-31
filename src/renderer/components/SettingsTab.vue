@@ -22,7 +22,7 @@
       <p class="text-sm mt-2">Yellow Bar at</p>
       <input-with-button
         @click="updateYellowOption(0)"
-        @input="updateYellowValue($event.target.value, 0)"
+        @input="updateYellowValue(+$event, 0)"
         type="number"
         :model-value="settings.timers[0].yellowAtOption === 'minutes' ? settings.timers[0].yellowAtMinutes : settings.timers[0].yellowAtPercent">
         {{ settings.timers[0].yellowAtOption === 'minutes' ? 'm' : '%' }} <arrows-right-left-icon class="ml-3 w-4 h-4" />
