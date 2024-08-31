@@ -42,17 +42,16 @@ jobs:
           APPLE_CERTIFICATES: ${{ secrets.APPLE_CERTIFICATES }}
           APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
 
-      - name: Publish Windows/Linux
-        if: ${{ runner.os != 'macOS' }}
+      - name: Publish x64
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: yarn run publish --arch x64
 
-      - name: Publish macOS
+      - name: Publish arm64
         if: ${{ runner.os == 'macOS' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-        run: yarn run publish --arch x64,arm64
+        run: yarn run publish --arch arm64
