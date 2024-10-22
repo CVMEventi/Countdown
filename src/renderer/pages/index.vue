@@ -82,7 +82,12 @@
         </card>
         <card class="flex-1">
           <div class="uppercase text-white">Message</div>
-          <input-with-button type="text" @input="value => message = value" :model-value="message" @click="sendMessage">Send</input-with-button>
+          <div class="flex gap-2">
+            <input-with-button type="text" @input="value => message = value" :model-value="message" @click="sendMessage">Send</input-with-button>
+            <button @click="deleteMessage" class="mt-1 relative inline-flex items-center space-x-2 px-2 py-1 border border-red-600 text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-500 focus:outline-none focus:ring-1 focus:ring-red-400 focus:border-red-500">
+              <trash-icon class="w-5 h-5 inline-flex" />
+            </button>
+          </div>
         </card>
       </div>
       <card class="presets inline-flex gap-2 overflow-x-auto">
@@ -120,7 +125,7 @@ import TimeInput from '../components/TimeInput.vue'
 import SettingsTab from '../components/SettingsTab.vue'
 import WindowsTab from "../components/WindowsTab.vue";
 import Jog from "../components/Jog.vue";
-import { PlayPauseIcon, PlusIcon, MinusIcon } from '@heroicons/vue/24/outline';
+import { PlayPauseIcon, PlusIcon, MinusIcon, TrashIcon } from '@heroicons/vue/24/outline';
 import Navigation from "../components/Navigation.vue";
 import { shell } from "electron";
 import dayjs from 'dayjs'
@@ -177,6 +182,11 @@ let lastMessage = ref('');
 function sendMessage() {
   timerControl.sendMessage(message.value);
   lastMessage.value = message.value;
+}
+
+const deleteMessage = () => {
+  timerControl.sendMessage('');
+  message.value = '';
 }
 
 onMounted(async () => {
