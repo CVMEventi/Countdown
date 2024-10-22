@@ -45,9 +45,12 @@
       <check-box id="messageBoxFixedHeight" v-model="settings.timers[0].windows[0].messageBoxFixedHeight">Message box fixed height</check-box>
       <check-box id="use12HourClock" v-model="settings.timers[0].windows[0].use12HourClock">12-Hour Clock</check-box>
       <hr class="mt-4 -mx-3 border-t-2"/>
-      <p class="text-2xl mt-3">Audio</p>
+      <p class="text-2xl mt-3 mb-1">
+        Audio
+        <button @click="settings.timers[0].audioFile = null" v-if="settings.timers[0].audioFile"><trash-icon class="inline-flex w-5 h-5"></trash-icon></button>
+      </p>
       <s-button @click="selectFile">Select file</s-button>
-      <div class="max-w-[200px] break-words">Current: {{ settings.timers[0].audioFile }}</div>
+      <div class="max-w-[190px] break-words">Current: {{ settings.timers[0].audioFile }}</div>
     </card>
     <card class="inline-block border flex flex-col">
       <div class="flex flex-col" style="min-width: 220px">
@@ -83,7 +86,7 @@
 
 <script lang="ts" setup>
 import {computed, defineComponent, onBeforeMount, ref, watch} from "vue";
-import {ArrowsRightLeftIcon} from "@heroicons/vue/20/solid";
+import {ArrowsRightLeftIcon, TrashIcon} from "@heroicons/vue/20/solid";
 import {ipcRenderer} from 'electron'
 import draggable from 'vuedraggable'
 import Card from './Card.vue'
