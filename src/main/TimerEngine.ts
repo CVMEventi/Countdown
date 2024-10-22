@@ -2,7 +2,7 @@ import {Timer} from "./Utilities/Timer.ts";
 import dayjs from "dayjs";
 import duration from "dayjs/plugin/duration.js";
 import {
-  MessageUpdateCallback,
+  MessageUpdateCallback, PlaySoundCallback,
   UpdateCallback,
   WebSocketUpdateCallback
 } from "../common/TimerInterfaces.ts";
@@ -14,6 +14,7 @@ export interface TimerEngineOptions {
   yellowAtOption?: string
   setTimeLive?: boolean
   stopTimerAtZero?: boolean
+  audioFile?: string
 }
 
 export class TimerEngine {
@@ -27,15 +28,17 @@ export class TimerEngine {
     yellowAt: 0,
     yellowAtOption: DEFAULT_YELLOW_AT_OPTION,
     setTimeLive: DEFAULT_SET_TIME_LIVE,
+    audioFile: null,
   }
   totalSeconds = 0;
   timerIsRunning = false;
-  audioEnabled = false;
+  audioEnabled = true;
   update: UpdateCallback = null;
   webSocketUpdate: WebSocketUpdateCallback = null;
   messageUpdate: MessageUpdateCallback = null;
+  playSound: PlaySoundCallback = null;
 
-  constructor(interval: number, options: TimerEngineOptions, update: UpdateCallback, webSocketUpdate: WebSocketUpdateCallback, messageUpdate: MessageUpdateCallback) {
+  constructor(interval: number, options: TimerEngineOptions, update: UpdateCallback, webSocketUpdate: WebSocketUpdateCallback, messageUpdate: MessageUpdateCallback, playSound: PlaySoundCallback) {
     this._timer = new Timer(interval, this._timerTick.bind(this), this._timerStatusChanged.bind(this))
     this.options = {
       ...this.options,
@@ -45,6 +48,7 @@ export class TimerEngine {
     this.update = update;
     this.webSocketUpdate = webSocketUpdate;
     this.messageUpdate = messageUpdate;
+    this.playSound = playSound;
   }
 
   extraSeconds() {
@@ -232,7 +236,7 @@ export class TimerEngine {
       state = 'Paused';
     } else if (isExpired) {
       if (this.audioEnabled && !this._audioRun) {
-        //sound.play();
+        this.playSound(this.options.audioFile)
         this._audioRun = true;
       }
       state = 'Expired';

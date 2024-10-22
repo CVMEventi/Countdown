@@ -1,6 +1,7 @@
-import {ipcMain, screen} from "electron";
+import {dialog, ipcMain, screen} from "electron";
 import {CountdownApp} from "../App.ts";
 import {IpcGetWindowSettingsArgs} from "../../common/IpcInterfaces.ts";
+import {promises as fs} from "node:fs";
 
 export default function addIpcHandles(app: CountdownApp)
 {
@@ -55,5 +56,17 @@ export default function addIpcHandles(app: CountdownApp)
 
   ipcMain.handle('settings:get-window', (event, args: IpcGetWindowSettingsArgs) => {
     return app.config.settings.timers[args.timerId].windows[args.windowId]
+  })
+
+  ipcMain.handle('audio:select-file', async () => {
+    const result = await dialog.showOpenDialog(null, {
+      properties: ['openFile'],
+      filters: [{
+        name: 'Audio file',
+        extensions: ['wav', 'mp3', 'flac'],
+      }]
+    })
+    if (result.canceled) return null;
+    return result.filePaths[0]
   })
 }

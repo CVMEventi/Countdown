@@ -6,10 +6,13 @@ import {
 import {TimerEngine, TimerEngineOptions} from "../TimerEngine.ts";
 import BrowserWinHandler from "./BrowserWinHandler.ts";
 import createCountdownWindow from "../countdownWindow.ts";
-import {app, BrowserWindow, screen} from "electron";
+import {app, BrowserWindow, ipcMain, screen} from "electron";
 import {MessageUpdate, TimerEngineUpdate, TimerEngineWebSocketUpdate} from "../../common/TimerInterfaces.ts";
 import {CountdownApp} from "../App.ts";
 import {sleep} from "./utilities.ts";
+import {promises as fs} from "node:fs";
+import mime from "mime/lite";
+import path from "path";
 
 interface SingleTimer {
   settings: TimerSettings
@@ -29,6 +32,7 @@ export class TimersOrchestrator {
         yellowAt: timer.yellowAtOption === 'minutes' ? timer.yellowAtMinutes : timer.yellowAtPercent,
         stopTimerAtZero: timer.stopTimerAtZero,
         setTimeLive: timer.setTimeLive,
+        audioFile: timer.audioFile,
       }
 
       const timerEngine = new TimerEngine(
@@ -42,6 +46,9 @@ export class TimersOrchestrator {
         },
         (update: MessageUpdate) => {
           this._timerEngineMessageUpdate(timerId, update)
+        },
+        async (audioFilePath) => {
+          await this._playSound(timerId, audioFilePath)
         }
       )
 
@@ -79,6 +86,19 @@ export class TimersOrchestrator {
     }.bind(this))
 
     return countdownWindowHandler
+  }
+
+  async _playSound(timerId: number, audioFilePath: string) {
+    const mainBrowserWindow = this.app.mainWindowHandler.browserWindow;
+    let audioFile;
+    try {
+      audioFile = await fs.readFile(audioFilePath, {encoding: 'base64'})
+    } catch {
+      return
+    }
+    const mimeType = mime.getType(audioFilePath)
+
+    mainBrowserWindow.webContents.send('audio:play', audioFile, mimeType)
   }
 
   _timerEngineUpdate(timerId: number, update: TimerEngineUpdate) {
@@ -129,12 +149,12 @@ export class TimersOrchestrator {
         yellowAt: timer.yellowAtOption === 'minutes' ? timer.yellowAtMinutes : timer.yellowAtPercent,
         stopTimerAtZero: timer.stopTimerAtZero,
         setTimeLive: timer.setTimeLive,
+        audioFile: timer.audioFile,
       }
 
       this.timers[timerId].engine.options = options
       this.timers[timerId].engine.setTimerInterval(timer.timerDuration)
       this.timers[timerId].settings = timer
-
 
       this.timers[timerId].windows.forEach((windowHandler) => {
         windowHandler.browserWindow.webContents.send('settings:updated', timer.windows[timerId])

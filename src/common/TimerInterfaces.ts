@@ -41,3 +41,4 @@ export interface TimerEngineWebSocketUpdate {
 export type UpdateCallback = (update: TimerEngineUpdate) => void;
 export type WebSocketUpdateCallback = (update: TimerEngineWebSocketUpdate) => void;
 export type MessageUpdateCallback = (update: MessageUpdate) => void;
+export type PlaySoundCallback = (audioFilePath: string) => void;

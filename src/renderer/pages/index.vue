@@ -132,6 +132,7 @@ import {TimerControl} from "../TimerControl";
 import Display = Electron.Display;
 import InputWithButton from "../components/InputWithButton.vue";
 import {CountdownSettings, DEFAULT_STORE} from "../../common/config";
+import {Howl} from "howler";
 /*
 import { Howl } from "howler";
 import gong from "../assets/sounds/gong.mp3";
@@ -184,6 +185,14 @@ onMounted(async () => {
 
   ipcRenderer.on('screens-updated', async () => {
     screens.value = await ipcRenderer.invoke('get-screens');
+  })
+
+  ipcRenderer.on('audio:play', async (event, audioFile, mimeType) => {
+    const sound = new Howl({
+      src: `data:${mimeType};base64,${audioFile}`,
+    });
+
+    sound.play()
   })
 });
 

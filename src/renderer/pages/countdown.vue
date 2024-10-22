@@ -52,6 +52,7 @@
 <script lang="ts" setup>
 import {computed, onMounted, ref} from "vue";
 import {ipcRenderer} from 'electron'
+import { Howl } from 'howler'
 import dayjs from 'dayjs'
 import duration from 'dayjs/plugin/duration'
 import {

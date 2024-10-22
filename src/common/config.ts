@@ -39,8 +39,6 @@ export const DEFAULT_SET_TIME_LIVE = false;
 
 export const DEFAULT_USE_12_HOUR_CLOCK = false;
 
-export const DEFAULT_AUDIO_ENABLED = false;
-
 export const DEFAULT_TIMER_DURATION = 1000;
 
 export const DEFAULT_MESSAGE_BOX_FIXED_HEIGHT = false;
@@ -97,6 +95,7 @@ export const DEFAULT_TIMER_SETTINGS: TimerSettings = {
   timerDuration: DEFAULT_TIMER_DURATION,
   setTimeLive: DEFAULT_SET_TIME_LIVE,
   stopTimerAtZero: DEFAULT_STOP_TIMER_AT_ZERO,
+  audioFile: null,
   windows: [DEFAULT_WINDOW_SETTINGS],
 }
 
@@ -166,6 +165,7 @@ export interface TimerSettings {
   timerDuration: number
   setTimeLive: boolean
   stopTimerAtZero: boolean
+  audioFile: string
   windows: WindowSettings[]
 }
 
