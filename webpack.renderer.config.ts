@@ -3,7 +3,7 @@ import {VueLoaderPlugin} from "vue-loader";
 import MiniCssExtractPlugin from "mini-css-extract-plugin";
 import CssMinimizerPlugin from "css-minimizer-webpack-plugin";
 const isProd = process.env.NODE_ENV === 'production';
-import {Configuration} from 'webpack';
+import {Configuration, DefinePlugin} from 'webpack';
 
 rules.push({
   test: /\.css$/i,
@@ -39,6 +39,11 @@ export const rendererConfig: Configuration = {
     // make sure to include the plugin!
     new VueLoaderPlugin(),
     new MiniCssExtractPlugin(),
+    new DefinePlugin({
+      __VUE_OPTIONS_API__: 'true',
+      __VUE_PROD_DEVTOOLS__: 'false',
+      __VUE_PROD_HYDRATION_MISMATCH_DETAILS__: 'false'
+    })
   ],
   resolve: {
     alias: {
