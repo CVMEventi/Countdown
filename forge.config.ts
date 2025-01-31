@@ -84,7 +84,11 @@ const config: ForgeConfig = {
     packageAfterPrune: async (config, buildPath, electronVersion, platform) => {
       if (platform !== 'win32') {
         const binsPath = 'node_modules/grandiose/build/node_gyp_bins/python3'
-        fs.unlinkSync(path.join(buildPath, binsPath));
+        try {
+          fs.unlinkSync(path.join(buildPath, binsPath));
+        } catch (e) {
+          console.log("Nothing to delete");
+        }
       }
     },
     postMake: async (forgeConfig, results) => {
