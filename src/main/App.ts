@@ -5,7 +5,7 @@ import {enableDevMode, isDev} from "./Utilities/dev.ts";
 import BrowserWinHandler from "./Utilities/BrowserWinHandler.ts";
 import createMainWindow from "./mainWindow.ts";
 import setMenu from "./Utilities/setMenu.js";
-import {app, BrowserWindow, screen, Tray, Menu, nativeImage, dialog} from "electron";
+import {app, BrowserWindow, screen, Tray, Menu, nativeImage, dialog, nativeTheme} from "electron";
 import {
   CloseAction,
   DEFAULT_CLOSE_ACTION,
@@ -53,6 +53,8 @@ export class CountdownApp {
   }
 
   async run() {
+    nativeTheme.themeSource = 'dark'
+
     this.mainWindowHandler = createMainWindow({
       show: !this.config.settings.startHidden
     });
@@ -184,15 +186,7 @@ export class CountdownApp {
   }
 
   async ndiIntervalCallback() {
-    try {
-      if (!this.timersOrchestrator.timers[0].windows[0].browserWindow) return;
-      const browserWindow = this.timersOrchestrator.timers[0].windows[0].browserWindow
-      const image = await browserWindow.webContents.capturePage()
-      await this.ndiServer.sendFrame(image);
-    } catch (e) {
-      console.log(e);
-      return;
-    }
+    this.timersOrchestrator.sendNDIFrames()
   }
 
   _configUpdated() {

@@ -2,21 +2,28 @@
   <svg
     xmlns="http://www.w3.org/2000/svg"
     :viewBox="svgSize"
-    style="width: 100%;"
+    style="width: 100%;height: 100%;"
     ref="svg"
   >
+    <g v-for="(window, key, index) in windows">
     <rect
-      v-for="(window, index) in windows"
       class="draggable"
-      @mousedown="startDrag($event, index)"
-      @mousemove="drag($event, index)"
+      @mousedown="startDrag($event, key as string)"
+      @mousemove="drag($event, key as string)"
       @mouseup="endDrag($event)"
       @mouseleave="endDrag"
-      :x="windowCoordinates(index).x"
-      :y="windowCoordinates(index).y"
-      :width="windowCoordinates(index).width"
-      :height="windowCoordinates(index).height"
+      :x="windowCoordinates(key as string).x"
+      :y="windowCoordinates(key as string).y"
+      :width="windowCoordinates(key as string).width"
+      :height="windowCoordinates(key as string).height"
       stroke="#ffffff" stroke-width="10" fill="black"></rect>
+      <text
+        :x="windowCoordinates(key as string).x + windowCoordinates(key as string).width / 2"
+        :y="windowCoordinates(key as string).y + windowCoordinates(key as string).height / 2"
+        :width="windowCoordinates(key as string).width"
+        :height="windowCoordinates(key as string).height"
+        dominant-baseline="middle" text-anchor="middle" fill="white" font-size="150">{{ index + 1 }}</text>
+    </g>
     <rect
       v-for="screen in screens"
       class="non-draggable"
@@ -43,13 +50,13 @@
 <script lang="ts" setup>
 import {computed, ref} from "vue";
 import Display = Electron.Display;
-import {WindowBounds} from "../../common/config";
+import {Windows, WindowSettings} from '../../common/config'
 
 defineOptions({
   name: 'ScreensDrag',
 });
 
-let dragging = ref(null);
+let dragging = ref<string|null>(null);
 let offset = ref<{
   x: number
   y: number
@@ -61,16 +68,10 @@ let svg = ref();
 
 export interface Props {
   screens: Display[]
-  windows: WindowBounds[]
 }
 
-const props = withDefaults(defineProps<Props>(), {
-  windows: () => [],
-});
-
-const emit = defineEmits<{
-  'update:windows': [windows: WindowBounds[]],
-}>();
+const props = defineProps<Props>()
+const windows = defineModel<Windows>('windows')
 
 const svgSize = computed(() => {
   let minX = 0;
@@ -96,21 +97,21 @@ const svgSize = computed(() => {
   return `${minX - 10} ${minY - 10} ${maxX + 20} ${maxY + 20}`
 })
 
-function startDrag(event: MouseEvent, index: number) {
-  if (props.windows[index].fullscreenOn) {
+function startDrag(event: MouseEvent, key: string) {
+  if (windows.value[key].bounds.fullscreenOn) {
     return;
   }
-  dragging.value = index;
+  dragging.value = key;
   offset.value = getMousePosition(event);
   offset.value.x -= parseFloat((event.target as HTMLElement).getAttributeNS(null, "x"));
   offset.value.y -= parseFloat((event.target as HTMLElement).getAttributeNS(null, "y"));
 }
 
-function drag(event: MouseEvent, index: number) {
-  if (props.windows[index].fullscreenOn) {
+function drag(event: MouseEvent, key: string) {
+  if (windows.value[key].bounds.fullscreenOn) {
     return;
   }
-  if (dragging.value !== index) {
+  if (dragging.value !== key) {
     return;
   }
   event.preventDefault();
@@ -119,14 +120,12 @@ function drag(event: MouseEvent, index: number) {
   let newWindow = {
     x: Math.round(mouseCoordinates.x - offset.value.x),
     y: Math.round(mouseCoordinates.y - offset.value.y),
-    width: props.windows[index].width,
-    height: props.windows[index].height,
-    fullscreenOn: props.windows[index].fullscreenOn,
+    width: windows.value[key].bounds.width,
+    height: windows.value[key].bounds.height,
+    fullscreenOn: windows.value[key].bounds.fullscreenOn,
   }
 
-  let windows = props.windows;
-  windows[index] = newWindow;
-  emit('update:windows', windows);
+  windows.value[key].bounds = newWindow;
 }
 
 function endDrag(event: MouseEvent) {
@@ -141,8 +140,8 @@ function getMousePosition(event: MouseEvent) {
   };
 }
 
-function windowCoordinates(index: number) {
-  let window = {...props.windows[index]};
+function windowCoordinates(key: string) {
+  let window = {...windows.value[key].bounds};
   if (window.fullscreenOn) {
     const screen = props.screens.find((screen) => screen.id == window.fullscreenOn)
     if (!screen) {

@@ -5,12 +5,12 @@ import {promises as fs} from "node:fs";
 
 export default function addIpcHandles(app: CountdownApp)
 {
-  ipcMain.handle('get-screens', () => {
+  ipcMain.handle('screens:get', () => {
     return screen.getAllDisplays()
   })
 
-  ipcMain.on('window-updated', async () => {
-    app.timersOrchestrator.windowUpdated(0, 0)
+  ipcMain.on('window-updated', async (event, timerId, windowId) => {
+    app.timersOrchestrator.windowUpdated(timerId, windowId)
   })
 
   ipcMain.on('temporary-settings-updated', (event, arg) => {
@@ -23,7 +23,7 @@ export default function addIpcHandles(app: CountdownApp)
     browserWindow.webContents.send('command', arg)
   })
 
-  ipcMain.handle('countdown-bounds', (event, timerId: number, windowId: number) => {
+  ipcMain.handle('countdown-bounds', (event, timerId: string, windowId: string) => {
     return app.timersOrchestrator.getWindowBounds(timerId, windowId)
   })
 

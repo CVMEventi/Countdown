@@ -11,6 +11,10 @@ export interface TimerEngineUpdate {
   timerEndsAt: string
 }
 
+export interface TimerEngineUpdates {
+  [key: string]: TimerEngineUpdate
+}
+
 export interface MessageUpdate {
   message?: string
 }

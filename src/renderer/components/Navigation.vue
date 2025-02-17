@@ -8,6 +8,12 @@
       Countdown
     </tab-button>
     <tab-button
+      :selected="selectedTab === 'timers'"
+      @click="$router.replace('/control/timers')"
+    >
+      Timers
+    </tab-button>
+    <tab-button
       :selected="selectedTab === 'settings'"
       @click="$router.replace('/control/settings')"
     >

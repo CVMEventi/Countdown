@@ -2,6 +2,7 @@
   <a
     href="javascript:;"
     :class="[
+      selected ? 'font-bold' : 'font-normal',
       selected ? 'text-gray-900' : 'text-gray-500 hover:text-gray-700',
       first ? 'rounded-l-lg' : '',
       last ? 'rounded-r-lg' : '',
@@ -12,10 +13,10 @@
     <span>
       <slot />
     </span>
-    <span
+    <!--<span
       aria-hidden="true"
       :class="[selected ? 'bg-indigo-500' : 'bg-transparent', 'absolute inset-x-0 bottom-0 h-0.5']"
-    />
+    />-->
   </a>
 </template>
 
@@ -41,6 +42,6 @@ const props = withDefaults(defineProps<Props>(), {
 <style scoped>
   .tab-button {
     @apply relative min-w-0 overflow-hidden;
-    @apply bg-white py-4 px-4 text-sm font-medium text-center hover:bg-gray-50 focus:z-10;
+    @apply bg-white py-1.5 px-4 text-sm text-center hover:bg-gray-50 focus:z-10;
   }
 </style>

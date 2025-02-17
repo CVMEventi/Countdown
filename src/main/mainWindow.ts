@@ -10,14 +10,14 @@ export default function createMainWindow (options: BrowserWindowConstructorOptio
       width: 920,
       minWidth: 920,
       minHeight: 590,
-      title: `Countdown Settings - Countdown v${APP_VERSION}`
+      title: `Countdown v${APP_VERSION}`
     },
     ...options,
   }
   const winHandler = new BrowserWinHandler(options)
 
   winHandler.onCreated(async () => {
-    await winHandler.loadPage('/control/main')
+    await winHandler.loadPage('/control')
     // Or load custom url
     // _browserWindow.loadURL('https://google.com')
     if (isDev) {

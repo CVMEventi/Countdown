@@ -1,4 +1,8 @@
+import {ulid} from 'ulid'
+
 export const CURRENT_CONFIG_VERSION: number = 2
+
+export const DEFAULT_TIMER_NAME = 'Timer'
 
 export const DEFAULT_BACKGROUND_COLOR = '#000000ff';
 export const DEFAULT_RESET_BACKGROUND_COLOR = '#000000ff';
@@ -89,6 +93,7 @@ export const DEFAULT_WINDOW_SETTINGS: WindowSettings = {
 }
 
 export const DEFAULT_TIMER_SETTINGS: TimerSettings = {
+  name: DEFAULT_TIMER_NAME,
   yellowAtOption: DEFAULT_YELLOW_AT_OPTION,
   yellowAtMinutes: DEFAULT_YELLOW_AT_MINUTES,
   yellowAtPercent: DEFAULT_YELLOW_AT_PERCENT,
@@ -96,7 +101,7 @@ export const DEFAULT_TIMER_SETTINGS: TimerSettings = {
   setTimeLive: DEFAULT_SET_TIME_LIVE,
   stopTimerAtZero: DEFAULT_STOP_TIMER_AT_ZERO,
   audioFile: null,
-  windows: [DEFAULT_WINDOW_SETTINGS],
+  windows: {[ulid()]: DEFAULT_WINDOW_SETTINGS},
 }
 
 export const DEFAULT_REMOTE_SETTINGS: RemoteSettings = {
@@ -116,9 +121,9 @@ export const DEFAULT_STORE: CountdownConfiguration = {
       setWindowAlwaysOnTop: DEFAULT_SET_WINDOW_ALWAYS_ON_TOP,
       closeAction: DEFAULT_CLOSE_ACTION,
       startHidden: DEFAULT_START_HIDDEN,
-      timers: [DEFAULT_TIMER_SETTINGS],
+      timers: { [ulid()]: DEFAULT_TIMER_SETTINGS},
     },
-    version: 2
+    version: CURRENT_CONFIG_VERSION
   }
 }
 
@@ -158,7 +163,12 @@ export interface WindowSettings {
   use12HourClock: boolean
 }
 
+export interface Windows {
+  [key: string]: WindowSettings;
+}
+
 export interface TimerSettings {
+  name: string
   yellowAtOption: string
   yellowAtMinutes: number
   yellowAtPercent: number
@@ -166,7 +176,7 @@ export interface TimerSettings {
   setTimeLive: boolean
   stopTimerAtZero: boolean
   audioFile: string
-  windows: WindowSettings[]
+  windows: Windows
 }
 
 export interface RemoteSettings {
@@ -178,13 +188,17 @@ export interface RemoteSettings {
   oscPort: number
 }
 
+export interface Timers {
+  [key: string]: TimerSettings;
+}
+
 export interface CountdownSettings {
   presets: number[]
   remote: RemoteSettings
   setWindowAlwaysOnTop: boolean
   closeAction: CloseAction,
   startHidden: boolean,
-  timers: TimerSettings[]
+  timers: Timers
 }
 
 export interface CountdownStore {

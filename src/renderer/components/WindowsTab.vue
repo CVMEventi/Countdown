@@ -5,7 +5,7 @@
       <div class="flex flex-col gap-2">
         <div class="flex justify-between">
           <span class="text-2xl">Screen</span>
-          <s-button tiny type="info" @click="getCountdownBounds">GET CURRENT POSITION</s-button>
+          <SButton tiny type="info" @click="getCountdownBounds">GET CURRENT POSITION</SButton>
         </div>
 
         <div class="inline-flex gap-2">

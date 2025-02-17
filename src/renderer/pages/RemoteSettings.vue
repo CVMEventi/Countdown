@@ -1,60 +1,73 @@
 <template>
-  <div class="flex flex-1 gap-2 p-1 min-h-0 text-white">
-    <card class="flex flex-col w-[300px]">
-      <p class="text-2xl pb-2">HTTP Server</p>
-      <check-box id="httpServerEnabled" v-model="httpServerEnabled">Enable</check-box>
-      <p>Port</p>
-      <input
-        @click="($event.target as HTMLInputElement).select()"
-        @focus="($event.target as HTMLInputElement).select()"
-        v-model="httpServerPort"
-        class="input text-black w-full">
-      <p :class="[isRunning ? 'text-emerald-300' : 'text-red-300']">{{ isRunning ? `Server running on port ${currentPort}` : "Server not running" }}</p>
-      <p class="text-sm italic">Last error: {{ lastError }}</p>
-      <s-button
-        :disabled="!httpServerEnabled"
-        class="uppercase mt-3"
-        type="warning"
-        @click="toggleHttpServer">
-        <svg v-if="isLoading" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-        </svg>
+  <BaseContainer>
+    <TopBar>
+      <template v-slot:right>
+        <SButton
+          class="self-end"
+          @click="save"
+        >
+          Save
+        </SButton>
+      </template>
+    </TopBar>
+    <div class="flex flex-1 gap-2 p-1 min-h-0 text-white">
+      <card class="flex flex-col w-[300px]">
+        <p class="text-2xl pb-2">HTTP Server</p>
+        <check-box id="httpServerEnabled" v-model="httpServerEnabled">Enable</check-box>
+        <p>Port</p>
+        <input
+          @click="($event.target as HTMLInputElement).select()"
+          @focus="($event.target as HTMLInputElement).select()"
+          v-model="httpServerPort"
+          class="input text-black w-full">
+        <p :class="[isRunning ? 'text-emerald-300' : 'text-red-300']">{{ isRunning ? `Server running on port ${currentPort}` : "Server not running" }}</p>
+        <p class="text-sm italic">Last error: {{ lastError }}</p>
+        <SButton
+          :disabled="!httpServerEnabled"
+          class="uppercase mt-3"
+          type="warning"
+          @click="toggleHttpServer">
+          <svg v-if="isLoading" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
 
-        {{ !isLoading ? httpToggleText : '' }}
-      </s-button>
-    </card>
-    <card class="flex flex-col w-[300px]">
-      <p class="text-2xl pb-2">NDI (Beta)</p>
-      <check-box id="ndiEnabled" v-model="ndiEnabled">Enable</check-box>
-      <check-box id="ndiAlpha" v-model="ndiAlpha">Alpha</check-box>
-    </card>
-    <card class="flex flex-col w-[300px]">
-      <p class="text-2xl pb-2">OSC</p>
-      <check-box id="oscEnabled" v-model="oscEnabled">Enable</check-box>
-      <p>Port</p>
-      <input
-        @click="($event.target as HTMLInputElement).select()"
-        @focus="($event.target as HTMLInputElement).select()"
-        v-model="oscPort"
-        class="input text-black w-full">
-    </card>
-  </div>
+          {{ !isLoading ? httpToggleText : '' }}
+        </SButton>
+      </card>
+      <card class="flex flex-col w-[300px]">
+        <p class="text-2xl pb-2">NDI (Beta)</p>
+        <check-box id="ndiEnabled" v-model="ndiEnabled">Enable</check-box>
+        <check-box id="ndiAlpha" v-model="ndiAlpha">Alpha</check-box>
+      </card>
+      <card class="flex flex-col w-[300px]">
+        <p class="text-2xl pb-2">OSC</p>
+        <check-box id="oscEnabled" v-model="oscEnabled">Enable</check-box>
+        <p>Port</p>
+        <input
+          @click="($event.target as HTMLInputElement).select()"
+          @focus="($event.target as HTMLInputElement).select()"
+          v-model="oscPort"
+          class="input text-black w-full">
+      </card>
+    </div>
+  </BaseContainer>
 </template>
 
 <script lang="ts" setup>
-import {computed, defineComponent, defineOptions, onBeforeMount, onMounted, ref} from "vue";
-import Card from "./Card.vue";
-import CheckBox from "./CheckBox.vue";
+import {computed, onBeforeMount, onMounted, ref} from "vue";
+import Card from "../components/Card.vue";
+import CheckBox from "../components/CheckBox.vue";
 import { ipcRenderer } from "electron";
-import SButton from "./SButton.vue";
+import SButton from "../components/SButton.vue";
 import {
   DEFAULT_NDI_ALPHA,
   DEFAULT_NDI_ENABLED, DEFAULT_OSC_ENABLED, DEFAULT_OSC_PORT, DEFAULT_STORE,
   DEFAULT_WEBSERVER_ENABLED,
   DEFAULT_WEBSERVER_PORT, RemoteSettings
-} from "../../common/config";
-import * as http from "node:http";
+} from "../../common/config.ts";
+import TopBar from '../components/TopBar.vue'
+import BaseContainer from '../components/BaseContainer.vue'
 
 defineOptions({
   'name': 'RemoteTab',

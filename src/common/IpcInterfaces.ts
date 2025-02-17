@@ -12,56 +12,56 @@ export enum IpcTimerCommandName {
 
 export interface IpcSetSeconds {
   name: IpcTimerCommandName.SetSeconds
-  timerId: number
+  timerId: string
   seconds: number
 }
 
 export interface IpcStart {
   name: IpcTimerCommandName.Start
-  timerId: number
+  timerId: string
 }
 
 export interface IpcReset {
   name: IpcTimerCommandName.Reset
-  timerId: number
+  timerId: string
 }
 
 export interface IpcTogglePause {
   name: IpcTimerCommandName.TogglePause
-  timerId: number
+  timerId: string
 }
 
 export interface IpcPause {
   name: IpcTimerCommandName.Pause
-  timerId: number
+  timerId: string
 }
 
 export interface IpcResume {
   name: IpcTimerCommandName.Resume
-  timerId: number
+  timerId: string
 }
 
 export interface IpcJogSet {
   name: IpcTimerCommandName.JogSet
-  timerId: number
+  timerId: string
   seconds: number
 }
 
 export interface IpcJogCurrent {
   name: IpcTimerCommandName.JogCurrent
-  timerId: number
+  timerId: string
   seconds: number
 }
 
 export interface IpcMessage {
   name: IpcTimerCommandName.Message
-  timerId: number
+  timerId: string
   message?: string
 }
 
 export type IpcTimerCommand = IpcSetSeconds | IpcStart | IpcReset | IpcTogglePause | IpcPause | IpcResume | IpcJogSet | IpcJogCurrent | IpcMessage;
 
 export interface IpcGetWindowSettingsArgs {
-  timerId: number
-  windowId: number
+  timerId: string
+  windowId: string
 }

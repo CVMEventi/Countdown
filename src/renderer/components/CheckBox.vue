@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="flex items-center">
     <input
       :id="id"
       :checked="modelValue"
@@ -14,10 +14,6 @@
 </template>
 
 <script lang="ts" setup>
-defineOptions({
-  name: 'CheckBox',
-});
-
 defineEmits(['update:modelValue']);
 
 export interface Props {

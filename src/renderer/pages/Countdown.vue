@@ -3,14 +3,14 @@
     :style="{
       backgroundColor: update.isReset ? settings.colors.resetBackground : backgroundColor,
     }"
-    v-if="settings.contentAtReset === ContentAtReset.Empty && update.isReset" class="drag"></div>
+    v-if="settings.contentAtReset === ContentAtReset.Empty && update.isReset" class="h-full drag"></div>
   <div
     v-if="settings.contentAtReset !== ContentAtReset.Empty || (settings.contentAtReset === ContentAtReset.Empty && !update.isReset)"
     :style="{
       backgroundColor: update.isReset ? settings.colors.resetBackground : backgroundColor,
       ...cssVars
     }"
-    class="flex justify-center flex-col drag"
+    class="h-full flex justify-center flex-col drag"
   >
     <div
       :class="{
@@ -52,7 +52,6 @@
 <script lang="ts" setup>
 import {computed, onMounted, ref} from "vue";
 import {ipcRenderer} from 'electron'
-import { Howl } from 'howler'
 import dayjs from 'dayjs'
 import duration from 'dayjs/plugin/duration'
 import {
@@ -66,10 +65,6 @@ import Clock from "../components/Clock.vue";
 import {IpcGetWindowSettingsArgs} from "../../common/IpcInterfaces";
 
 dayjs.extend(duration)
-
-defineOptions({
-  name: 'countdown',
-});
 
 let update = ref<TimerEngineUpdate>({
   setSeconds: 0,
@@ -135,8 +130,8 @@ const cssVars = computed(() => {
 });
 
 const queryString = new URLSearchParams(window.location.search);
-const timerId = ref(+queryString.get('timer'))
-const windowId = ref(+queryString.get('window'))
+const timerId = ref(queryString.get('timer'))
+const windowId = ref(queryString.get('window'))
 
 onMounted(async () => {
 
@@ -190,5 +185,3 @@ onMounted(async () => {
   height: min(18vh, 12vw);
 }
 </style>
-
-10:14=x:25

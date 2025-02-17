@@ -6,66 +6,94 @@ import {
 import {TimerEngine, TimerEngineOptions} from "../TimerEngine.ts";
 import BrowserWinHandler from "./BrowserWinHandler.ts";
 import createCountdownWindow from "../countdownWindow.ts";
-import {app, BrowserWindow, ipcMain, screen} from "electron";
+import {app, BrowserWindow, screen} from "electron";
 import {MessageUpdate, TimerEngineUpdate, TimerEngineWebSocketUpdate} from "../../common/TimerInterfaces.ts";
 import {CountdownApp} from "../App.ts";
 import {sleep} from "./utilities.ts";
 import {promises as fs} from "node:fs";
 import mime from "mime/lite";
-import path from "path";
+import NDIManager from "../Remotes/NDI.ts";
+import {destroy} from 'grandiose'
+
+interface WindowsKV {
+  [key: string]: BrowserWinHandler;
+}
+
+interface NDIManagersKV {
+  [key: string]: NDIManager;
+}
 
 interface SingleTimer {
   settings: TimerSettings
   engine: TimerEngine
-  windows: BrowserWinHandler[]
+  windows: WindowsKV
+  ndiServers: NDIManagersKV
+}
+
+interface TimersKV {
+  [key: string]: SingleTimer
 }
 
 export class TimersOrchestrator {
   app: CountdownApp
-  timers: SingleTimer[] = []
+  timers: TimersKV = {}
 
   constructor(app: CountdownApp) {
     this.app = app
-    app.config.settings.timers.forEach((timer: TimerSettings, timerId: number) => {
-      const options: TimerEngineOptions = {
-        yellowAtOption: timer.yellowAtOption,
-        yellowAt: timer.yellowAtOption === 'minutes' ? timer.yellowAtMinutes : timer.yellowAtPercent,
-        stopTimerAtZero: timer.stopTimerAtZero,
-        setTimeLive: timer.setTimeLive,
-        audioFile: timer.audioFile,
-      }
-
-      const timerEngine = new TimerEngine(
-        timer.timerDuration,
-        options,
-        (update: TimerEngineUpdate) => {
-          this._timerEngineUpdate(timerId, update)
-        },
-        (update: TimerEngineWebSocketUpdate) => {
-          this._timerEngineWebSocketUpdate(timerId, update)
-        },
-        (update: MessageUpdate) => {
-          this._timerEngineMessageUpdate(timerId, update)
-        },
-        async (audioFilePath) => {
-          await this._playSound(timerId, audioFilePath)
-        }
-      )
-
-      const windows = timer.windows.map((windowSettings, windowId) => {
-        return this._createWindow(timerId, windowId, windowSettings)
-      })
-
-      this.timers.push({
-        settings: timer,
-        engine: timerEngine,
-        windows,
-      })
+    Object.keys(app.config.settings.timers).forEach(timerId => {
+      this.createTimer(timerId, app.config.settings.timers[timerId]);
     })
   }
 
-  private _createWindow(timerId: number, windowId: number, windowSettings: WindowSettings) {
-    const countdownWindowHandler = createCountdownWindow(timerId, windowId, {
+  public createTimer(timerId: string, settings: TimerSettings) {
+    const options: TimerEngineOptions = {
+      yellowAtOption: settings.yellowAtOption,
+      yellowAt: settings.yellowAtOption === 'minutes' ? settings.yellowAtMinutes : settings.yellowAtPercent,
+      stopTimerAtZero: settings.stopTimerAtZero,
+      setTimeLive: settings.setTimeLive,
+      audioFile: settings.audioFile,
+    }
+
+    const timerEngine = new TimerEngine(
+      settings.timerDuration,
+      options,
+      (update: TimerEngineUpdate) => {
+        this._timerEngineUpdate(timerId, update)
+      },
+      (update: TimerEngineWebSocketUpdate) => {
+        this._timerEngineWebSocketUpdate(timerId, update)
+      },
+      (update: MessageUpdate) => {
+        this._timerEngineMessageUpdate(timerId, update)
+      },
+      async (audioFilePath) => {
+        await this._playSound(timerId, audioFilePath)
+      }
+    )
+
+    let windows: WindowsKV = {}
+    Object.keys(settings.windows).forEach(windowId => {
+      const windowSettings = settings.windows[windowId]
+      windows[windowId] = this._createWindow(timerId, settings.name, windowId, windowSettings)
+    })
+
+    let ndiServers: NDIManagersKV = {}
+    Object.keys(settings.windows).forEach(windowId => {
+      const server = new NDIManager(`Countdown ${timerId}-${windowId}`)
+      server.start()
+      ndiServers[windowId] = server
+    })
+
+    this.timers[timerId] = {
+      settings,
+      engine: timerEngine,
+      windows,
+      ndiServers,
+    }
+  }
+
+  private _createWindow(timerId: string, timerName: string, windowId: string, windowSettings: WindowSettings) {
+    const countdownWindowHandler = createCountdownWindow(timerId, timerName, windowId, {
       x: windowSettings.bounds.x,
       y: windowSettings.bounds.y,
       height: windowSettings.bounds.height,
@@ -78,17 +106,13 @@ export class TimersOrchestrator {
     });
 
     countdownWindowHandler.onCreated(async function (browserWindow: BrowserWindow) {
-      browserWindow.on('closed', () => {
-        app.quit();
-      })
-
       await this._setCountdownWindowPosition(countdownWindowHandler, windowSettings);
     }.bind(this))
 
     return countdownWindowHandler
   }
 
-  async _playSound(timerId: number, audioFilePath: string) {
+  async _playSound(timerId: string, audioFilePath: string) {
     const mainBrowserWindow = this.app.mainWindowHandler.browserWindow;
     let audioFile;
     try {
@@ -101,20 +125,22 @@ export class TimersOrchestrator {
     mainBrowserWindow.webContents.send('audio:play', audioFile, mimeType)
   }
 
-  _timerEngineUpdate(timerId: number, update: TimerEngineUpdate) {
+  _timerEngineUpdate(timerId: string, update: TimerEngineUpdate) {
     const mainBrowserWindow = this.app.mainWindowHandler.browserWindow;
-    mainBrowserWindow.webContents.send('update', update);
-    this.timers[timerId].windows.forEach((browserWinHandler) => {
+    mainBrowserWindow.webContents.send('update', timerId, update);
+    Object.keys(this.timers[timerId].windows).forEach(windowId => {
+      const browserWinHandler = this.timers[timerId].windows[windowId];
       browserWinHandler.browserWindow.webContents.send('update', update);
     })
   }
 
-  _timerEngineWebSocketUpdate(timerId: number, update: TimerEngineWebSocketUpdate) {
+  _timerEngineWebSocketUpdate(timerId: string, update: TimerEngineWebSocketUpdate) {
     this.app.webServer.sendToWebSocket(update)
   }
 
-  _timerEngineMessageUpdate(timerId: number, update: MessageUpdate) {
-    this.timers[timerId].windows.forEach((browserWinHandler) => {
+  _timerEngineMessageUpdate(timerId: string, update: MessageUpdate) {
+    Object.keys(this.timers[timerId].windows).forEach(windowId => {
+      const browserWinHandler = this.timers[timerId].windows[windowId];
       browserWinHandler.browserWindow.webContents.send('message', update);
     })
   }
@@ -124,8 +150,9 @@ export class TimersOrchestrator {
     const fullscreenOn = windowSettings.bounds.fullscreenOn
     const selectedScreen = screen.getAllDisplays().find((display) => display.id === fullscreenOn)
 
-    if (browserWindow.fullScreen) {
+    if (browserWindow.fullScreen && fullscreenOn === null) {
       browserWindow.setFullScreen(false)
+      await new Promise(r => setTimeout(r, 1000));
     }
     if (fullscreenOn !== null) {
       await sleep(1000)
@@ -142,34 +169,72 @@ export class TimersOrchestrator {
     })
   }
 
+  destroyWindow(timerId: string, windowId: string) {
+    this.timers[timerId].windows[windowId].browserWindow.destroy()
+    delete this.timers[timerId].windows[windowId]
+  }
+
+  destroyTimer(timerId: string) {
+    Object.keys(this.timers[timerId].windows).forEach(windowId => {
+      this.destroyWindow(timerId, windowId)
+    })
+    delete this.timers[timerId]
+  }
+
   configUpdated() {
-    this.app.config.settings.timers.forEach((timer: TimerSettings, timerId: number) => {
-      const options: TimerEngineOptions = {
-        yellowAtOption: timer.yellowAtOption,
-        yellowAt: timer.yellowAtOption === 'minutes' ? timer.yellowAtMinutes : timer.yellowAtPercent,
-        stopTimerAtZero: timer.stopTimerAtZero,
-        setTimeLive: timer.setTimeLive,
-        audioFile: timer.audioFile,
+    Object.keys(this.timers).forEach(timerId => {
+      const timersInSettings = this.app.config.settings.timers
+      if (Object.keys(timersInSettings).includes(timerId)) {
+        Object.keys(this.timers[timerId].windows).forEach(windowId => {
+          if (!Object.keys(timersInSettings[timerId].windows).includes(windowId)) {
+            this.destroyWindow(timerId, windowId)
+          }
+        })
+      } else {
+        this.destroyTimer(timerId)
       }
+    })
 
-      this.timers[timerId].engine.options = options
-      this.timers[timerId].engine.setTimerInterval(timer.timerDuration)
-      this.timers[timerId].settings = timer
+    Object.keys(this.app.config.settings.timers).forEach(timerId => {
+      const timer = this.app.config.settings.timers[timerId];
 
-      this.timers[timerId].windows.forEach((windowHandler) => {
-        windowHandler.browserWindow.webContents.send('settings:updated', timer.windows[timerId])
-      })
+      if (Object.keys(this.timers).includes(timerId)) {
+        const options: TimerEngineOptions = {
+          yellowAtOption: timer.yellowAtOption,
+          yellowAt: timer.yellowAtOption === 'minutes' ? timer.yellowAtMinutes : timer.yellowAtPercent,
+          stopTimerAtZero: timer.stopTimerAtZero,
+          setTimeLive: timer.setTimeLive,
+          audioFile: timer.audioFile,
+        }
+
+        this.timers[timerId].engine.options = options
+        this.timers[timerId].engine.setTimerInterval(timer.timerDuration)
+        this.timers[timerId].settings = timer
+
+        Object.keys(timer.windows).forEach(windowId => {
+          if (!Object.keys(this.timers[timerId].windows).includes(windowId)) {
+            this.timers[timerId].windows[windowId] = this._createWindow(timerId, timer.name, windowId, timer.windows[windowId])
+          }
+        })
+
+        Object.keys(this.timers[timerId].windows).forEach(windowId => {
+          const windowHandler = this.timers[timerId].windows[windowId]
+          windowHandler.browserWindow.webContents.send('settings:updated', timer.windows[windowId])
+        })
+      } else {
+        this.createTimer(timerId, timer)
+      }
     })
   }
 
-  windowUpdated(timerId: number, windowId: number): void {
+  windowUpdated(timerId: string, windowId: number): void {
     const windowHandler = this.timers[timerId].windows[windowId]
     const windowSettings = this.timers[timerId].settings.windows[windowId];
 
     this._setCountdownWindowPosition(windowHandler, windowSettings)
   }
 
-  getWindowBounds(timerId: number, windowId: number): WindowBounds {
+  getWindowBounds(timerId: string, windowId: string): WindowBounds {
     const windowHandler = this.timers[timerId].windows[windowId]
     const windowBounds = windowHandler.browserWindow.getBounds()
     const windowSettings = this.timers[timerId].settings.windows[windowId]
@@ -180,6 +245,25 @@ export class TimersOrchestrator {
       x: windowBounds.x,
       y: windowBounds.y,
       fullscreenOn: windowSettings.bounds.fullscreenOn
+    }
+  }
+
+  sendNDIFrames() {
+    try {
+      Object.keys(this.timers).forEach(timerId => {
+        const timer = this.timers[timerId];
+
+        Object.keys(timer.windows).forEach(async windowId => {
+          const windowHandler = this.timers[timerId].windows[windowId]
+          const ndiServer = timer.ndiServers[windowId]
+          if (!ndiServer.hasConnections()) return
+          const image = await windowHandler.browserWindow.webContents.capturePage()
+          await timer.ndiServers[windowId].sendFrame(image)
+        })
+      })
+    } catch (e) {
+      console.log(e);
+      return;
     }
   }
 }

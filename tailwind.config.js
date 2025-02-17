@@ -1,7 +1,7 @@
 module.exports = {
   mode: 'jit',
   content: [
-    './src/renderer/**/*.{vue,js,html}',
+    './src/renderer/**/*.{vue,js,ts,html}',
   ],
   theme: {
     extend: {

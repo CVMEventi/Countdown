@@ -1,55 +1,49 @@
 <template>
-  <div class="main-container flex flex-col bg-zinc-700">
-    <div class="flex flex-row justify-between p-1 gap-2 items-center">
-      <navigation :selected-tab="tab"/>
-      <div class="flex-1"></div>
-      <s-button
-        v-if="tab === 'remote'"
-        class="self-end"
-        @click="save"
-      >
-        Save
-      </s-button>
-      <card class="bg-white self-end p-0">
-        <button class="block" type="button" @click="openURL('https://cvm.it')">
-          <img class="h-10" alt="CVM Logo" src="../assets/images/logo.png" />
-        </button>
-      </card>
-    </div>
-    <div v-if="tab === 'main'" class="countdown-tab p-1">
+  <BaseContainer>
+    <TopBar>
+      <timers-navigation>
+        <timer-tab-button
+          v-for="(timer, key) in settingsStore.settings.timers"
+          @click="currentTimer = key as string"
+          :active="currentTimer === key as string">
+          {{ timer.name }}
+        </timer-tab-button>
+      </timers-navigation>
+    </TopBar>
+    <div class="countdown-tab p-1">
       <div class="flex gap-2">
         <card class="clock-setup justify-center">
           <div class="uppercase text-white">Set</div>
-          <time-input @update:modelValue="timerControl.set($event);" :modelValue="update.setSeconds" color="white"/>
+          <time-input @update:modelValue="timerControl.set(currentTimer, $event);" :modelValue="currentUpdate.setSeconds" color="white"/>
           <div class="uppercase mt-2 text-white flex flex-row justify-between">
             <span>Count</span>
             <div class="flex flex-row items-center gap-1">
-              <play-pause-icon v-if="update.timerEndsAt" class="w-6 h-6 inline-flex" />
-              <span>{{ update.timerEndsAt }}</span>
+              <play-pause-icon v-if="currentUpdate.timerEndsAt" class="w-6 h-6 inline-flex" />
+              <span>{{ currentUpdate.timerEndsAt }}</span>
             </div>
 
           </div>
-          <time-input :modelValue="update.countSeconds" color="green" :disabled="true"/>
+          <time-input :modelValue="currentUpdate.countSeconds" color="green" :disabled="true"/>
           <div class="uppercase mt-2 text-white">Extra</div>
-          <time-input color="red" :modelValue="update.extraSeconds" :disabled="true"/>
+          <time-input color="red" :modelValue="currentUpdate.extraSeconds" :disabled="true"/>
         </card>
-        <card class="control-buttons">
-          <s-button class="text-4xl mb-2 font-mono uppercase" @click="timerControl.start">Start</s-button>
-          <s-button
-            :disabled="update.isReset"
+        <Card class="control-buttons">
+          <SButton class="text-4xl mb-2 font-mono uppercase" @click="timerControl.start(currentTimer)">Start</SButton>
+          <SButton
+            :disabled="currentUpdate.isReset"
             class="text-4xl mb-2 font-mono uppercase"
             type="warning"
-            @click="timerControl.toggle"
+            @click="timerControl.toggle(currentTimer)"
           >
-            {{ update.isRunning ? "Pause" : "Resume" }}
-          </s-button>
-          <s-button
+            {{ currentUpdate.isRunning ? "Pause" : "Resume" }}
+          </SButton>
+          <SButton
             class="text-4xl mb-2 font-mono uppercase"
             type="danger"
-            @click="timerControl.reset"
+            @click="timerControl.reset(currentTimer)"
           >
             Reset
-          </s-button>
+          </SButton>
           <div class="flex gap-2 justify-center">
             <jog @up-click="jogMinutes(1)" @down-click="jogMinutes(-1)">
               <template v-slot:up>
@@ -79,8 +73,8 @@
               10m
             </jog>
           </div>
-        </card>
-        <card class="flex-1">
+        </Card>
+        <Card class="flex-1">
           <div class="uppercase text-white">Message</div>
           <div class="flex gap-2">
             <input-with-button type="text" @input="value => message = value" :model-value="message" @click="sendMessage">Send</input-with-button>
@@ -88,113 +82,99 @@
               <trash-icon class="w-5 h-5 inline-flex" />
             </button>
           </div>
-        </card>
+        </Card>
       </div>
-      <card class="presets inline-flex gap-2 overflow-x-auto">
-        <s-button
-          v-for="(preset, index) in settings.presets"
+      <Card class="presets inline-flex gap-2 overflow-x-auto">
+        <SButton
+          v-for="(preset, index) in settingsStore.settings.presets"
           :key="index" type="info"
           @click="setPresetTime(preset)"
         >
           {{ preset }}
-        </s-button>
-      </card>
+        </SButton>
+      </Card>
     </div>
-    <settings-tab
-      v-if="tab === 'settings'"
-      :screens="screens"
-      :selected-screen="selectedScreen"
-      @settings-updated="settingsUpdated"
-    />
-    <remote-tab
-      v-if="tab === 'remote'"
-      ref="remoteTabRef" />
-    <windows-tab
-      :screens="screens"
-      v-if="tab === 'windows'"
-    />
-  </div>
+  </BaseContainer>
 </template>
 
 <script lang="ts" setup>
-import {nextTick, onMounted, ref} from "vue";
+import {computed, nextTick, onBeforeMount, onMounted, ref, watch} from 'vue'
 import {ipcRenderer} from 'electron'
 import Card from '../components/Card.vue'
 import SButton from '../components/SButton.vue'
 import TimeInput from '../components/TimeInput.vue'
-import SettingsTab from '../components/SettingsTab.vue'
-import WindowsTab from "../components/WindowsTab.vue";
 import Jog from "../components/Jog.vue";
 import { PlayPauseIcon, PlusIcon, MinusIcon, TrashIcon } from '@heroicons/vue/24/outline';
-import Navigation from "../components/Navigation.vue";
-import { shell } from "electron";
 import dayjs from 'dayjs'
 import duration from 'dayjs/plugin/duration'
-dayjs.extend(duration)
-import RemoteTab from "../components/RemoteTab.vue";
-import {TimerEngineUpdate} from "../../common/TimerInterfaces";
 import {TimerControl} from "../TimerControl";
 import Display = Electron.Display;
 import InputWithButton from "../components/InputWithButton.vue";
-import {CountdownSettings, DEFAULT_STORE} from "../../common/config";
 import {Howl} from "howler";
-/*
-import { Howl } from "howler";
-import gong from "../assets/sounds/gong.mp3";
-let sound = new Howl({
-  src: [gong],
-})
-*/
+import {CountdownSettings, DEFAULT_STORE} from "../../common/config";
+import TimerTabButton from "../components/TimerTabButton.vue";
+import TimersNavigation from "../components/TimersNavigation.vue";
+import {useTimersStore} from '../stores/timers.ts'
+import TopBar from '../components/TopBar.vue'
+import BaseContainer from '../components/BaseContainer.vue'
+import {useSettingsStore} from '../stores/settings.ts'
 
-const timerControl = new TimerControl(updateReceived);
+dayjs.extend(duration)
+const timerControl = new TimerControl();
 
 defineOptions({
   name: 'index',
 });
 
-export interface Props {
-  tab: string
-}
-
-const props = defineProps<Props>();
-
-let externalContent = ref('');
-let selectedScreen = ref(null);
 let screens = ref<Display[]>([]);
-let selectedTab = ref('countdown');
+const settingsStore = useSettingsStore()
 let settings = ref<CountdownSettings>(DEFAULT_STORE.defaults.settings);
-let audioRun = false;
-let update = ref<TimerEngineUpdate>({
-  setSeconds: 0,
-  countSeconds: 0,
-  currentSeconds: 0,
-  extraSeconds: 0,
-  secondsSetOnCurrentTimer: 0,
-  isCountingUp: false,
-  isExpiring: false,
-  isReset: true,
-  isRunning: false,
-  timerEndsAt: null,
-});
+const timersStore = useTimersStore()
 let message = ref('');
 let lastMessage = ref('');
 
+const currentTimer = ref<string|null>(null)
+const currentUpdate = computed(() => {
+  return timersStore.updates[currentTimer.value] ?? {
+    setSeconds: 0,
+    countSeconds: 0,
+    currentSeconds: 0,
+    extraSeconds: 0,
+    secondsSetOnCurrentTimer: 0,
+    isCountingUp: false,
+    isExpiring: false,
+    isReset: true,
+    isRunning: false,
+    timerEndsAt: null,
+  }
+})
+
 function sendMessage() {
-  timerControl.sendMessage(message.value);
+  timerControl.sendMessage(currentTimer.value, message.value);
   lastMessage.value = message.value;
 }
 
 const deleteMessage = () => {
-  timerControl.sendMessage('');
+  timerControl.sendMessage(currentTimer.value, '');
   message.value = '';
 }
 
+watch(() => settingsStore.settings.timers, (timers) => {
+  if (currentTimer.value === undefined) {
+    const firstTimer = Object.keys(timers)[0]
+    currentTimer.value = firstTimer
+  }
+})
+
 onMounted(async () => {
+  const firstTimer = Object.keys(settingsStore.settings.timers)[0]
+  currentTimer.value = firstTimer
+
   settings.value = await ipcRenderer.invoke('settings:get')
-  screens.value = await ipcRenderer.invoke('get-screens');
+  screens.value = await ipcRenderer.invoke('screens:get');
 
   ipcRenderer.on('screens-updated', async () => {
-    screens.value = await ipcRenderer.invoke('get-screens');
+    screens.value = await ipcRenderer.invoke('screens:get');
   })
 
   ipcRenderer.on('audio:play', async (event, audioFile, mimeType) => {
@@ -207,48 +187,21 @@ onMounted(async () => {
 });
 
 function jogMinutes(minutes: number) {
-  if (!update.value.isReset) {
-    timerControl.jogCurrent(minutes * 60);
+  if (!currentUpdate.value.isReset) {
+    timerControl.jogCurrent(currentTimer.value, minutes * 60);
   } else {
-    timerControl.jogSet(minutes * 60);
+    timerControl.jogSet(currentTimer.value, minutes * 60);
   }
-}
-
-function updateReceived(newUpdate: TimerEngineUpdate) {
-  update.value = newUpdate;
 }
 
 function setPresetTime(minutes: number) {
   const secondsPerMinute = 60;
-  timerControl.set(minutes * secondsPerMinute);
+  timerControl.set(currentTimer.value, minutes * secondsPerMinute);
 }
 
-async function settingsUpdated() {
-  settings.value = await ipcRenderer.invoke('settings:get')
-}
-
-function openURL(url: string) {
-  shell.openExternal(url);
-}
-
-let remoteTabRef = ref<typeof RemoteTab>(null);
-
-function save() {
-  nextTick(() => {
-    if (props.tab === 'remote') {
-      remoteTabRef.value.save()
-    }
-  })
-}
 </script>
 
 <style scoped>
-
-.main-container {
-  height: 100%;
-  gap: 10px;
-  padding: 0 10px 10px 10px;
-}
 
 .countdown-tab {
   @apply flex flex-col gap-2;
@@ -263,10 +216,4 @@ function save() {
   min-width: 250px;
 }
 
-.presets {
-}
-
-.top-menu {
-  height: 50px;
-}
 </style>

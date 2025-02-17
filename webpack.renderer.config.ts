@@ -4,6 +4,7 @@ import MiniCssExtractPlugin from "mini-css-extract-plugin";
 import CssMinimizerPlugin from "css-minimizer-webpack-plugin";
 const isProd = process.env.NODE_ENV === 'production';
 import {Configuration, DefinePlugin} from 'webpack';
+import path from "path";
 
 rules.push({
   test: /\.css$/i,
@@ -47,7 +48,8 @@ export const rendererConfig: Configuration = {
   ],
   resolve: {
     alias: {
-      vue: 'vue/dist/vue.esm-bundler.js'
+      vue: 'vue/dist/vue.esm-bundler.js',
+      '@': path.resolve(__dirname, 'src/renderer'),
     },
     extensions: ['.js', '.ts', '.vue', '.css'],
   },

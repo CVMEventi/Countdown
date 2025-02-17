@@ -14,83 +14,78 @@ import {
 } from "../common/IpcInterfaces.ts";
 
 export class TimerControl {
-  constructor(updateCallback: (update: TimerEngineUpdate) => void) {
-    ipcRenderer.on('update', (event, update) => {
-      updateCallback(update);
-    });
-  }
 
-  async set(seconds: number) {
+  async set(timerId: string, seconds: number) {
     const command: IpcSetSeconds = {
       name: IpcTimerCommandName.SetSeconds,
-      timerId: 0,
+      timerId,
       seconds,
     };
     await ipcRenderer.invoke('command', command);
   }
 
-  async start() {
+  async start(timerId: string) {
     const command: IpcStart = {
       name: IpcTimerCommandName.Start,
-      timerId: 0,
+      timerId,
     };
     await ipcRenderer.invoke('command', command);
   }
 
-  async reset() {
+  async reset(timerId: string) {
     const command: IpcReset = {
       name: IpcTimerCommandName.Reset,
-      timerId: 0,
+      timerId,
     };
     await ipcRenderer.invoke('command', command);
   }
 
-  async toggle() {
+  async toggle(timerId: string) {
     const command: IpcTogglePause = {
       name: IpcTimerCommandName.TogglePause,
-      timerId: 0,
+      timerId,
     };
     await ipcRenderer.invoke('command', command);
   }
 
-  async pause() {
+  async pause(timerId: string) {
     const command: IpcPause = {
       name: IpcTimerCommandName.Pause,
-      timerId: 0,
+      timerId,
     };
     await ipcRenderer.invoke('command', command);
   }
 
-  async resume() {
+  async resume(timerId: string) {
     const command: IpcResume = {
       name: IpcTimerCommandName.Resume,
-      timerId: 0,
+      timerId,
     };
     await ipcRenderer.invoke('command', command);
   }
 
-  async jogSet(seconds: number) {
+  async jogSet(timerId: string, seconds: number) {
     const command: IpcJogSet = {
       name: IpcTimerCommandName.JogSet,
-      timerId: 0,
+      timerId,
       seconds,
     }
     await ipcRenderer.invoke('command', command);
   }
 
-  async jogCurrent(seconds: number) {
+  async jogCurrent(timerId: string, seconds: number) {
     const command: IpcJogCurrent = {
       name: IpcTimerCommandName.JogCurrent,
-      timerId: 0,
+      timerId,
       seconds,
     };
     await ipcRenderer.invoke('command', command);
   }
 
-  async sendMessage(message: string) {
+  async sendMessage(timerId: string, message: string) {
     const command: IpcMessage = {
       name: IpcTimerCommandName.Message,
-      timerId: 0,
+      timerId,
       message,
     };
     await ipcRenderer.invoke('command', command);

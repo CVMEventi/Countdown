@@ -1,13 +1,13 @@
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
 import {BaseMigration} from "./BaseMigration.ts";
-import {CloseAction} from "../../common/config.ts";
+import {CloseAction, DEFAULT_TIMER_NAME} from '../../common/config.ts'
 
 export class MoveSettingsToWindow implements BaseMigration {
   migrate(oldConfig: { [key: string]: unknown }): { [key: string]: unknown } {
     const settings = oldConfig.settings as {[key: string]: unknown};
 
-    if (oldConfig.version as number >= 2) return oldConfig
+    if (oldConfig.version as number >= 2 && oldConfig.settings.timers) return oldConfig
 
     return {
       version: 2,
@@ -25,6 +25,7 @@ export class MoveSettingsToWindow implements BaseMigration {
         closeAction: settings.closeAction ?? CloseAction.Ask,
         startHidden: settings.startHidden ?? false,
         timers: [{
+          name: DEFAULT_TIMER_NAME,
           yellowAtOption: settings.yellowAtOption,
           yellowAtMinutes: settings.yellowAtMinutes,
           yellowAtPercent: settings.yellowAtPercent,

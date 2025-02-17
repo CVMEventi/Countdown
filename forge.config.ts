@@ -57,7 +57,7 @@ const config: ForgeConfig = {
         entryPoints: [
           {
             html: './src/renderer/index.html',
-            js: './src/renderer/index.js',
+            js: './src/renderer/index.ts',
             name: 'main_window',
           },
         ],

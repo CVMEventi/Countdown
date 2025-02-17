@@ -79,6 +79,11 @@ export default class NDIManager {
       fourCC,
       data: buffer
     }
+
     await this.ndiSender.video(frame)
+  }
+
+  hasConnections(): boolean {
+    return this.ndiSender.connections() !== 0
   }
 }

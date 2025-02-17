@@ -16,7 +16,7 @@
             class="w-5 h-5 inline-block border border-gray-300 rounded"
             :style="{backgroundColor: modelValue}"
           ></div>
-          <button class="text-base ml-1">
+          <button class="text-sm ml-1">
             <slot></slot>
           </button>
         </PopoverButton>

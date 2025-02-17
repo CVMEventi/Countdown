@@ -1,5 +1,5 @@
 <template>
-  <div class="rounded-lg border-2 p-3">
+  <div v-bind="$attrs" class="rounded-xl border-2 px-3 py-2">
     <slot />
   </div>
 </template>
