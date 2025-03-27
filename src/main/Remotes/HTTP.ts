@@ -1,8 +1,9 @@
 import fastify, {FastifyInstance, RequestGenericInterface} from 'fastify';
 import FastifyWebSocket from '@fastify/websocket';
 import {BrowserWindow, ipcMain} from "electron";
-import {TimerEngineWebSocketUpdate} from "../../common/TimerInterfaces.ts";
+import {TimerEngineWebSocketUpdate, WebSocketUpdate} from '../../common/TimerInterfaces.ts'
 import {TimersOrchestrator} from "../Utilities/TimersOrchestrator.ts";
+// @ts-ignore
 import {WebSocket} from "ws";
 
 const secondsPerMinute = 60;
@@ -10,6 +11,7 @@ const secondsPerHour = secondsPerMinute * 60;
 
 interface TimeRequest extends RequestGenericInterface {
   Params: {
+    timerId: string,
     hours: string,
     minutes: string,
     seconds: string,
@@ -18,7 +20,14 @@ interface TimeRequest extends RequestGenericInterface {
 
 interface MessageRequest extends RequestGenericInterface {
   Params: {
+    timerId: string,
     message: string,
+  }
+}
+
+interface GenericRequest extends RequestGenericInterface {
+  Params: {
+    timerId: string,
   }
 }
 
@@ -50,12 +59,119 @@ export default class HTTP {
     this.fastifyServer.get('/', (req, res) => {
       res.send('Countdown')
     })
+
+    this.fastifyServer.get<TimeRequest>('/timer/:timerId/set/:hours/:minutes/:seconds', (req, res) => {
+      const hours = parseInt(req.params.hours);
+      const minutes = parseInt(req.params.minutes);
+      const seconds = parseInt(req.params.seconds);
+
+      if (!Object.keys(this.timersOrchestrator.timers).includes(req.params.timerId)) {
+        return res.send(404)
+      }
+
+      this.timersOrchestrator.timers[req.params.timerId].engine.set(hours * secondsPerHour + minutes * secondsPerMinute + seconds);
+      res.send(200)
+    })
+    this.fastifyServer.get<TimeRequest>('/timer/:timerId/start/:hours/:minutes/:seconds', (req, res) => {
+      const hours = parseInt(req.params.hours);
+      const minutes = parseInt(req.params.minutes);
+      const seconds = parseInt(req.params.seconds);
+
+      if (!Object.keys(this.timersOrchestrator.timers).includes(req.params.timerId)) {
+        return res.send(404)
+      }
+
+      this.timersOrchestrator.timers[req.params.timerId].engine.set(hours * secondsPerHour + minutes * secondsPerMinute + seconds);
+      this.timersOrchestrator.timers[req.params.timerId].engine.start();
+      res.send(200)
+    })
+    this.fastifyServer.get<GenericRequest>('/timer/:timerId/start', (req, res) => {
+      if (!Object.keys(this.timersOrchestrator.timers).includes(req.params.timerId)) {
+        return res.send(404)
+      }
+      this.timersOrchestrator.timers[req.params.timerId].engine.start();
+      res.send(200)
+    })
+    this.fastifyServer.get<GenericRequest>('/timer/:timerId/toggle-pause', (req, res) => {
+      if (!Object.keys(this.timersOrchestrator.timers).includes(req.params.timerId)) {
+        return res.send(404)
+      }
+      this.timersOrchestrator.timers[req.params.timerId].engine.toggleTimer();
+      res.send(200)
+    })
+    this.fastifyServer.get<GenericRequest>('/timer/:timerId/pause', (req, res) => {
+      if (!Object.keys(this.timersOrchestrator.timers).includes(req.params.timerId)) {
+        return res.send(404)
+      }
+      this.timersOrchestrator.timers[req.params.timerId].engine.pause()
+      res.send(200)
+    })
+    this.fastifyServer.get<GenericRequest>('/timer/:timerId/resume', (req, res) => {
+      if (!Object.keys(this.timersOrchestrator.timers).includes(req.params.timerId)) {
+        return res.send(404)
+      }
+      this.timersOrchestrator.timers[req.params.timerId].engine.resume();
+      res.send(200)
+    })
+    this.fastifyServer.get<GenericRequest>('/timer/:timerId/reset', (req, res) => {
+      if (!Object.keys(this.timersOrchestrator.timers).includes(req.params.timerId)) {
+        return res.send(404)
+      }
+      this.timersOrchestrator.timers[req.params.timerId].engine.reset();
+      res.send(200)
+    })
+    this.fastifyServer.get<TimeRequest>('/timer/:timerId/jog-set/:hours/:minutes/:seconds', (req, res) => {
+      const hours = parseInt(req.params.hours);
+      const minutes = parseInt(req.params.minutes);
+      const seconds = parseInt(req.params.seconds);
+
+      if (!Object.keys(this.timersOrchestrator.timers).includes(req.params.timerId)) {
+        return res.send(404)
+      }
+      this.timersOrchestrator.timers[req.params.timerId].engine.jogSet(hours * secondsPerHour + minutes * secondsPerMinute + seconds);
+      res.send(200)
+    })
+    this.fastifyServer.get<TimeRequest>('/timer/:timerId/jog-current/:hours/:minutes/:seconds', (req, res) => {
+      const hours = parseInt(req.params.hours);
+      const minutes = parseInt(req.params.minutes);
+      const seconds = parseInt(req.params.seconds);
+
+      if (!Object.keys(this.timersOrchestrator.timers).includes(req.params.timerId)) {
+        return res.send(404)
+      }
+      this.timersOrchestrator.timers[req.params.timerId].engine.jogCurrent(hours * secondsPerHour + minutes * secondsPerMinute + seconds);
+      res.send(200)
+    })
+
+    this.fastifyServer.get<GenericRequest>('/timer/:timerId/message', (req, res) => {
+      if (!Object.keys(this.timersOrchestrator.timers).includes(req.params.timerId)) {
+        return res.send(404)
+      }
+      this.timersOrchestrator.timers[req.params.timerId].engine.setMessage("");
+      res.send(200);
+    })
+    this.fastifyServer.get<MessageRequest>('/timer/:timerId/message/:message', (req, res) => {
+      if (!Object.keys(this.timersOrchestrator.timers).includes(req.params.timerId)) {
+        return res.send(404)
+      }
+      this.timersOrchestrator.timers[req.params.timerId].engine.setMessage(req.params.message);
+      res.send(200);
+    })
+    this.fastifyServer.get('/timers', (req, res) => {
+      res
+        .code(200)
+        .header('Content-Type', 'application/json; charset=utf-8')
+        .send(this.timersOrchestrator.app.config.settings.timers);
+    })
+
+    /* Legacy */
     this.fastifyServer.get<TimeRequest>('/set/:hours/:minutes/:seconds', (req, res) => {
       const hours = parseInt(req.params.hours);
       const minutes = parseInt(req.params.minutes);
       const seconds = parseInt(req.params.seconds);
 
-      this.timersOrchestrator.timers[0].engine.set(hours * secondsPerHour + minutes * secondsPerMinute + seconds);
+      const firstTimer = Object.keys(this.timersOrchestrator.timers).sort()[0]
+      this.timersOrchestrator.timers[firstTimer].engine.set(hours * secondsPerHour + minutes * secondsPerMinute + seconds);
       res.send(200)
     })
     this.fastifyServer.get<TimeRequest>('/start/:hours/:minutes/:seconds', (req, res) => {
@@ -63,28 +179,35 @@ export default class HTTP {
       const minutes = parseInt(req.params.minutes);
       const seconds = parseInt(req.params.seconds);
 
-      this.timersOrchestrator.timers[0].engine.set(hours * secondsPerHour + minutes * secondsPerMinute + seconds);
-      this.timersOrchestrator.timers[0].engine.start();
+      const firstTimer = Object.keys(this.timersOrchestrator.timers).sort()[0]
+
+      this.timersOrchestrator.timers[firstTimer].engine.set(hours * secondsPerHour + minutes * secondsPerMinute + seconds);
+      this.timersOrchestrator.timers[firstTimer].engine.start();
       res.send(200)
     })
     this.fastifyServer.get('/start', (req, res) => {
-      this.timersOrchestrator.timers[0].engine.start();
+      const firstTimer = Object.keys(this.timersOrchestrator.timers).sort()[0]
+      this.timersOrchestrator.timers[firstTimer].engine.start();
       res.send(200)
     })
     this.fastifyServer.get('/toggle-pause', (req, res) => {
-      this.timersOrchestrator.timers[0].engine.toggleTimer();
+      const firstTimer = Object.keys(this.timersOrchestrator.timers).sort()[0]
+      this.timersOrchestrator.timers[firstTimer].engine.toggleTimer();
       res.send(200)
     })
     this.fastifyServer.get('/pause', (req, res) => {
-      this.timersOrchestrator.timers[0].engine.pause()
+      const firstTimer = Object.keys(this.timersOrchestrator.timers).sort()[0]
+      this.timersOrchestrator.timers[firstTimer].engine.pause()
       res.send(200)
     })
     this.fastifyServer.get('/resume', (req, res) => {
-      this.timersOrchestrator.timers[0].engine.resume();
+      const firstTimer = Object.keys(this.timersOrchestrator.timers).sort()[0]
+      this.timersOrchestrator.timers[firstTimer].engine.resume();
       res.send(200)
     })
     this.fastifyServer.get('/reset', (req, res) => {
-      this.timersOrchestrator.timers[0].engine.reset();
+      const firstTimer = Object.keys(this.timersOrchestrator.timers).sort()[0]
+      this.timersOrchestrator.timers[firstTimer].engine.reset();
       res.send(200)
     })
     this.fastifyServer.get<TimeRequest>('/jog-set/:hours/:minutes/:seconds', (req, res) => {
@@ -92,7 +215,8 @@ export default class HTTP {
       const minutes = parseInt(req.params.minutes);
       const seconds = parseInt(req.params.seconds);
 
-      this.timersOrchestrator.timers[0].engine.jogSet(hours * secondsPerHour + minutes * secondsPerMinute + seconds);
+      const firstTimer = Object.keys(this.timersOrchestrator.timers).sort()[0]
+      this.timersOrchestrator.timers[firstTimer].engine.jogSet(hours * secondsPerHour + minutes * secondsPerMinute + seconds);
       res.send(200)
     })
     this.fastifyServer.get<TimeRequest>('/jog-current/:hours/:minutes/:seconds', (req, res) => {
@@ -100,16 +224,19 @@ export default class HTTP {
       const minutes = parseInt(req.params.minutes);
       const seconds = parseInt(req.params.seconds);
 
-      this.timersOrchestrator.timers[0].engine.jogCurrent(hours * secondsPerHour + minutes * secondsPerMinute + seconds);
+      const firstTimer = Object.keys(this.timersOrchestrator.timers).sort()[0]
+      this.timersOrchestrator.timers[firstTimer].engine.jogCurrent(hours * secondsPerHour + minutes * secondsPerMinute + seconds);
       res.send(200)
     })
 
     this.fastifyServer.get('/message', (req, res) => {
-      this.timersOrchestrator.timers[0].engine.setMessage("");
+      const firstTimer = Object.keys(this.timersOrchestrator.timers).sort()[0]
+      this.timersOrchestrator.timers[firstTimer].engine.setMessage("");
       res.send(200);
     })
     this.fastifyServer.get<MessageRequest>('/message/:message', (req, res) => {
-      this.timersOrchestrator.timers[0].engine.setMessage(req.params.message);
+      const firstTimer = Object.keys(this.timersOrchestrator.timers).sort()[0]
+      this.timersOrchestrator.timers[firstTimer].engine.setMessage(req.params.message);
       res.send(200);
     })
 
@@ -119,13 +246,13 @@ export default class HTTP {
 
   }
 
-  sendToWebSocket(payload: TimerEngineWebSocketUpdate): void {
+  sendToWebSocket(update: WebSocketUpdate<any>): void {
     if (!this.fastifyServer.websocketServer) {
       return;
     }
     this.fastifyServer.websocketServer.clients.forEach(function each(client: WebSocket) {
       if (client.readyState === 1) {
-        client.send(JSON.stringify(payload))
+        client.send(JSON.stringify(update))
       }
     })
   }

@@ -6,14 +6,14 @@ import {
 import {TimerEngine, TimerEngineOptions} from "../TimerEngine.ts";
 import BrowserWinHandler from "./BrowserWinHandler.ts";
 import createCountdownWindow from "../countdownWindow.ts";
-import {app, BrowserWindow, screen} from "electron";
+import {BrowserWindow, screen} from "electron";
 import {MessageUpdate, TimerEngineUpdate, TimerEngineWebSocketUpdate} from "../../common/TimerInterfaces.ts";
 import {CountdownApp} from "../App.ts";
 import {sleep} from "./utilities.ts";
 import {promises as fs} from "node:fs";
+// @ts-ignore
 import mime from "mime/lite";
 import NDIManager from "../Remotes/NDI.ts";
-import {destroy} from 'grandiose'
 
 interface WindowsKV {
   [key: string]: BrowserWinHandler;
@@ -61,10 +61,16 @@ export class TimersOrchestrator {
         this._timerEngineUpdate(timerId, update)
       },
       (update: TimerEngineWebSocketUpdate) => {
-        this._timerEngineWebSocketUpdate(timerId, update)
+        this._timerEngineWebSocketUpdate(timerId, {
+          timerId,
+          ...update
+        })
       },
       (update: MessageUpdate) => {
-        this._timerEngineMessageUpdate(timerId, update)
+        this._timerEngineMessageUpdate(timerId, {
+          ...update,
+          timerId,
+        })
       },
       async (audioFilePath) => {
         await this._playSound(timerId, audioFilePath)
@@ -79,7 +85,7 @@ export class TimersOrchestrator {
 
     let ndiServers: NDIManagersKV = {}
     Object.keys(settings.windows).forEach(windowId => {
-      const server = new NDIManager(`Countdown ${timerId}-${windowId}`)
+      const server = new NDIManager(`Countdown ${settings.name}-${windowId}`)
       server.start()
       ndiServers[windowId] = server
     })
@@ -135,7 +141,10 @@ export class TimersOrchestrator {
   }
 
   _timerEngineWebSocketUpdate(timerId: string, update: TimerEngineWebSocketUpdate) {
-    this.app.webServer.sendToWebSocket(update)
+    this.app.webServer.sendToWebSocket({
+      type: 'timerEngine',
+      update
+    })
   }
 
   _timerEngineMessageUpdate(timerId: string, update: MessageUpdate) {

@@ -1,6 +1,8 @@
 import {CountdownSettings, DEFAULT_STORE} from "../../common/config.ts";
+// @ts-ignore
 import Store from "electron-store";
 import {applyMigrations} from "../Migrations/applyMigrations.ts";
+// @ts-ignore
 import {getProperty, setProperty} from "dot-prop";
 
 

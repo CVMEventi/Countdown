@@ -195,6 +195,7 @@ export class TimerEngine {
 
   setMessage(message?: string) {
     this.messageUpdate({
+      timerId: '',
       message,
     });
   }
@@ -249,6 +250,7 @@ export class TimerEngine {
     const timeSetOnCurrentTimerDuration = dayjs.duration(this._timer.secondsSet, 'seconds');
 
     this.webSocketUpdate({
+
       state: state,
       setTime: this.totalSeconds,
       setTimeHms: setTimeDuration.format('HH:mm:ss'),

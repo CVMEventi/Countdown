@@ -32,41 +32,40 @@ export class OSC {
   _messageReceived(message: [string, ...ArgumentType[]]) {
     console.log(message)
     const [messageType, ...args] = message;
-    const hours = +args[0];
-    const minutes = +args[1];
-    const seconds = +args[2];
+    const timerId = args[0] as string
+    const hours = +args[1]
+    const minutes = +args[2]
+    const seconds = +args[3]
 
     switch (messageType) {
       case '/start':
         if (args.length === 3) {
-
-
-          this.timersOrchestrator.timers[0].engine.set(hours * secondsPerHour + minutes * secondsPerMinute + seconds);
-          this.timersOrchestrator.timers[0].engine.start();
+          this.timersOrchestrator.timers[timerId].engine.set(hours * secondsPerHour + minutes * secondsPerMinute + seconds);
+          this.timersOrchestrator.timers[timerId].engine.start();
         } else {
-          this.timersOrchestrator.timers[0].engine.start();
+          this.timersOrchestrator.timers[timerId].engine.start();
         }
         break;
       case '/set':
-        this.timersOrchestrator.timers[0].engine.set(hours * secondsPerHour + minutes * secondsPerMinute + seconds);
+        this.timersOrchestrator.timers[timerId].engine.set(hours * secondsPerHour + minutes * secondsPerMinute + seconds);
         break;
       case '/toggle-pause':
-        this.timersOrchestrator.timers[0].engine.toggleTimer();
+        this.timersOrchestrator.timers[timerId].engine.toggleTimer();
         break;
       case '/pause':
-        this.timersOrchestrator.timers[0].engine.pause();
+        this.timersOrchestrator.timers[timerId].engine.pause();
         break;
       case '/resume':
-        this.timersOrchestrator.timers[0].engine.resume();
+        this.timersOrchestrator.timers[timerId].engine.resume();
         break;
       case '/reset':
-        this.timersOrchestrator.timers[0].engine.reset();
+        this.timersOrchestrator.timers[timerId].engine.reset();
         break;
       case '/jog-set':
-        this.timersOrchestrator.timers[0].engine.jogSet(hours * secondsPerHour + minutes * secondsPerMinute + seconds);
+        this.timersOrchestrator.timers[timerId].engine.jogSet(hours * secondsPerHour + minutes * secondsPerMinute + seconds);
         break;
       case '/jog-current':
-        this.timersOrchestrator.timers[0].engine.jogCurrent(hours * secondsPerHour + minutes * secondsPerMinute + seconds);
+        this.timersOrchestrator.timers[timerId].engine.jogCurrent(hours * secondsPerHour + minutes * secondsPerMinute + seconds);
         break;
     }
   }

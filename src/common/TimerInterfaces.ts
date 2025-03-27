@@ -16,10 +16,17 @@ export interface TimerEngineUpdates {
 }
 
 export interface MessageUpdate {
+  timerId: string
   message?: string
 }
 
+export interface WebSocketUpdate<PayloadType> {
+  type: string
+  update: PayloadType
+}
+
 export interface TimerEngineWebSocketUpdate {
+  timerId?: string,
   state: string
   setTime: number,
   setTimeHms: string,
