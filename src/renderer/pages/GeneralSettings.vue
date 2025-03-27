@@ -12,12 +12,12 @@
             </div>
           </template>
         </draggable>
-        <SButton tiny class="m-3" type="info" @click="addPreset">Add</SButton>
+        <SButton tiny class="my-3" type="info" @click="addPreset">Add</SButton>
       </card>
       <card class="border flex flex-col gap-2">
         <div class="flex flex-col" style="min-width: 220px">
           <p class="text-lg uppercase">Close action</p>
-          <select v-model="settingsStore.settings.closeAction" class="input p-2 text-black">
+          <select v-model="settingsStore.settings.closeAction" class="input p-2">
             <option v-for="action in CloseAction" :value="action">{{ getCloseActionLabel(action) }}</option>
           </select>
           <CheckBox class="mt-2" id="startHidden" v-model="settingsStore.settings.startHidden">Start hidden</CheckBox>
