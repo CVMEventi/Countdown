@@ -22,6 +22,7 @@ export class TimerEngine {
   private _secondsSetOnCurrentTimer = 0;
   private _audioRun = false;
   private _timer: Timer;
+  private _currentInterval = 1000;
 
   options: TimerEngineOptions = {
     stopTimerAtZero: DEFAULT_STOP_TIMER_AT_ZERO,
@@ -95,10 +96,11 @@ export class TimerEngine {
 
   endsAt() {
     if (this.countSeconds() <= 0) return null;
-    return dayjs().add(this._currentSeconds, 's').format('HH:mm');
+    return dayjs().add(this._currentSeconds / 1000 * this._currentInterval, 's').format('HH:mm');
   }
 
   setTimerInterval(interval: number) {
+    this._currentInterval = interval;
     this._timer.setInterval(interval);
     this._timer.adjustingTimer.interval = interval;
   }
