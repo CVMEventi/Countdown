@@ -1,5 +1,5 @@
 <template>
-  <div class="inline-flex border rounded justify-center" :class="classes">
+  <div class="inline-flex border rounded-lg justify-center" :class="classes">
     <input
       :value="formattedHours"
       @input="updateTime('hours', $event.target.value)"
@@ -7,7 +7,7 @@
       max="23"
       type="number"
       :disabled="disabled"
-      class="input input-big input-number-fixed"
+      class="input input-big input-number-fixed focus:ring-0 text-black"
       :class="classes"
       @click="$event.target.select()"
       @focus="$event.target.select()"
@@ -20,7 +20,7 @@
       max="60"
       type="number"
       :disabled="disabled"
-      class="input input-big input-number-fixed"
+      class="input input-big input-number-fixed focus:ring-0 text-black"
       :class="classes"
       @click="$event.target.select()"
       @focus="$event.target.select()"
@@ -33,7 +33,7 @@
       max="60"
       type="number"
       :disabled="disabled"
-      class="input input-big input-number-fixed"
+      class="input input-big input-number-fixed focus:ring-0 text-black"
       :class="classes"
       @click="$event.target.select()"
       @focus="$event.target.select()"

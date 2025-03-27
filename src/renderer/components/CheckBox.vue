@@ -1,6 +1,7 @@
 <template>
   <div class="flex items-center">
     <input
+      class="rounded-md border-0 bg-zinc-700 focus:ring-0"
       :id="id"
       :checked="modelValue"
       @input="$emit('update:modelValue', $event.target.checked)"

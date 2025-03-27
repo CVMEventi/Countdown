@@ -31,7 +31,7 @@
         </div>
         <div class="inline-flex flex-row gap-2 items-center">
           <p class="text-sm">Ms per second</p>
-          <input class="input text-black rounded-lg text-center px-2 sm:text-sm border-gray-300 w-24" type="number" @input="(event) => timers[currentTimer].timerDuration = parseInt(event.target.value)" :value="timers[currentTimer].timerDuration">
+          <input class="input rounded-lg text-center px-2 sm:text-sm border-gray-300 w-24" type="number" @input="(event) => timers[currentTimer].timerDuration = parseInt(event.target.value)" :value="timers[currentTimer].timerDuration">
         </div>
       </Card>
       <div class="h-[40vh]">
@@ -40,50 +40,48 @@
       <div class="flex flex-row justify-end">
         <button @click="createWindow" class="relative min-w-0 overflow-hidden font-normal text-white bg-green-500 py-0.5 px-1 text-sm text-center hover:bg-green-600 focus:z-10 rounded-lg"><PlusIcon class="h-6" /></button>
       </div>
-      <Card class="inline-block flex flex-col">
-        <div class="flex flex-col gap-2">
-          <div class="inline-flex gap-2 items-end" v-for="(window, key, index) in timers[currentTimer].windows">
-            <span class="text-2xl pr-5">{{ index + 1 }}</span>
-            <div class="inline-flex flex-col">
-              <p class="text-base">Fullscreen</p>
-              <select v-model="window.bounds.fullscreenOn" class="input p-2 text-black">
-                <option :value="null">-</option>
-                <option
-                  v-for="(screen, index) in screens"
-                  :key="screen.id"
-                  :value="screen.id"
-                >
-                  Screen {{ index }}
-                  ({{ screen.size.width }}x{{ screen.size.height }}{{ screen.internal ? " Internal" : "" }})
-                </option>
-              </select>
-            </div>
-            <div class="inline-flex flex-col">
-              <p class="text-base">X</p>
-              <input v-model="window.bounds.x" type="number" class="input w-20 text-black rounded-lg px-2 sm:text-sm border-gray-300">
-            </div>
-            <div class="inline-flex flex-col">
-              <p class="text-base">Y</p>
-              <input v-model="window.bounds.y" type="number" class="input w-20 text-black rounded-lg px-2 sm:text-sm border-gray-300">
-            </div>
-            <div class="inline-flex flex-col">
-              <p class="text-base">Width</p>
-              <input v-model="window.bounds.width" type="number" class="input w-20 text-black rounded-lg px-2 sm:text-sm border-gray-300">
-            </div>
-            <div class="inline-flex flex-col">
-              <p class="text-base">Height</p>
-              <input v-model="window.bounds.height" type="number" class="input w-20 text-black px-2 sm:text-sm border-gray-300">
-            </div>
-            <SButton class="inline-flex" tiny type="info" @click="getWindowBounds(key as string)"><ArrowUturnLeftIcon class="w-5" /><WindowIcon class="w-5" /> </SButton>
-            <div class="inline-flex ml-auto flex-row gap-2">
-              <SButton tiny type="info" @click="editWindow(key as string)"><CogIcon class="w-5" /></SButton>
-              <SButton tiny type="danger"
-                       @click="removeWindow(key as string)"
-                       :disabled="Object.keys(timers[currentTimer].windows).length < 2"><TrashIcon class="w-5" /></SButton>
-            </div>
+      <div class="flex flex-col gap-2">
+        <Card class="inline-flex gap-2 items-end" v-for="(window, key, index) in timers[currentTimer].windows">
+          <span class="self-center text-2xl text-center min-w-8 rounded-lg bg-blue-500">{{ index + 1 }}</span>
+          <div class="inline-flex flex-col">
+            <p class="text-base">Fullscreen on screen</p>
+            <select v-model="window.bounds.fullscreenOn" class="input p-2">
+              <option :value="null">-</option>
+              <option
+                v-for="(screen, index) in screens"
+                :key="screen.id"
+                :value="screen.id"
+              >
+                Screen {{ index }}
+                ({{ screen.size.width }}x{{ screen.size.height }}{{ screen.internal ? " Internal" : "" }})
+              </option>
+            </select>
           </div>
-        </div>
-      </Card>
+          <div class="inline-flex flex-col">
+            <p class="text-base">X</p>
+            <input v-model="window.bounds.x" type="number" class="input w-20 rounded-lg px-2 sm:text-sm">
+          </div>
+          <div class="inline-flex flex-col">
+            <p class="text-base">Y</p>
+            <input v-model="window.bounds.y" type="number" class="input w-20 rounded-lg px-2 sm:text-sm">
+          </div>
+          <div class="inline-flex flex-col">
+            <p class="text-base">Width</p>
+            <input v-model="window.bounds.width" type="number" class="input w-20 rounded-lg px-2 sm:text-sm">
+          </div>
+          <div class="inline-flex flex-col">
+            <p class="text-base">Height</p>
+            <input v-model="window.bounds.height" type="number" class="input w-20 px-2 sm:text-sm">
+          </div>
+          <SButton class="inline-flex" tiny type="info" @click="getWindowBounds(key as string)"><ArrowUturnLeftIcon class="w-5" /><WindowIcon class="w-5" /> </SButton>
+          <div class="inline-flex ml-auto flex-row gap-2">
+            <SButton tiny type="info" @click="editWindow(key as string)"><CogIcon class="w-5" /></SButton>
+            <SButton tiny type="danger"
+                     @click="removeWindow(key as string)"
+                     :disabled="Object.keys(timers[currentTimer].windows).length < 2"><TrashIcon class="w-5" /></SButton>
+          </div>
+        </Card>
+      </div>
     </div>
     <EditTimerModal v-model:window="editingWindow" v-model:window-id="editingWindowId" />
     <DeleteTimerModal v-model:open="deleteOpen" @delete="deleteTimer" :timer-name="timers[currentTimer]?.name ?? null" :timer-id="currentTimer" />

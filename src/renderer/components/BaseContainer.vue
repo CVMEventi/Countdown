@@ -1,5 +1,5 @@
 <template>
-  <div class="h-full px-2 py-1 flex flex-col bg-zinc-800">
+  <div class="h-full px-2 py-1 flex flex-col bg-zinc-900">
     <slot></slot>
   </div>
 </template>

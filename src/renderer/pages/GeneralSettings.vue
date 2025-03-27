@@ -8,19 +8,19 @@
                    class="flex flex-col gap-2 overflow-y-auto items-center pb-1 pr-2">
           <template #item="{element, index}">
             <div :key="index" class="inline-block w-[140px]">
-              <edit-preset v-model="settingsStore.settings.presets[index]" @delete="deletePreset(index)"></edit-preset>
+              <EditPreset v-model="settingsStore.settings.presets[index]" @delete="deletePreset(index)"></EditPreset>
             </div>
           </template>
         </draggable>
         <SButton tiny class="m-3" type="info" @click="addPreset">Add</SButton>
       </card>
-      <card class="border flex flex-col">
+      <card class="border flex flex-col gap-2">
         <div class="flex flex-col" style="min-width: 220px">
           <p class="text-lg uppercase">Close action</p>
           <select v-model="settingsStore.settings.closeAction" class="input p-2 text-black">
             <option v-for="action in CloseAction" :value="action">{{ getCloseActionLabel(action) }}</option>
           </select>
-          <check-box id="startHidden" v-model="settingsStore.settings.startHidden">Start hidden</check-box>
+          <CheckBox class="mt-2" id="startHidden" v-model="settingsStore.settings.startHidden">Start hidden</CheckBox>
         </div>
       </card>
     </div>

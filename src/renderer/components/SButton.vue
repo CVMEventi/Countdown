@@ -3,7 +3,7 @@
     @click.stop.prevent="click"
     @focus="($event.target as HTMLButtonElement).blur();"
     :disabled="disabled"
-    class="rounded text-white ring-transparent"
+    class="rounded-lg text-white ring-transparent"
     :class="{
       'px-4': !tiny,
       'py-2': !tiny,
@@ -28,9 +28,9 @@
       'bg-red-300': type === 'danger' && disabled,
       'hover:bg-red-600': type === 'danger' && !disabled,
 
-      'bg-gray-400': type === 'info' && !disabled,
-      'bg-gray-300': type === 'info' && disabled,
-      'hover:bg-gray-500': type === 'info' && !disabled,
+      'bg-zinc-400': type === 'info' && !disabled,
+      'bg-zinc-300': type === 'info' && disabled,
+      'hover:bg-zinc-500': type === 'info' && !disabled,
     }"
   >
     <slot />

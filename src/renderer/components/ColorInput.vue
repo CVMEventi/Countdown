@@ -13,7 +13,7 @@
         :arrow="5" :offset="15">
         <PopoverButton class="flex flex-row items-center focus:outline-0">
           <div
-            class="w-5 h-5 inline-block border border-gray-300 rounded"
+            class="w-5 h-5 inline-block border border-zinc-700 rounded"
             :style="{backgroundColor: modelValue}"
           ></div>
           <button class="text-sm ml-1">

@@ -19,7 +19,7 @@
           @click="($event.target as HTMLInputElement).select()"
           @focus="($event.target as HTMLInputElement).select()"
           v-model="httpServerPort"
-          class="input text-black w-full">
+          class="input w-full">
         <p :class="[isRunning ? 'text-emerald-300' : 'text-red-300']">{{ isRunning ? `Server running on port ${currentPort}` : "Server not running" }}</p>
         <p class="text-sm italic">Last error: {{ lastError }}</p>
         <SButton
@@ -36,19 +36,19 @@
         </SButton>
       </card>
       <card class="flex flex-col w-[300px]">
-        <p class="text-2xl pb-2">NDI (Beta)</p>
-        <check-box id="ndiEnabled" v-model="ndiEnabled">Enable</check-box>
-        <check-box id="ndiAlpha" v-model="ndiAlpha">Alpha</check-box>
+        <p class="text-2xl pb-2">NDI</p>
+        <CheckBox id="ndiEnabled" v-model="ndiEnabled">Enable</CheckBox>
+        <CheckBox id="ndiAlpha" v-model="ndiAlpha">Alpha</CheckBox>
       </card>
       <card class="flex flex-col w-[300px]">
         <p class="text-2xl pb-2">OSC</p>
-        <check-box id="oscEnabled" v-model="oscEnabled">Enable</check-box>
+        <CheckBox id="oscEnabled" v-model="oscEnabled">Enable</CheckBox>
         <p>Port</p>
         <input
           @click="($event.target as HTMLInputElement).select()"
           @focus="($event.target as HTMLInputElement).select()"
           v-model="oscPort"
-          class="input text-black w-full">
+          class="input w-full">
       </card>
     </div>
   </BaseContainer>

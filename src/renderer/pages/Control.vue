@@ -1,20 +1,20 @@
 <template>
   <BaseContainer>
     <TopBar>
-      <timers-navigation>
-        <timer-tab-button
+      <TimersNavigation>
+        <TimerTabButton
           v-for="(timer, key) in settingsStore.settings.timers"
           @click="currentTimer = key as string"
           :active="currentTimer === key as string">
           {{ timer.name }}
-        </timer-tab-button>
-      </timers-navigation>
+        </TimerTabButton>
+      </TimersNavigation>
     </TopBar>
     <div class="countdown-tab p-1">
       <div class="flex gap-2">
-        <card class="clock-setup justify-center">
+        <Card class="clock-setup justify-center">
           <div class="uppercase text-white">Set</div>
-          <time-input @update:modelValue="timerControl.set(currentTimer, $event);" :modelValue="currentUpdate.setSeconds" color="white"/>
+          <TimeInput @update:modelValue="timerControl.set(currentTimer, $event);" :modelValue="currentUpdate.setSeconds" color="white"/>
           <div class="uppercase mt-2 text-white flex flex-row justify-between">
             <span>Count</span>
             <div class="flex flex-row items-center gap-1">
@@ -23,10 +23,10 @@
             </div>
 
           </div>
-          <time-input :modelValue="currentUpdate.countSeconds" color="green" :disabled="true"/>
+          <TimeInput :modelValue="currentUpdate.countSeconds" color="green" :disabled="true"/>
           <div class="uppercase mt-2 text-white">Extra</div>
-          <time-input color="red" :modelValue="currentUpdate.extraSeconds" :disabled="true"/>
-        </card>
+          <TimeInput color="red" :modelValue="currentUpdate.extraSeconds" :disabled="true"/>
+        </Card>
         <Card class="control-buttons">
           <SButton class="text-4xl mb-2 font-mono uppercase" @click="timerControl.start(currentTimer)">Start</SButton>
           <SButton
@@ -45,42 +45,42 @@
             Reset
           </SButton>
           <div class="flex gap-2 justify-center">
-            <jog @up-click="jogMinutes(1)" @down-click="jogMinutes(-1)">
+            <Jog class="w-18" @up-click="jogMinutes(1)" @down-click="jogMinutes(-1)">
               <template v-slot:up>
-                <plus-icon class="w-5 h-5 inline-flex"></plus-icon>
+                <PlusIcon class="w-5 h-5 inline-flex"></PlusIcon>
               </template>
               <template v-slot:down>
-                <minus-icon class="w-5 h-5 inline-flex"></minus-icon>
+                <MinusIcon class="w-5 h-5 inline-flex"></MinusIcon>
               </template>
               1m
-            </jog>
-            <jog @up-click="jogMinutes(5)" @down-click="jogMinutes(-5)">
+            </Jog>
+            <Jog class="w-18" @up-click="jogMinutes(5)" @down-click="jogMinutes(-5)">
               <template v-slot:up>
-                <plus-icon class="w-5 h-5 inline-flex"></plus-icon>
+                <PlusIcon class="w-5 h-5 inline-flex"></PlusIcon>
               </template>
               <template v-slot:down>
-                <minus-icon class="w-5 h-5 inline-flex"></minus-icon>
+                <MinusIcon class="w-5 h-5 inline-flex"></MinusIcon>
               </template>
               5m
-            </jog>
-            <jog @up-click="jogMinutes(10)" @down-click="jogMinutes(-10)">
+            </Jog>
+            <Jog class="w-18" @up-click="jogMinutes(10)" @down-click="jogMinutes(-10)">
               <template v-slot:up>
-                <plus-icon class="w-5 h-5 inline-flex"></plus-icon>
+                <PlusIcon class="w-5 h-5 inline-flex"></PlusIcon>
               </template>
               <template v-slot:down>
-                <minus-icon class="w-5 h-5 inline-flex"></minus-icon>
+                <MinusIcon class="w-5 h-5 inline-flex"></MinusIcon>
               </template>
               10m
-            </jog>
+            </Jog>
           </div>
         </Card>
         <Card class="flex-1">
           <div class="uppercase text-white">Message</div>
           <div class="flex gap-2">
-            <input-with-button type="text" @input="value => message = value" :model-value="message" @click="sendMessage">Send</input-with-button>
-            <button @click="deleteMessage" class="mt-1 relative inline-flex items-center space-x-2 px-2 py-1 border border-red-600 text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-500 focus:outline-none focus:ring-1 focus:ring-red-400 focus:border-red-500">
-              <trash-icon class="w-5 h-5 inline-flex" />
-            </button>
+            <InputWithButton class="h-8" type="text" @input="value => message = value" :model-value="message" @click="sendMessage">Send</InputWithButton>
+            <SButton tiny type="danger" @click="deleteMessage">
+              <TrashIcon class="w-5 h-5 inline-flex" />
+            </SButton>
           </div>
         </Card>
       </div>

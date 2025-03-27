@@ -8,10 +8,11 @@
       <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
         <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
           <TransitionChild as="template" enter="ease-out duration-300" enter-from="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" enter-to="opacity-100 translate-y-0 sm:scale-100" leave="ease-in duration-200" leave-from="opacity-100 translate-y-0 sm:scale-100" leave-to="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95">
-            <DialogPanel class="relative transform overflow-hidden rounded-lg bg-zinc-800 text-white px-4 pb-4 pt-5 text-left shadow-xl transition-all my-8 w-full m-6">
+            <DialogPanel class="relative transform overflow-hidden rounded-lg bg-zinc-900 text-white px-4 pb-4 pt-4 text-left shadow-xl transition-all my-8 m-6">
               <div v-if="window">
-                <div class="flex flex-row justify-end">
-                  <button type="button" class="relative rounded-md text-gray-300 hover:text-white focus:outline-none focus:ring-2 focus:ring-white" @click="windowId = null">
+                <div class="flex flex-row justify-between mb-2">
+                  <span class="text-2xl uppercase">Settings</span>
+                  <button type="button" class="relative rounded-md text-gray-300 hover:text-white focus:outline-none focus:ring-2 focus:ring-zinc-700" @click="windowId = null">
                     <XMarkIcon class="size-6" aria-hidden="true" />
                   </button>
                 </div>
@@ -23,7 +24,7 @@
                     <CheckBox id="timerAlwaysOnTop" v-model="window.alwaysOnTop">Window always on top</CheckBox>
 
                     <p class="text-sm mt-2">Content at Reset</p>
-                    <select v-model="window.contentAtReset" class="input p-2 text-black">
+                    <select v-model="window.contentAtReset" class="input p-2">
                       <option :value="ContentAtReset.Empty">Empty</option>
                       <option :value="ContentAtReset.Time">Time</option>
                       <option :value="ContentAtReset.Full">Full</option>
