@@ -39,7 +39,7 @@
       const timer = settingsStore.settings.timers[timerId]
       let windows: WindowsKV = {}
       Object.keys(timer.windows).forEach((windowId) => {
-        windows[windowId] = timer.windows[windowId].bounds
+        windows[windowId] = {...timer.windows[windowId].bounds}
       })
       timers[timerId] = windows
     })
