@@ -36,8 +36,10 @@ export class MoveSettingsToWindow implements BaseMigration {
             stopTimerAtZero: settings.stopTimerAtZero,
             windows: {
               [ulid()]: {
-                alwaysOnTop: settings.timerAlwaysOnTop,
-                bounds: oldConfig.window,
+                bounds: {
+                  ...oldConfig.window,
+                  alwaysOnTop: settings.timerAlwaysOnTop,
+                },
                 show: {
                   ...(settings.show),
                   hours: settings.showHours,

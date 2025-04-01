@@ -65,6 +65,7 @@ export const DEFAULT_SHOW_SECTIONS: ShowSections = {
 };
 
 export const DEFAULT_WINDOW_BOUNDS: WindowBounds = {
+  alwaysOnTop: DEFAULT_TIMER_ALWAYS_ON_TOP,
   fullscreenOn: null,
   x: 100,
   y: 100,
@@ -82,7 +83,6 @@ export const DEFAULT_TIMER_COLORS: WindowColors = {
 }
 
 export const DEFAULT_WINDOW_SETTINGS: WindowSettings = {
-  alwaysOnTop: DEFAULT_TIMER_ALWAYS_ON_TOP,
   bounds: DEFAULT_WINDOW_BOUNDS,
   show: DEFAULT_SHOW_SECTIONS,
   messageBoxFixedHeight: DEFAULT_MESSAGE_BOX_FIXED_HEIGHT,
@@ -136,6 +136,7 @@ export interface ShowSections {
 }
 
 export interface WindowBounds {
+  alwaysOnTop: boolean
   fullscreenOn: number,
   x: number,
   y: number,
@@ -153,7 +154,6 @@ export interface WindowColors {
 }
 
 export interface WindowSettings {
-  alwaysOnTop: boolean
   bounds: WindowBounds
   show: ShowSections
   messageBoxFixedHeight: boolean

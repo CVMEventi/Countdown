@@ -50,7 +50,7 @@
 <script lang="ts" setup>
 import {computed, ref} from "vue";
 import Display = Electron.Display;
-import {Windows, WindowSettings} from '../../common/config'
+import {WindowBounds, Windows, WindowSettings} from '../../common/config'
 
 defineOptions({
   name: 'ScreensDrag',
@@ -117,7 +117,8 @@ function drag(event: MouseEvent, key: string) {
   event.preventDefault();
   const mouseCoordinates = getMousePosition(event);
 
-  let newWindow = {
+  let newWindow: WindowBounds = {
+    alwaysOnTop: windows.value[key].bounds.alwaysOnTop,
     x: Math.round(mouseCoordinates.x - offset.value.x),
     y: Math.round(mouseCoordinates.y - offset.value.y),
     width: windows.value[key].bounds.width,

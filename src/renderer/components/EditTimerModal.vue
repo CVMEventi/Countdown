@@ -21,7 +21,7 @@
                     <p class="text-lg uppercase">Timer</p>
                     <CheckBox id="showHours" v-model="window.show.hours">Show hours</CheckBox>
                     <CheckBox id="pulseAtZero" v-model="window.pulseAtZero">Pulse at zero</CheckBox>
-                    <CheckBox id="timerAlwaysOnTop" v-model="window.alwaysOnTop">Window always on top</CheckBox>
+                    <CheckBox id="timerAlwaysOnTop" v-model="window.bounds.alwaysOnTop">Window always on top</CheckBox>
 
                     <p class="text-sm mt-2">Content at Reset</p>
                     <select v-model="window.contentAtReset" class="input p-2">

@@ -6,9 +6,9 @@
   import {useTimersStore} from "../stores/timers.ts"
   import {ipcRenderer} from "electron"
   import {useSettingsStore} from '../stores/settings.ts'
-  import {onBeforeMount, onMounted, watch} from 'vue'
+  import {onBeforeMount, watch} from 'vue'
   import {useDebounceFn, watchIgnorable} from '@vueuse/core'
-  import {Timers, WindowBounds, Windows} from '../../common/config.ts'
+  import {WindowBounds} from '../../common/config.ts'
   import {useGlobalStore} from '../stores/global.ts'
 
   const timersStore = useTimersStore()

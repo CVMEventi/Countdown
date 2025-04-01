@@ -109,7 +109,7 @@ export class TimersOrchestrator {
       frame: false,
       enableLargerThanScreen: true,
       transparent: true,
-      alwaysOnTop: windowSettings.alwaysOnTop,
+      alwaysOnTop: windowSettings.bounds.alwaysOnTop,
     });
 
     countdownWindowHandler.onCreated(async function (browserWindow: BrowserWindow) {
@@ -177,6 +177,8 @@ export class TimersOrchestrator {
       height: windowSettings.bounds.height,
       width: windowSettings.bounds.width
     })
+
+    browserWindow.setAlwaysOnTop(windowSettings.bounds.alwaysOnTop)
   }
 
   destroyWindow(timerId: string, windowId: string) {
@@ -250,6 +252,7 @@ export class TimersOrchestrator {
     const windowSettings = this.timers[timerId].settings.windows[windowId]
 
     return {
+      alwaysOnTop: windowSettings.bounds.alwaysOnTop,
       width: windowBounds.width,
       height: windowBounds.height,
       x: windowBounds.x,
