@@ -38,7 +38,7 @@
         <ScreensDrag :screens="screens" v-model:windows="timers[currentTimer].windows" />
       </div>
       <div class="flex flex-row justify-end">
-        <button @click="createWindow" class="relative min-w-0 overflow-hidden font-normal text-white bg-green-500 py-0.5 px-1 text-sm text-center hover:bg-green-600 focus:z-10 rounded-lg"><PlusIcon class="h-6" /></button>
+        <button title="Add window" @click="createWindow" class="relative min-w-0 overflow-hidden font-normal text-white bg-green-500 py-0.5 px-1 text-sm text-center hover:bg-green-600 focus:z-10 rounded-lg"><PlusIcon class="h-6" /></button>
       </div>
       <div class="flex flex-col gap-2">
         <Card class="inline-flex gap-2 items-end" v-for="(window, key, index) in timers[currentTimer].windows">
@@ -73,14 +73,19 @@
             <p class="text-base">Height</p>
             <input v-model="window.bounds.height" type="number" class="input w-20 px-2 sm:text-sm">
           </div>
-          <SButton class="inline-flex" tiny type="info" @click="getWindowBounds(key as string)"><ArrowUturnLeftIcon class="w-5" /><WindowIcon class="w-5" /> </SButton>
+          <SButton title="Save current position and size of window" class="inline-flex" tiny type="info" @click="getWindowBounds(key as string)"><ArrowUturnLeftIcon class="w-5" /><WindowIcon class="w-5" /> </SButton>
           <div class="inline-flex ml-auto flex-row gap-2">
-            <SButton tiny type="info" @click="editWindow(key as string)"><CogIcon class="w-5" /></SButton>
-            <SButton tiny type="danger"
+            <SButton title="Settings" tiny type="info" @click="editWindow(key as string)"><CogIcon class="w-5" /></SButton>
+            <SButton title="Delete" tiny type="danger"
                      @click="removeWindow(key as string)"
                      :disabled="Object.keys(timers[currentTimer].windows).length < 2"><TrashIcon class="w-5" /></SButton>
           </div>
         </Card>
+      </div>
+    </div>
+    <div class="flex flex-row justify-end text-white bg-zinc-800 px-1 py-1 -mb-1 -mx-2">
+      <div>
+        <input :value="currentTimer" readonly type="text" @click="clipboard.writeText(currentTimer);" class="input text-center w-[18.5rem]" />
       </div>
     </div>
     <EditTimerModal v-model:window="editingWindow" v-model:window-id="editingWindowId" />
@@ -95,7 +100,7 @@ import TimersNavigation from "../components/TimersNavigation.vue";
 import TimerTabButton from "../components/TimerTabButton.vue";
 import Card from "../components/Card.vue";
 import InputWithButton from "../components/InputWithButton.vue";
-import {ArrowsRightLeftIcon, PlusIcon, TrashIcon, WindowIcon, ArrowUturnLeftIcon, CogIcon} from "@heroicons/vue/20/solid";
+import {ArrowsRightLeftIcon, PlusIcon, TrashIcon, WindowIcon, ArrowUturnLeftIcon, CogIcon, ClipboardIcon} from "@heroicons/vue/20/solid";
 import CheckBox from "../components/CheckBox.vue";
 import TopBar from '../components/TopBar.vue'
 import BaseContainer from '../components/BaseContainer.vue'
@@ -107,6 +112,7 @@ import SButton from '../components/SButton.vue'
 import EditTimerModal from '../components/EditTimerModal.vue'
 import {ulid} from 'ulid'
 import DeleteTimerModal from '../components/DeleteTimerModal.vue'
+import {clipboard} from 'electron'
 
 const screens = ref<Electron.Display[]>([])
 const settingsStore = useSettingsStore()
