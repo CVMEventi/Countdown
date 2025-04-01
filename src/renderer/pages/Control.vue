@@ -4,8 +4,8 @@
       <TimersNavigation>
         <TimerTabButton
           v-for="(timer, key) in settingsStore.settings.timers"
-          @click="currentTimer = key as string"
-          :active="currentTimer === key as string">
+          @click="globalStore.currentTimer = key as string"
+          :active="globalStore.currentTimer === key as string">
           {{ timer.name }}
         </TimerTabButton>
       </TimersNavigation>
@@ -14,7 +14,7 @@
       <div class="flex gap-2">
         <Card class="clock-setup justify-center">
           <div class="uppercase text-white">Set</div>
-          <TimeInput @update:modelValue="timerControl.set(currentTimer, $event);" :modelValue="currentUpdate.setSeconds" color="white"/>
+          <TimeInput @update:modelValue="timerControl.set(globalStore.currentTimer, $event);" :modelValue="currentUpdate.setSeconds" color="white"/>
           <div class="uppercase mt-2 text-white flex flex-row justify-between">
             <span>Count</span>
             <div class="flex flex-row items-center gap-1">
@@ -28,19 +28,19 @@
           <TimeInput color="red" :modelValue="currentUpdate.extraSeconds" :disabled="true"/>
         </Card>
         <Card class="control-buttons">
-          <SButton class="text-4xl mb-2 font-mono uppercase" @click="timerControl.start(currentTimer)">Start</SButton>
+          <SButton class="text-4xl mb-2 font-mono uppercase" @click="timerControl.start(globalStore.currentTimer)">Start</SButton>
           <SButton
             :disabled="currentUpdate.isReset"
             class="text-4xl mb-2 font-mono uppercase"
             type="warning"
-            @click="timerControl.toggle(currentTimer)"
+            @click="timerControl.toggle(globalStore.currentTimer)"
           >
             {{ currentUpdate.isRunning ? "Pause" : "Resume" }}
           </SButton>
           <SButton
             class="text-4xl mb-2 font-mono uppercase"
             type="danger"
-            @click="timerControl.reset(currentTimer)"
+            @click="timerControl.reset(globalStore.currentTimer)"
           >
             Reset
           </SButton>
@@ -98,7 +98,7 @@
 </template>
 
 <script lang="ts" setup>
-import {computed, nextTick, onBeforeMount, onMounted, ref, watch} from 'vue'
+import {computed, onMounted, ref, watch} from 'vue'
 import {ipcRenderer} from 'electron'
 import Card from '../components/Card.vue'
 import SButton from '../components/SButton.vue'
@@ -110,14 +110,16 @@ import duration from 'dayjs/plugin/duration'
 import {TimerControl} from "../TimerControl";
 import Display = Electron.Display;
 import InputWithButton from "../components/InputWithButton.vue";
+// @ts-ignore
 import {Howl} from "howler";
-import {CountdownSettings, DEFAULT_STORE} from "../../common/config";
 import TimerTabButton from "../components/TimerTabButton.vue";
 import TimersNavigation from "../components/TimersNavigation.vue";
 import {useTimersStore} from '../stores/timers.ts'
 import TopBar from '../components/TopBar.vue'
 import BaseContainer from '../components/BaseContainer.vue'
 import {useSettingsStore} from '../stores/settings.ts'
+import {useGlobalStore} from '../stores/global.ts'
+import exports from 'webpack'
 
 dayjs.extend(duration)
 const timerControl = new TimerControl();
@@ -128,14 +130,13 @@ defineOptions({
 
 let screens = ref<Display[]>([]);
 const settingsStore = useSettingsStore()
-let settings = ref<CountdownSettings>(DEFAULT_STORE.defaults.settings);
 const timersStore = useTimersStore()
+const globalStore = useGlobalStore()
 let message = ref('');
 let lastMessage = ref('');
 
-const currentTimer = ref<string|null>(null)
 const currentUpdate = computed(() => {
-  return timersStore.updates[currentTimer.value] ?? {
+  return timersStore.updates[globalStore.currentTimer] ?? {
     setSeconds: 0,
     countSeconds: 0,
     currentSeconds: 0,
@@ -150,27 +151,26 @@ const currentUpdate = computed(() => {
 })
 
 function sendMessage() {
-  timerControl.sendMessage(currentTimer.value, message.value);
+  timerControl.sendMessage(globalStore.currentTimer, message.value);
   lastMessage.value = message.value;
 }
 
 const deleteMessage = () => {
-  timerControl.sendMessage(currentTimer.value, '');
+  timerControl.sendMessage(globalStore.currentTimer, '');
   message.value = '';
 }
 
 watch(() => settingsStore.settings.timers, (timers) => {
-  if (currentTimer.value === undefined) {
+  if (globalStore.currentTimer === undefined) {
     const firstTimer = Object.keys(timers)[0]
-    currentTimer.value = firstTimer
+    globalStore.currentTimer = firstTimer
   }
 })
 
 onMounted(async () => {
   const firstTimer = Object.keys(settingsStore.settings.timers)[0]
-  currentTimer.value = firstTimer
+  globalStore.currentTimer = firstTimer
 
-  settings.value = await ipcRenderer.invoke('settings:get')
   screens.value = await ipcRenderer.invoke('screens:get');
 
   ipcRenderer.on('screens-updated', async () => {
@@ -188,15 +188,15 @@ onMounted(async () => {
 
 function jogMinutes(minutes: number) {
   if (!currentUpdate.value.isReset) {
-    timerControl.jogCurrent(currentTimer.value, minutes * 60);
+    timerControl.jogCurrent(globalStore.currentTimer, minutes * 60);
   } else {
-    timerControl.jogSet(currentTimer.value, minutes * 60);
+    timerControl.jogSet(globalStore.currentTimer, minutes * 60);
   }
 }
 
 function setPresetTime(minutes: number) {
   const secondsPerMinute = 60;
-  timerControl.set(currentTimer.value, minutes * secondsPerMinute);
+  timerControl.set(globalStore.currentTimer, minutes * secondsPerMinute);
 }
 
 </script>

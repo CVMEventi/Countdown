@@ -9,9 +9,11 @@
   import {onBeforeMount, onMounted, watch} from 'vue'
   import {useDebounceFn, watchIgnorable} from '@vueuse/core'
   import {Timers, WindowBounds, Windows} from '../../common/config.ts'
+  import {useGlobalStore} from '../stores/global.ts'
 
   const timersStore = useTimersStore()
   const settingsStore = useSettingsStore()
+  const globalStore = useGlobalStore()
 
   const emit = defineEmits<{
     (e: 'mounted'): void
@@ -57,6 +59,12 @@
       })
     })
   }, {deep: true})
+
+  watch(() => globalStore.currentTimer, () => {
+    if (globalStore.currentTimer) {
+      ipcRenderer.send('current-timer:set', globalStore.currentTimer)
+    }
+  })
 
   const save = useDebounceFn(async () => {
     await ipcRenderer.invoke('settings:set', null, JSON.stringify(settingsStore.settings))

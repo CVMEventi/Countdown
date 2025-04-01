@@ -27,6 +27,10 @@ export default function addIpcHandles(app: CountdownApp)
     return app.timersOrchestrator.getWindowBounds(timerId, windowId)
   })
 
+  ipcMain.on('current-timer:set', (event, timerId: string) => {
+    app.timersOrchestrator.currentTimer = timerId;
+  })
+
   ipcMain.handle('settings:get', (event, key: string) => {
     return app.config.get(key)
   })

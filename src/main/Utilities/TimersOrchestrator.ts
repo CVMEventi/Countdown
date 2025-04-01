@@ -37,6 +37,7 @@ interface TimersKV {
 export class TimersOrchestrator {
   app: CountdownApp
   timers: TimersKV = {}
+  currentTimer: string|null = null
 
   constructor(app: CountdownApp) {
     this.app = app

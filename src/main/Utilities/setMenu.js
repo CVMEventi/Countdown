@@ -27,14 +27,18 @@ export default (mainWindowHandler, timersOrchestrator) => {
           label: 'Start/Pause',
           accelerator: 'CommandOrControl+Enter',
           click: async () => {
-            timersOrchestrator.timers[0].engine.startResumePause();
+            if (timersOrchestrator.currentTimer) {
+              timersOrchestrator.timers[timersOrchestrator.currentTimer].engine.startResumePause();
+            }
           },
         },
         {
           label: 'Reset',
           accelerator: 'CommandOrControl+R',
           click: async () => {
-            timersOrchestrator.timers[0].engine.reset();
+            if (timersOrchestrator.currentTimer) {
+              timersOrchestrator.timers[timersOrchestrator.currentTimer].engine.reset();
+            }
           }
         }
       ]
