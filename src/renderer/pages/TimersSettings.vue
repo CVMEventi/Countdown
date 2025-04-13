@@ -64,19 +64,31 @@
           </div>
           <div class="inline-flex flex-col">
             <p class="text-base">X</p>
-            <input v-model="window.bounds.x" type="number" class="input w-20 rounded-lg px-2 sm:text-sm">
+            <input
+              :value="window.bounds.x"
+              @input="window.bounds.x = $event.target.value !== '' ? parseInt($event.target.value) : 0"
+              type="number" class="input w-20 rounded-lg px-2 sm:text-sm">
           </div>
           <div class="inline-flex flex-col">
             <p class="text-base">Y</p>
-            <input v-model="window.bounds.y" type="number" class="input w-20 rounded-lg px-2 sm:text-sm">
+            <input
+              :value="window.bounds.y"
+              @input="window.bounds.y = $event.target.value !== '' ? parseInt($event.target.value) : 0"
+              type="number" class="input w-20 rounded-lg px-2 sm:text-sm">
           </div>
           <div class="inline-flex flex-col">
             <p class="text-base">Width</p>
-            <input v-model="window.bounds.width" type="number" class="input w-20 rounded-lg px-2 sm:text-sm">
+            <input
+              :value="window.bounds.width"
+              @input="window.bounds.width = $event.target.value !== '' ? parseInt($event.target.value) : 0"
+              type="number" class="input w-20 rounded-lg px-2 sm:text-sm">
           </div>
           <div class="inline-flex flex-col">
             <p class="text-base">Height</p>
-            <input v-model="window.bounds.height" type="number" class="input w-20 px-2 sm:text-sm">
+            <input
+              :value="window.bounds.height"
+              @input="window.bounds.height = $event.target.value !== '' ? parseInt($event.target.value) : 0"
+              type="number" class="input w-20 px-2 sm:text-sm">
           </div>
           <SButton title="Save current position and size of window" class="inline-flex" tiny type="info" @click="getWindowBounds(key as string)"><ArrowUturnLeftIcon class="w-5" /><WindowIcon class="w-5" /> </SButton>
           <div class="inline-flex ml-auto flex-row gap-2">
