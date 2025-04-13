@@ -16,22 +16,27 @@
       </template>
     </TopBar>
     <div v-if="timers[currentTimer]" class="mt-1 flex flex-1 flex-col gap-2 p-1 min-h-0 text-white overflow-y-scroll">
-      <Card class="border inline-flex flex-row items-center gap-10 justify-between">
-        <CheckBox id="stopTimerAtZero" v-model="timers[currentTimer].stopTimerAtZero">Stop timer at 0</CheckBox>
-        <CheckBox id="setTimeLive" v-model="timers[currentTimer].setTimeLive">Set time live</CheckBox>
-        <div class="flex flex-row gap-2 items-center">
-          <span class="text-sm">Bar turns yellow at</span>
-          <input-with-button
-            @click="updateYellowOption(currentTimer)"
-            @input="updateYellowValue($event.target.value, currentTimer)"
-            type="number"
-            :model-value="timers[currentTimer].yellowAtOption === 'minutes' ? timers[currentTimer].yellowAtMinutes : timers[currentTimer].yellowAtPercent">
-            {{ timers[currentTimer].yellowAtOption === 'minutes' ? 'm' : '%' }} <arrows-right-left-icon class="ml-3 w-4 h-4" />
-          </input-with-button>
+      <Card class="inline-flex flex-col gap-2">
+        <div class="inline-flex flex-row items-center gap-10 justify-between">
+          <CheckBox id="stopTimerAtZero" v-model="timers[currentTimer].stopTimerAtZero">Stop timer at 0</CheckBox>
+          <CheckBox id="setTimeLive" v-model="timers[currentTimer].setTimeLive">Set time live</CheckBox>
+          <div class="flex flex-row gap-2 items-center">
+            <span class="text-sm">Bar turns yellow at</span>
+            <input-with-button
+              @click="updateYellowOption(currentTimer)"
+              @input="updateYellowValue($event.target.value, currentTimer)"
+              type="number"
+              :model-value="timers[currentTimer].yellowAtOption === 'minutes' ? timers[currentTimer].yellowAtMinutes : timers[currentTimer].yellowAtPercent">
+              {{ timers[currentTimer].yellowAtOption === 'minutes' ? 'm' : '%' }} <arrows-right-left-icon class="ml-3 w-4 h-4" />
+            </input-with-button>
+          </div>
+          <div class="inline-flex flex-row gap-2 items-center">
+            <p class="text-sm">Ms per second</p>
+            <input class="input rounded-lg text-center px-2 sm:text-sm border-gray-300 w-24" type="number" @input="(event) => timers[currentTimer].timerDuration = parseInt(event.target.value)" :value="timers[currentTimer].timerDuration">
+          </div>
         </div>
-        <div class="inline-flex flex-row gap-2 items-center">
-          <p class="text-sm">Ms per second</p>
-          <input class="input rounded-lg text-center px-2 sm:text-sm border-gray-300 w-24" type="number" @input="(event) => timers[currentTimer].timerDuration = parseInt(event.target.value)" :value="timers[currentTimer].timerDuration">
+        <div>
+
         </div>
       </Card>
       <div class="h-[40vh]">
