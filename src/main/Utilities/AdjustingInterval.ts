@@ -4,7 +4,9 @@ export default class AdjustingInterval {
   interval = 1000;
   callback: () => void = null;
   _timeout: NodeJS.Timeout = null;
-  _expected = 0;
+  _startingTime = Date.now();
+  _drifts: number[] = [];
+  _lastActualInterval = 1000;
 
   constructor(callback: () => void, interval: number) {
     this.callback = callback;
@@ -12,8 +14,9 @@ export default class AdjustingInterval {
   }
 
   start() {
-    this._expected = Date.now() + this.interval;
-    this._timeout = setTimeout(this.step.bind(this), this.interval);
+    this._startingTime = Date.now();
+    this._lastActualInterval = this.interval;
+    this._timeout = setTimeout(this.step.bind(this), this._lastActualInterval);
   }
 
   stop() {
@@ -26,12 +29,17 @@ export default class AdjustingInterval {
   }
 
   step() {
-    const drift = Date.now() - this._expected;
+    const elapsedTime = Date.now() - this._startingTime;
+    const drift = elapsedTime - this._lastActualInterval;
     if (drift > this.interval) {
       this.stop();
     }
     this.callback();
-    this._expected += this.interval;
-    this._timeout = setTimeout(this.step.bind(this), Math.max(0, this.interval - drift));
+
+    this._drifts = this._drifts.slice(-59).concat(drift);
+    const avgDrift = Math.round(this._drifts.reduce((partialSum, drift) => partialSum + drift, 0) / this._drifts.length);
+    this._startingTime += elapsedTime // to include the processing time between one second and another
+    this._lastActualInterval = Math.max(0, this.interval - avgDrift);
+    this._timeout = setTimeout(this.step.bind(this), Math.max(0, this._lastActualInterval));
   }
 }
