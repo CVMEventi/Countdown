@@ -49,7 +49,7 @@ jobs:
           APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
       - name: Build arm64
-        if: ${{ runner.arch == 'ARM64' }}
+        if: ${{ runner.os == 'macOS' }}
         run: |
           yarn make --arch arm64
         env:
