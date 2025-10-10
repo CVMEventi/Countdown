@@ -78,7 +78,7 @@ jobs:
         uses: actions/upload-artifact@v4
         if: ${{ runner.os == 'Linux' }}
         with:
-          name: linux-build
+          name: linux-build-${{ runner.arch }}
           path: |
             out/make/**/*.rpm
             out/make/**/*.deb
