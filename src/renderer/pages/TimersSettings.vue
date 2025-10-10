@@ -36,7 +36,14 @@
           </div>
         </div>
         <div>
-
+          <div class="text-sm flex gap-3 items-center flex-row mt-3 mb-1">
+            <div class="flex items-center gap-1">
+              Audio:
+              <SButton :disabled="!timers[currentTimer].audioFile" tiny type="danger" @click="timers[currentTimer].audioFile = null"><TrashIcon class="w-5"/></SButton>
+              <SButton tiny @click="selectFile">Select file</SButton>
+            </div>
+            <div class="flex-1 break-words">Current: {{ timers[currentTimer].audioFile }}</div>
+          </div>
         </div>
       </Card>
       <div class="h-[40vh]">
@@ -185,6 +192,13 @@ const createTimer = (name: string) => {
         [ulid()]: DEFAULT_WINDOW_SETTINGS
       }
     }
+  }
+}
+
+const selectFile = async () => {
+  const file = await ipcRenderer.invoke('audio:select-file')
+  if (file) {
+    timers.value[currentTimer.value].audioFile = file
   }
 }
 
