@@ -203,7 +203,7 @@ const selectFile = async () => {
 }
 
 const createWindow = () => {
-  timers.value[currentTimer.value].windows[ulid()] = DEFAULT_WINDOW_SETTINGS
+  timers.value[currentTimer.value].windows[ulid()] = structuredClone(DEFAULT_WINDOW_SETTINGS)
 }
 
 const getWindowBounds = async (windowId: string) => {
