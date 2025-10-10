@@ -22,13 +22,11 @@
     </div>
     <div
       v-if="settings.show.timer && ((settings.contentAtReset === ContentAtReset.Full && update.isReset) || !update.isReset)"
-      class="text-center text-time font-digital-clock"
+      class="text-center text-time font-digital-clock transition-opacity duration-[1000ms]"
       :style="{
-        color: timerText
+        color: timerText,
       }"
-      :class="{
-        'animate-pulse-fast': !update.isReset && update.isCountingUp && settings.pulseAtZero
-      }"
+      :class="timerOpacity"
     >
       {{ timer }}
     </div>
@@ -55,14 +53,15 @@ import {ipcRenderer} from 'electron'
 import dayjs from 'dayjs'
 import duration from 'dayjs/plugin/duration'
 import {
-  ContentAtReset,
-  DEFAULT_WINDOW_SETTINGS,
+  ContentAtReset, DEFAULT_TIMER_SETTINGS,
+  DEFAULT_WINDOW_SETTINGS, TimerSettings,
   WindowSettings
-} from "../../common/config";
+} from '../../common/config'
 import {MessageUpdate, TimerEngineUpdate} from "../../common/TimerInterfaces";
 import ProgressBar from "../components/ProgressBar.vue";
 import Clock from "../components/Clock.vue";
 import {IpcGetWindowSettingsArgs} from "../../common/IpcInterfaces";
+import TimersSettings from './TimersSettings.vue'
 
 dayjs.extend(duration)
 
@@ -82,7 +81,16 @@ let messageUpdate = ref<MessageUpdate>({
   timerId: null,
   message: null,
 })
-let settings = ref<WindowSettings>(DEFAULT_WINDOW_SETTINGS);
+let settings = ref<WindowSettings>(DEFAULT_WINDOW_SETTINGS)
+let timerSettings = ref<TimerSettings>(DEFAULT_TIMER_SETTINGS)
+
+const timerOpacity = computed(() => {
+  if (!update.value.isReset && update.value.isCountingUp && settings.value.pulseAtZero) {
+    return update.value.currentSeconds % 2 ? 'pulse-1' : 'pulse-2'
+  } else {
+    return 'opacity-100'
+  }
+})
 
 const timer = computed(() => {
   const currentTimeInSeconds = dayjs.duration(Math.abs(update.value.currentSeconds), 'seconds')
@@ -120,13 +128,14 @@ const timerText = computed(() => {
 })
 
 const backgroundColor = computed(() => {
-  return update.value.isReset ? settings.value.colors.resetBackground : settings.value.colors.backgroundColor
+  return update.value.isReset ? settings.value.colors.resetBackground : settings.value.colors.background
 })
 
 const cssVars = computed(() => {
   return {
     '--message-length': messageUpdate.value.message?.length ?? 1,
     '--magic-number-font-size': 17,
+    '--animation-duration': `${timerSettings.value.timerDuration}ms`
   }
 });
 
@@ -141,6 +150,7 @@ onMounted(async () => {
     windowId: windowId.value,
   }
   settings.value = await ipcRenderer.invoke('settings:get-window', args)
+  timerSettings.value = await ipcRenderer.invoke('settings:get', `timers.${timerId.value}`)
 
   ipcRenderer.on('update', (event, arg) => {
     update.value = arg;
@@ -149,16 +159,19 @@ onMounted(async () => {
     console.log(arg);
     messageUpdate.value = arg;
   })
-  ipcRenderer.on('settings:updated', (event, arg) => {
+  ipcRenderer.on('settings:updated', async (event, arg) => {
     settings.value = {
       ...settings.value,
       ...arg,
     }
+
+    timerSettings.value = await ipcRenderer.invoke('settings:get', `timers.${timerId.value}`)
   })
 });
 </script>
 
 <style scoped>
+
 .drag {
   -webkit-user-select: none;
   -webkit-app-region: drag;
@@ -184,5 +197,31 @@ onMounted(async () => {
 
 .message-box-fixed-height {
   height: min(18vh, 12vw);
+}
+
+.pulse-1 {
+  animation: pulse-1 var(--animation-duration) cubic-bezier(0.4, 0, 0.6, 1);
+}
+
+.pulse-2 {
+  animation: pulse-2 var(--animation-duration) cubic-bezier(0.4, 0, 0.6, 1);
+}
+
+@keyframes pulse-1 {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: .5;
+  }
+}
+
+@keyframes pulse-2 {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: .5;
+  }
 }
 </style>
