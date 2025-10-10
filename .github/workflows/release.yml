@@ -43,12 +43,13 @@ jobs:
           APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
 
       - name: Publish x64
+        if: ${{ runner.arch == 'X64' || runner.os == 'macOS' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: yarn run publish --arch x64
 
       - name: Publish arm64
-        if: ${{ runner.os == 'macOS' }}
+        if: ${{ runner.arch == 'ARM64' || runner.os == 'macOS'}}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           APPLE_ID: ${{ secrets.APPLE_ID }}
