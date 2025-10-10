@@ -1,13 +1,13 @@
 <template>
   <div
     :style="{
-      backgroundColor: update.isReset ? settings.colors.resetBackground : backgroundColor,
+      backgroundColor,
     }"
     v-if="settings.contentAtReset === ContentAtReset.Empty && update.isReset" class="h-full drag"></div>
   <div
     v-if="settings.contentAtReset !== ContentAtReset.Empty || (settings.contentAtReset === ContentAtReset.Empty && !update.isReset)"
     :style="{
-      backgroundColor: update.isReset ? settings.colors.resetBackground : backgroundColor,
+      backgroundColor,
       ...cssVars
     }"
     class="h-full flex justify-center flex-col drag"
@@ -79,6 +79,7 @@ let update = ref<TimerEngineUpdate>({
   timerEndsAt: null,
 });
 let messageUpdate = ref<MessageUpdate>({
+  timerId: null,
   message: null,
 })
 let settings = ref<WindowSettings>(DEFAULT_WINDOW_SETTINGS);
@@ -119,7 +120,7 @@ const timerText = computed(() => {
 })
 
 const backgroundColor = computed(() => {
-  return settings.value.colors.background;
+  return update.value.isReset ? settings.value.colors.resetBackground : settings.value.colors.backgroundColor
 })
 
 const cssVars = computed(() => {
