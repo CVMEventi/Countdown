@@ -34,6 +34,15 @@ jobs:
       - name: Install dependencies
         run: yarn
 
+      - name: Install flatpak-builder and eu-strip
+        if: ${{ runner.os == 'Linux' }}
+        run: |
+          sudo apt-get install flatpak -y
+          sudo apt-get install flatpak-builder -y
+          sudo apt-get install elfutils -y
+          sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+          sudo flatpak install flathub org.freedesktop.Platform//21.08 org.freedesktop.Sdk//21.08 -y
+
       - name: Add macOS certs
         if: matrix.os == 'macos-latest'
         run: chmod +x ./.github/add-macos-certificate.sh && ./.github/add-macos-certificate.sh
