@@ -137,6 +137,7 @@ export class TimersOrchestrator {
     mainBrowserWindow.webContents.send('update', timerId, update);
     Object.keys(this.timers[timerId].windows).forEach(windowId => {
       const browserWinHandler = this.timers[timerId].windows[windowId];
+      if (!browserWinHandler.browserWindow) return
       browserWinHandler.browserWindow.webContents.send('update', update);
     })
   }
@@ -278,5 +279,12 @@ export class TimersOrchestrator {
       console.log(e);
       return;
     }
+  }
+
+  cleanUp(): void {
+    Object.keys(this.timers).forEach(timerId => {
+      const timer = this.timers[timerId];
+      timer.engine.reset()
+    })
   }
 }
