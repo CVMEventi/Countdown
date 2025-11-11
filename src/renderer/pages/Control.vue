@@ -13,19 +13,27 @@
     <div class="countdown-tab p-1">
       <div class="flex gap-2">
         <Card class="clock-setup justify-center">
-          <div class="uppercase text-white">Set</div>
+          <div class="uppercase text-white flex flex-row justify-between">
+            <span>Set</span>
+            <div>
+              <div class="flex flex-row items-center gap-1" v-if="followingTimer">
+                <ArrowRightIcon class="w-6 h-6 inline-flex" />
+                <span>{{ settingsStore.settings.timers[followingTimer].name }}</span>
+              </div>
+            </div>
+          </div>
           <TimeInput @update:modelValue="timerControl.set(globalStore.currentTimer, $event);" :modelValue="currentUpdate.setSeconds" color="white"/>
           <div class="uppercase mt-2 text-white flex flex-row justify-between">
             <span>Count</span>
             <div class="flex flex-row items-center gap-1">
-              <play-pause-icon v-if="currentUpdate.timerEndsAt" class="w-6 h-6 inline-flex" />
-              <span>{{ currentUpdate.timerEndsAt }}</span>
+              <PlayPauseIcon v-if="followingTimer ? followingUpdate.timerEndsAt : currentUpdate.timerEndsAt" class="w-6 h-6 inline-flex" />
+              <span>{{ followingTimer ? followingUpdate.timerEndsAt : currentUpdate.timerEndsAt }}</span>
             </div>
 
           </div>
-          <TimeInput :modelValue="currentUpdate.countSeconds" color="green" :disabled="true"/>
+          <TimeInput :modelValue="followingTimer ? followingUpdate.countSeconds : currentUpdate.countSeconds" color="green" :disabled="true"/>
           <div class="uppercase mt-2 text-white">Extra</div>
-          <TimeInput color="red" :modelValue="currentUpdate.extraSeconds" :disabled="true"/>
+          <TimeInput color="red" :modelValue="followingTimer ? currentUpdate.extraSeconds : currentUpdate.extraSeconds" :disabled="true"/>
         </Card>
         <Card class="control-buttons">
           <SButton class="text-4xl mb-2 font-mono uppercase" @click="timerControl.start(globalStore.currentTimer)">Start</SButton>
@@ -104,7 +112,7 @@ import Card from '../components/Card.vue'
 import SButton from '../components/SButton.vue'
 import TimeInput from '../components/TimeInput.vue'
 import Jog from "../components/Jog.vue";
-import { PlayPauseIcon, PlusIcon, MinusIcon, TrashIcon } from '@heroicons/vue/24/outline';
+import { PlayPauseIcon, PlusIcon, MinusIcon, TrashIcon, ArrowRightIcon } from '@heroicons/vue/24/outline';
 import dayjs from 'dayjs'
 import duration from 'dayjs/plugin/duration'
 import {TimerControl} from "../TimerControl";
@@ -148,6 +156,22 @@ const currentUpdate = computed(() => {
     isRunning: false,
     timerEndsAt: null,
   }
+})
+const followingUpdate = computed(() => {
+  const followTimer = settingsStore.settings.timers[globalStore.currentTimer].followTimer
+  if (currentUpdate.value.isReset && followTimer) {
+    return timersStore.updates[followTimer]
+  }
+
+  return null
+})
+const followingTimer = computed(() => {
+  const followTimer = settingsStore.settings.timers[globalStore.currentTimer]?.followTimer
+  if (currentUpdate.value.isReset && followTimer) {
+    return followTimer
+  }
+
+  return null
 })
 
 function sendMessage() {

@@ -24,7 +24,7 @@
             <span class="text-sm">Bar turns yellow at</span>
             <input-with-button
               @click="updateYellowOption(currentTimer)"
-              @input="updateYellowValue($event.target.value, currentTimer)"
+              @input="updateYellowValue($event, currentTimer)"
               type="number"
               :model-value="timers[currentTimer].yellowAtOption === 'minutes' ? timers[currentTimer].yellowAtMinutes : timers[currentTimer].yellowAtPercent">
               {{ timers[currentTimer].yellowAtOption === 'minutes' ? 'm' : '%' }} <arrows-right-left-icon class="ml-3 w-4 h-4" />
@@ -33,6 +33,21 @@
           <div class="inline-flex flex-row gap-2 items-center">
             <p class="text-sm">Ms per second</p>
             <input class="input rounded-lg text-center px-2 sm:text-sm border-gray-300 w-24" type="number" @input="(event) => timers[currentTimer].timerDuration = parseInt(event.target.value)" :value="timers[currentTimer].timerDuration">
+          </div>
+        </div>
+        <div>
+          <div class="inline-flex flex-row gap-2 items-center">
+            <p class="text-sm">Follow timer</p>
+            <select v-model="timers[currentTimer].followTimer" class="input p-2 min-w-32">
+              <option :value="null">-</option>
+              <option
+                v-for="(id) in otherTimers"
+                :key="id"
+                :value="id"
+              >
+                {{ timers[id].name }}
+              </option>
+            </select>
           </div>
         </div>
         <div>
@@ -151,6 +166,9 @@ const editingWindow = computed(() => {
   return timers.value[currentTimer.value].windows[editingWindowId.value]
 })
 const deleteOpen = ref(false)
+const otherTimers = computed(() => {
+  return Object.keys(timers.value).filter((id) => id !== currentTimer.value)
+})
 
 onBeforeMount(async () => {
   screens.value = await ipcRenderer.invoke('screens:get')

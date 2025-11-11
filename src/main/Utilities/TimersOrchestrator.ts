@@ -135,10 +135,12 @@ export class TimersOrchestrator {
   _timerEngineUpdate(timerId: string, update: TimerEngineUpdate) {
     const mainBrowserWindow = this.app.mainWindowHandler.browserWindow;
     mainBrowserWindow.webContents.send('update', timerId, update);
-    Object.keys(this.timers[timerId].windows).forEach(windowId => {
-      const browserWinHandler = this.timers[timerId].windows[windowId];
-      if (!browserWinHandler.browserWindow) return
-      browserWinHandler.browserWindow.webContents.send('update', update);
+    Object.keys(this.timers).forEach(timer => {
+      Object.keys(this.timers[timer].windows).forEach(windowId => {
+        const browserWinHandler = this.timers[timer].windows[windowId];
+        if (!browserWinHandler.browserWindow) return
+        browserWinHandler.browserWindow.webContents.send('update', timerId, update);
+      })
     })
   }
 

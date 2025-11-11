@@ -48,7 +48,7 @@
 </template>
 
 <script lang="ts" setup>
-import {computed, onMounted, ref} from "vue";
+import { computed, onMounted, ref, toRaw } from 'vue'
 import {ipcRenderer} from 'electron'
 import dayjs from 'dayjs'
 import duration from 'dayjs/plugin/duration'
@@ -57,26 +57,38 @@ import {
   DEFAULT_WINDOW_SETTINGS, TimerSettings,
   WindowSettings
 } from '../../common/config'
-import {MessageUpdate, TimerEngineUpdate} from "../../common/TimerInterfaces";
+import { MessageUpdate, TimerEngineUpdate, TimerEngineUpdates } from '../../common/TimerInterfaces'
 import ProgressBar from "../components/ProgressBar.vue";
 import Clock from "../components/Clock.vue";
 import {IpcGetWindowSettingsArgs} from "../../common/IpcInterfaces";
 import TimersSettings from './TimersSettings.vue'
+import { Timer } from '../../main/Utilities/Timer.ts'
 
 dayjs.extend(duration)
 
-let update = ref<TimerEngineUpdate>({
-  setSeconds: 0,
-  countSeconds: 0,
-  currentSeconds: 0,
-  extraSeconds: 0,
-  secondsSetOnCurrentTimer: 0,
-  isCountingUp: false,
-  isExpiring: false,
-  isReset: true,
-  isRunning: false,
-  timerEndsAt: null,
-});
+let updates = ref<TimerEngineUpdates>({})
+let update = computed<TimerEngineUpdate>(() => {
+  const defaultValue: TimerEngineUpdate = {
+    setSeconds: 0,
+    countSeconds: 0,
+    currentSeconds: 0,
+    extraSeconds: 0,
+    secondsSetOnCurrentTimer: 0,
+    isCountingUp: false,
+    isExpiring: false,
+    isReset: true,
+    isRunning: false,
+    timerEndsAt: null,
+  }
+  const update = updates.value[timerId.value]
+  if (update && !update.isReset) {
+    return updates.value[timerId.value]
+  }
+  if ((update?.isReset ?? true) && timerSettings.value.followTimer) {
+    return updates.value[timerSettings.value.followTimer] ?? defaultValue
+  }
+  return defaultValue
+})
 let messageUpdate = ref<MessageUpdate>({
   timerId: null,
   message: null,
@@ -152,8 +164,8 @@ onMounted(async () => {
   settings.value = await ipcRenderer.invoke('settings:get-window', args)
   timerSettings.value = await ipcRenderer.invoke('settings:get', `timers.${timerId.value}`)
 
-  ipcRenderer.on('update', (event, arg) => {
-    update.value = arg;
+  ipcRenderer.on('update', (event, timerId: string, update: TimerEngineUpdate) => {
+    updates.value[timerId] = update;
   })
   ipcRenderer.on('message', (event, arg) => {
     console.log(arg);
