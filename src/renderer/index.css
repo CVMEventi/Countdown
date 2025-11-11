@@ -25,12 +25,6 @@
   @apply w-24 text-center border-0 font-mono
 }
 
-.input::-webkit-outer-spin-button,
-.input::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-
 @font-face {
   font-family: digital-7;
   src: url("./assets/fonts/digital-7.woff2");
