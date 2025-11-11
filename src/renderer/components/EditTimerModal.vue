@@ -38,6 +38,7 @@
                     <CheckBox id="showSecondsOnClock" v-model="window.show.secondsOnClock">Seconds on clock</CheckBox>
                     <CheckBox id="messageBoxFixedHeight" v-model="window.messageBoxFixedHeight">Message box fixed height</CheckBox>
                     <CheckBox id="use12HourClock" v-model="window.use12HourClock">12-Hour Clock</CheckBox>
+                    <CheckBox id="use12HourClock" v-model="window.show.minusSignOnExtra">Minus Sign on Extra</CheckBox>
                   </Card>
                   <Card class="inline-block border flex flex-col">
                     <div class="flex flex-col" style="min-width: 220px">

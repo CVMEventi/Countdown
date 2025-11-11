@@ -61,7 +61,8 @@ export const DEFAULT_SHOW_SECTIONS: ShowSections = {
   progress: true,
   clock: true,
   secondsOnClock: false,
-  hours: DEFAULT_SHOW_HOURS
+  hours: DEFAULT_SHOW_HOURS,
+  minusSignOnExtra: false,
 };
 
 export const DEFAULT_WINDOW_BOUNDS: WindowBounds = {
@@ -134,6 +135,7 @@ export interface ShowSections {
   clock: boolean
   secondsOnClock: boolean
   hours: boolean
+  minusSignOnExtra: boolean
 }
 
 export interface WindowBounds {
