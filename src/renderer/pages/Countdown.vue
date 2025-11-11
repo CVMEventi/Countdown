@@ -28,7 +28,7 @@
       }"
       :class="timerOpacity"
     >
-      {{ settings.show.minusSignOnExtra ? '-' : '' }}{{ timer }}
+      {{ settings.show.minusSignOnExtra && update.isCountingUp ? '-' : '' }}{{ timer }}
     </div>
     <progress-bar
       v-if="settings.show.progress && ((settings.contentAtReset === ContentAtReset.Full && update.isReset) || !update.isReset)"
