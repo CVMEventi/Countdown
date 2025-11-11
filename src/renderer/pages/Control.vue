@@ -26,14 +26,14 @@
           <div class="uppercase mt-2 text-white flex flex-row justify-between">
             <span>Count</span>
             <div class="flex flex-row items-center gap-1">
-              <PlayPauseIcon v-if="followingTimer ? followingUpdate.timerEndsAt : currentUpdate.timerEndsAt" class="w-6 h-6 inline-flex" />
-              <span>{{ followingTimer ? followingUpdate.timerEndsAt : currentUpdate.timerEndsAt }}</span>
+              <PlayPauseIcon v-if="followingUpdate ? followingUpdate.timerEndsAt : currentUpdate.timerEndsAt" class="w-6 h-6 inline-flex" />
+              <span>{{ followingUpdate ? followingUpdate.timerEndsAt : currentUpdate.timerEndsAt }}</span>
             </div>
 
           </div>
-          <TimeInput :modelValue="followingTimer ? followingUpdate.countSeconds : currentUpdate.countSeconds" color="green" :disabled="true"/>
+          <TimeInput :modelValue="followingUpdate ? followingUpdate.countSeconds : currentUpdate.countSeconds" color="green" :disabled="true"/>
           <div class="uppercase mt-2 text-white">Extra</div>
-          <TimeInput color="red" :modelValue="followingTimer ? currentUpdate.extraSeconds : currentUpdate.extraSeconds" :disabled="true"/>
+          <TimeInput color="red" :modelValue="followingUpdate ? followingUpdate.extraSeconds : currentUpdate.extraSeconds" :disabled="true"/>
         </Card>
         <Card class="control-buttons">
           <SButton class="text-4xl mb-2 font-mono uppercase" @click="timerControl.start(globalStore.currentTimer)">Start</SButton>
@@ -127,7 +127,6 @@ import TopBar from '../components/TopBar.vue'
 import BaseContainer from '../components/BaseContainer.vue'
 import {useSettingsStore} from '../stores/settings.ts'
 import {useGlobalStore} from '../stores/global.ts'
-import exports from 'webpack'
 
 dayjs.extend(duration)
 const timerControl = new TimerControl();
@@ -158,7 +157,7 @@ const currentUpdate = computed(() => {
   }
 })
 const followingUpdate = computed(() => {
-  const followTimer = settingsStore.settings.timers[globalStore.currentTimer].followTimer
+  const followTimer = settingsStore.settings.timers[globalStore.currentTimer]?.followTimer
   if (currentUpdate.value.isReset && followTimer) {
     return timersStore.updates[followTimer]
   }
