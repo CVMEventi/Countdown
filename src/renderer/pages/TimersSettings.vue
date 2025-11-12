@@ -114,6 +114,10 @@
           </div>
           <SButton title="Save current position and size of window" class="inline-flex" tiny type="info" @click="getWindowBounds(key as string)"><ArrowUturnLeftIcon class="w-5" /><WindowIcon class="w-5" /> </SButton>
           <div class="inline-flex ml-auto flex-row gap-2">
+            <SButton title="Hide/Show" tiny type="warning" @click="window.bounds.hidden = !window.bounds.hidden">
+              <EyeIcon v-if="window.bounds.hidden" class="w-5" />
+              <EyeSlashIcon v-if="!window.bounds.hidden" class="w-5" />
+            </SButton>
             <SButton title="Settings" tiny type="info" @click="editWindow(key as string)"><CogIcon class="w-5" /></SButton>
             <SButton title="Delete" tiny type="danger"
                      @click="removeWindow(key as string)"
@@ -139,7 +143,7 @@ import TimersNavigation from "../components/TimersNavigation.vue";
 import TimerTabButton from "../components/TimerTabButton.vue";
 import Card from "../components/Card.vue";
 import InputWithButton from "../components/InputWithButton.vue";
-import {ArrowsRightLeftIcon, PlusIcon, TrashIcon, WindowIcon, ArrowUturnLeftIcon, CogIcon, ClipboardIcon} from "@heroicons/vue/20/solid";
+import {ArrowsRightLeftIcon, PlusIcon, TrashIcon, WindowIcon, ArrowUturnLeftIcon, CogIcon, ClipboardIcon, EyeIcon, EyeSlashIcon} from "@heroicons/vue/20/solid";
 import CheckBox from "../components/CheckBox.vue";
 import TopBar from '../components/TopBar.vue'
 import BaseContainer from '../components/BaseContainer.vue'

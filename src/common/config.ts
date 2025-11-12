@@ -67,6 +67,7 @@ export const DEFAULT_SHOW_SECTIONS: ShowSections = {
 
 export const DEFAULT_WINDOW_BOUNDS: WindowBounds = {
   alwaysOnTop: DEFAULT_TIMER_ALWAYS_ON_TOP,
+  hidden: false,
   fullscreenOn: null,
   x: 100,
   y: 100,
@@ -140,10 +141,11 @@ export interface ShowSections {
 
 export interface WindowBounds {
   alwaysOnTop: boolean
-  fullscreenOn: number,
-  x: number,
-  y: number,
-  width: number,
+  hidden: boolean
+  fullscreenOn: number
+  x: number
+  y: number
+  width: number
   height: number
 }
 
