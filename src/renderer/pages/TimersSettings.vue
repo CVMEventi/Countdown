@@ -207,11 +207,11 @@ const updateYellowValue = (value: number, timerId: string) => {
 
 const createTimer = (name: string) => {
   timers.value[ulid()] = {
-    ...DEFAULT_TIMER_SETTINGS,
+    ...structuredClone(DEFAULT_TIMER_SETTINGS),
     ...{
       name,
       windows: {
-        [ulid()]: DEFAULT_WINDOW_SETTINGS
+        [ulid()]: structuredClone(DEFAULT_WINDOW_SETTINGS)
       }
     }
   }
