@@ -135,8 +135,14 @@ export class TimersOrchestrator {
   _timerEngineUpdate(timerId: string, update: TimerEngineUpdate) {
     const mainBrowserWindow = this.app.mainWindowHandler.browserWindow;
     mainBrowserWindow.webContents.send('update', timerId, update);
-    Object.keys(this.timers).forEach(timer => {
+    Object.keys(this.timers).forEach((timer) => {
       Object.keys(this.timers[timer].windows).forEach(windowId => {
+        if (update.isReset
+          && update.currentSeconds > 0
+          && timerId !== timer) {
+          return
+        }
+        console.log(update)
         const browserWinHandler = this.timers[timer].windows[windowId];
         if (!browserWinHandler.browserWindow) return
         browserWinHandler.browserWindow.webContents.send('update', timerId, update);

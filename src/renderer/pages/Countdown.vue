@@ -28,7 +28,7 @@
       }"
       :class="timerOpacity"
     >
-      {{ settings.show.minusSignOnExtra && update.isCountingUp ? '-' : '' }}{{ timer }}
+      {{ settings.show.minusSignOnExtra && update.isCountingUp && !update.isReset ? '-' : '' }}{{ timer }}
     </div>
     <progress-bar
       v-if="settings.show.progress && ((settings.contentAtReset === ContentAtReset.Full && update.isReset) || !update.isReset)"
@@ -81,7 +81,7 @@ let update = computed<TimerEngineUpdate>(() => {
     timerEndsAt: null,
   }
   const update = updates.value[timerId.value]
-  if (update && !update.isReset) {
+  if (update && (!update.isReset || timerSettings.value.followTimer === null)) {
     return updates.value[timerId.value]
   }
   if ((update?.isReset ?? true) && timerSettings.value.followTimer) {
