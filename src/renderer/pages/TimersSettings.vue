@@ -24,7 +24,7 @@
             <span class="text-sm">Bar turns yellow at</span>
             <input-with-button
               @click="updateYellowOption(currentTimer)"
-              @input="updateYellowValue($event.target.value, currentTimer)"
+              @input="updateYellowValue($event, currentTimer)"
               type="number"
               :model-value="timers[currentTimer].yellowAtOption === 'minutes' ? timers[currentTimer].yellowAtMinutes : timers[currentTimer].yellowAtPercent">
               {{ timers[currentTimer].yellowAtOption === 'minutes' ? 'm' : '%' }} <arrows-right-left-icon class="ml-3 w-4 h-4" />
@@ -36,7 +36,29 @@
           </div>
         </div>
         <div>
-
+          <div class="inline-flex flex-row gap-2 items-center">
+            <p class="text-sm">Follow timer</p>
+            <select v-model="timers[currentTimer].followTimer" class="input p-2 min-w-32">
+              <option :value="null">-</option>
+              <option
+                v-for="(id) in otherTimers"
+                :key="id"
+                :value="id"
+              >
+                {{ timers[id].name }}
+              </option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <div class="text-sm flex gap-3 items-center flex-row mt-3 mb-1">
+            <div class="flex items-center gap-1">
+              Audio:
+              <SButton :disabled="!timers[currentTimer].audioFile" tiny type="danger" @click="timers[currentTimer].audioFile = null"><TrashIcon class="w-5"/></SButton>
+              <SButton tiny @click="selectFile">Select file</SButton>
+            </div>
+            <div class="flex-1 break-words">Current: {{ timers[currentTimer].audioFile }}</div>
+          </div>
         </div>
       </Card>
       <div class="h-[40vh]">
@@ -92,6 +114,10 @@
           </div>
           <SButton title="Save current position and size of window" class="inline-flex" tiny type="info" @click="getWindowBounds(key as string)"><ArrowUturnLeftIcon class="w-5" /><WindowIcon class="w-5" /> </SButton>
           <div class="inline-flex ml-auto flex-row gap-2">
+            <SButton title="Hide/Show" tiny type="warning" @click="window.bounds.hidden = !window.bounds.hidden">
+              <EyeIcon v-if="window.bounds.hidden" class="w-5" />
+              <EyeSlashIcon v-if="!window.bounds.hidden" class="w-5" />
+            </SButton>
             <SButton title="Settings" tiny type="info" @click="editWindow(key as string)"><CogIcon class="w-5" /></SButton>
             <SButton title="Delete" tiny type="danger"
                      @click="removeWindow(key as string)"
@@ -117,7 +143,7 @@ import TimersNavigation from "../components/TimersNavigation.vue";
 import TimerTabButton from "../components/TimerTabButton.vue";
 import Card from "../components/Card.vue";
 import InputWithButton from "../components/InputWithButton.vue";
-import {ArrowsRightLeftIcon, PlusIcon, TrashIcon, WindowIcon, ArrowUturnLeftIcon, CogIcon, ClipboardIcon} from "@heroicons/vue/20/solid";
+import {ArrowsRightLeftIcon, PlusIcon, TrashIcon, WindowIcon, ArrowUturnLeftIcon, CogIcon, ClipboardIcon, EyeIcon, EyeSlashIcon} from "@heroicons/vue/20/solid";
 import CheckBox from "../components/CheckBox.vue";
 import TopBar from '../components/TopBar.vue'
 import BaseContainer from '../components/BaseContainer.vue'
@@ -144,6 +170,9 @@ const editingWindow = computed(() => {
   return timers.value[currentTimer.value].windows[editingWindowId.value]
 })
 const deleteOpen = ref(false)
+const otherTimers = computed(() => {
+  return Object.keys(timers.value).filter((id) => id !== currentTimer.value)
+})
 
 onBeforeMount(async () => {
   screens.value = await ipcRenderer.invoke('screens:get')
@@ -178,18 +207,25 @@ const updateYellowValue = (value: number, timerId: string) => {
 
 const createTimer = (name: string) => {
   timers.value[ulid()] = {
-    ...DEFAULT_TIMER_SETTINGS,
+    ...structuredClone(DEFAULT_TIMER_SETTINGS),
     ...{
       name,
       windows: {
-        [ulid()]: DEFAULT_WINDOW_SETTINGS
+        [ulid()]: structuredClone(DEFAULT_WINDOW_SETTINGS)
       }
     }
   }
 }
 
+const selectFile = async () => {
+  const file = await ipcRenderer.invoke('audio:select-file')
+  if (file) {
+    timers.value[currentTimer.value].audioFile = file
+  }
+}
+
 const createWindow = () => {
-  timers.value[currentTimer.value].windows[ulid()] = DEFAULT_WINDOW_SETTINGS
+  timers.value[currentTimer.value].windows[ulid()] = structuredClone(DEFAULT_WINDOW_SETTINGS)
 }
 
 const getWindowBounds = async (windowId: string) => {

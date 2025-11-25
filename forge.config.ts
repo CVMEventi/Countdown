@@ -14,6 +14,7 @@ import * as path from "path";
 import { APP_VERSION } from "./src/version";
 import MakerDMG from "@electron-forge/maker-dmg";
 import PublisherGithub from "@electron-forge/publisher-github";
+import MakerFlatpak from '@electron-forge/maker-flatpak'
 
 const appName = "Countdown";
 
@@ -47,6 +48,12 @@ const config: ForgeConfig = {
     new MakerRpm({}),
     new MakerDeb({}),
     new MakerDMG(),
+    new MakerFlatpak({
+      options: {
+        categories: ['Utility'],
+        files: []
+      }
+    }, [''])
   ],
   plugins: [
     new AutoUnpackNativesPlugin({}),

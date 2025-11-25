@@ -61,11 +61,13 @@ export const DEFAULT_SHOW_SECTIONS: ShowSections = {
   progress: true,
   clock: true,
   secondsOnClock: false,
-  hours: DEFAULT_SHOW_HOURS
+  hours: DEFAULT_SHOW_HOURS,
+  minusSignOnExtra: false,
 };
 
 export const DEFAULT_WINDOW_BOUNDS: WindowBounds = {
   alwaysOnTop: DEFAULT_TIMER_ALWAYS_ON_TOP,
+  hidden: false,
   fullscreenOn: null,
   x: 100,
   y: 100,
@@ -100,6 +102,7 @@ export const DEFAULT_TIMER_SETTINGS: TimerSettings = {
   timerDuration: DEFAULT_TIMER_DURATION,
   setTimeLive: DEFAULT_SET_TIME_LIVE,
   stopTimerAtZero: DEFAULT_STOP_TIMER_AT_ZERO,
+  followTimer: null,
   audioFile: null,
   windows: {[ulid()]: DEFAULT_WINDOW_SETTINGS},
 }
@@ -133,14 +136,16 @@ export interface ShowSections {
   clock: boolean
   secondsOnClock: boolean
   hours: boolean
+  minusSignOnExtra: boolean
 }
 
 export interface WindowBounds {
   alwaysOnTop: boolean
-  fullscreenOn: number,
-  x: number,
-  y: number,
-  width: number,
+  hidden: boolean
+  fullscreenOn: number
+  x: number
+  y: number
+  width: number
   height: number
 }
 
@@ -175,6 +180,7 @@ export interface TimerSettings {
   timerDuration: number
   setTimeLive: boolean
   stopTimerAtZero: boolean
+  followTimer: string
   audioFile: string
   windows: Windows
 }

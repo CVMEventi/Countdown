@@ -104,6 +104,7 @@ export class CountdownApp {
       screen.on('display-metrics-changed', () => screensUpdated(browserWindow))
 
       app.on('before-quit', () => {
+        this.timersOrchestrator.cleanUp()
         browserWindow.destroy()
       })
 

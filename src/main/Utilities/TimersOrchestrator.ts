@@ -105,11 +105,11 @@ export class TimersOrchestrator {
       y: windowSettings.bounds.y,
       height: windowSettings.bounds.height,
       width: windowSettings.bounds.width,
-      // fullscreen: true
       frame: false,
       enableLargerThanScreen: true,
       transparent: true,
       alwaysOnTop: windowSettings.bounds.alwaysOnTop,
+      show: !windowSettings.bounds.hidden
     });
 
     countdownWindowHandler.onCreated(async function (browserWindow: BrowserWindow) {
@@ -135,9 +135,18 @@ export class TimersOrchestrator {
   _timerEngineUpdate(timerId: string, update: TimerEngineUpdate) {
     const mainBrowserWindow = this.app.mainWindowHandler.browserWindow;
     mainBrowserWindow.webContents.send('update', timerId, update);
-    Object.keys(this.timers[timerId].windows).forEach(windowId => {
-      const browserWinHandler = this.timers[timerId].windows[windowId];
-      browserWinHandler.browserWindow.webContents.send('update', update);
+    Object.keys(this.timers).forEach((timer) => {
+      Object.keys(this.timers[timer].windows).forEach(windowId => {
+        if (update.isReset
+          && update.currentSeconds > 0
+          && timerId !== timer) {
+          return
+        }
+        console.log(update)
+        const browserWinHandler = this.timers[timer].windows[windowId];
+        if (!browserWinHandler.browserWindow) return
+        browserWinHandler.browserWindow.webContents.send('update', timerId, update);
+      })
     })
   }
 
@@ -179,6 +188,11 @@ export class TimersOrchestrator {
     })
 
     browserWindow.setAlwaysOnTop(windowSettings.bounds.alwaysOnTop)
+    if (windowSettings.bounds.hidden && browserWindow.isVisible()) {
+      browserWindow.hide()
+    } else if (!windowSettings.bounds.hidden && !browserWindow.isVisible()) {
+      browserWindow.show()
+    }
   }
 
   destroyWindow(timerId: string, windowId: string) {
@@ -253,6 +267,7 @@ export class TimersOrchestrator {
 
     return {
       alwaysOnTop: windowSettings.bounds.alwaysOnTop,
+      hidden: windowSettings.bounds.hidden,
       width: windowBounds.width,
       height: windowBounds.height,
       x: windowBounds.x,
@@ -278,5 +293,12 @@ export class TimersOrchestrator {
       console.log(e);
       return;
     }
+  }
+
+  cleanUp(): void {
+    Object.keys(this.timers).forEach(timerId => {
+      const timer = this.timers[timerId];
+      timer.engine.reset()
+    })
   }
 }
