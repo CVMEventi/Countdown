@@ -83,7 +83,6 @@ export class Timer {
 
     if (this.seconds <= 0 && this.stopsAtZero) {
       this.seconds = 0;
-      this.timerTickCallback(0);
       this.pause();
     }
 
