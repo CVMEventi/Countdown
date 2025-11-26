@@ -80,12 +80,12 @@ export class Timer {
 
   _timerTick() {
     this.seconds = this.seconds - 1;
-    this.timerTickCallback(this.seconds);
 
     if (this.seconds <= 0 && this.stopsAtZero) {
       this.seconds = 0;
-      this.timerTickCallback(0);
       this.pause();
     }
+
+    this.timerTickCallback(this.seconds);
   }
 }
