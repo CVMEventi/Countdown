@@ -212,11 +212,11 @@ onMounted(async () => {
 }
 
 .pulse-1 {
-  animation: pulse-1 var(--animation-duration) cubic-bezier(0.4, 0, 0.6, 1);
+  animation: pulse-1 var(--animation-duration) cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
 .pulse-2 {
-  animation: pulse-2 var(--animation-duration) cubic-bezier(0.4, 0, 0.6, 1);
+  animation: pulse-2 var(--animation-duration) cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
 @keyframes pulse-1 {
