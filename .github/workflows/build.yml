@@ -49,7 +49,7 @@ jobs:
         run: chmod +x ./.github/add-macos-certificate.sh && ./.github/add-macos-certificate.sh
         env:
           APPLE_CERTIFICATES: ${{ secrets.APPLE_CERTIFICATES }}
-          APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
+          APPLE_ID_PASSWORD: ${{ secrets.APPLE_CERTIFICATES_PASSWORD }}
 
       - name: Build x64
         if: ${{ runner.arch == 'X64' || runner.os == 'macOS' }}
