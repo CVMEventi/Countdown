@@ -13,16 +13,6 @@ export default function addIpcHandles(app: CountdownApp)
     app.timersOrchestrator.windowUpdated(timerId, windowId)
   })
 
-  ipcMain.on('temporary-settings-updated', (event, arg) => {
-    const browserWindow = app.countdownWindowHandler.browserWindow
-    browserWindow.webContents.send('temporary-settings-updated', arg)
-  })
-
-  ipcMain.on('send-to-countdown-window', (event, arg) => {
-    const browserWindow = app.countdownWindowHandler.browserWindow
-    browserWindow.webContents.send('command', arg)
-  })
-
   ipcMain.handle('countdown-bounds', (event, timerId: string, windowId: string) => {
     return app.timersOrchestrator.getWindowBounds(timerId, windowId)
   })

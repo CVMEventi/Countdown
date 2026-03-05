@@ -30,7 +30,6 @@ console.log(macOsTrayIcon2x)
 
 export class CountdownApp {
   mainWindowHandler: BrowserWinHandler = null
-  countdownWindowHandler: BrowserWinHandler = null
   ipcTimerController: IpcTimerController;
   config: Config = new Config(this._configUpdated.bind(this));
   timersOrchestrator: TimersOrchestrator
