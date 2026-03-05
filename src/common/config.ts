@@ -142,7 +142,7 @@ export interface ShowSections {
 export interface WindowBounds {
   alwaysOnTop: boolean
   hidden: boolean
-  fullscreenOn: number
+  fullscreenOn: number | null
   x: number
   y: number
   width: number

@@ -30,9 +30,11 @@ export class OSC {
   }
 
   _messageReceived(message: [string, ...ArgumentType[]]) {
-    console.log(message)
     const [messageType, ...args] = message;
     const timerId = args[0] as string
+
+    if (!Object.keys(this.timersOrchestrator.timers).includes(timerId)) return;
+
     const hours = +args[1]
     const minutes = +args[2]
     const seconds = +args[3]

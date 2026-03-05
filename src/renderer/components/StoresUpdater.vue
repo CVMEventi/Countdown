@@ -19,7 +19,7 @@
     (e: 'mounted'): void
   }>()
 
-  ipcRenderer.on('update', (event, timerId: number, update) => {
+  ipcRenderer.on('update', (event, timerId: string, update) => {
     timersStore.updates[timerId] = update
   })
 

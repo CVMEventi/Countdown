@@ -45,7 +45,7 @@ export default class BrowserWinHandler {
         ...this.options.webPreferences,
         nodeIntegration: true, // allow loading modules via the require () function
         contextIsolation: false, // https://github.com/electron/electron/issues/18037#issuecomment-806320028
-        backgroundThrottling: false, // countdown will not run when window is beh
+        backgroundThrottling: false, // countdown will not run when window is behind other windows
       },
     })
     this.browserWindow.on('closed', () => {
@@ -64,7 +64,7 @@ export default class BrowserWinHandler {
    * @param {BrowserWindow}
    */
 
-  /**x
+  /**
    *
    * @param callback {onReadyCallback}
    */
@@ -83,7 +83,6 @@ export default class BrowserWinHandler {
     if (queryString !== "") {
       queryString = "?" + queryString
     }
-    console.log(queryString)
     const fullPath = serverUrl + queryString + '#' + pagePath;
     await this.browserWindow.loadURL(fullPath)
   }

@@ -145,7 +145,6 @@ export class TimersOrchestrator {
           && timerId !== timer) {
           return
         }
-        console.log(update)
         const browserWinHandler = this.timers[timer].windows[windowId];
         if (!browserWinHandler.browserWindow) return
         browserWinHandler.browserWindow.webContents.send('update', timerId, update);
@@ -174,7 +173,7 @@ export class TimersOrchestrator {
 
     if (browserWindow.fullScreen && fullscreenOn === null) {
       browserWindow.setFullScreen(false)
-      await new Promise(r => setTimeout(r, 1000));
+      await sleep(1000);
     }
     if (fullscreenOn !== null) {
       await sleep(1000)
