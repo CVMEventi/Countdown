@@ -41,10 +41,10 @@ export default function addIpcHandles(app: CountdownApp)
     app.timersOrchestrator.configUpdated()
 
     if (newSettings.remote.ndiEnabled) {
-      app.ndiServer.start();
+      app.timersOrchestrator.startNdi();
       app.startNdiTimer();
     } else {
-      app.ndiServer.stop()
+      app.timersOrchestrator.stopNdi();
       app.stopNdiTimer();
     }
     if (newSettings.remote.oscEnabled) {
@@ -53,7 +53,7 @@ export default function addIpcHandles(app: CountdownApp)
     } else {
       app.oscServer.stop();
     }
-    app.ndiServer.alpha = newSettings.remote.ndiAlpha;
+    app.timersOrchestrator.setNdiAlpha(newSettings.remote.ndiAlpha);
 
     return newSettings
   })

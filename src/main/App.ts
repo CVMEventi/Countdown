@@ -1,4 +1,3 @@
-import NDI from "./Remotes/NDI.ts";
 import addDefaultEvents from "./Utilities/addDefaultEvents.ts";
 import addIpcHandles from "./Utilities/addIpcHandles.ts";
 import {enableDevMode, isDev} from "./Utilities/dev.ts";
@@ -36,7 +35,6 @@ export class CountdownApp {
   config: Config = new Config(this._configUpdated.bind(this));
   timersOrchestrator: TimersOrchestrator
 
-  ndiServer = new NDI("Countdown");
   ndiTimer: NodeJS.Timeout = null;
   webServer: HTTP = null;
   oscServer: OSC = null;
@@ -169,8 +167,6 @@ export class CountdownApp {
     })
 
     if (this.config.settings.remote.ndiEnabled ?? DEFAULT_NDI_ENABLED) {
-      this.ndiServer.alpha = this.config.settings.remote.ndiAlpha;
-      await this.ndiServer.start();
       this.startNdiTimer();
     }
   }

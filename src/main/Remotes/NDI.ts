@@ -84,6 +84,7 @@ export default class NDIManager {
   }
 
   hasConnections(): boolean {
+    if (!this.ndiSender) return false;
     return this.ndiSender.connections() !== 0
   }
 }

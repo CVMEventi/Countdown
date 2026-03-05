@@ -85,11 +85,14 @@ export class TimersOrchestrator {
     })
 
     let ndiServers: NDIManagersKV = {}
-    Object.keys(settings.windows).forEach(windowId => {
-      const server = new NDIManager(`Countdown ${settings.name}-${windowId}`)
-      server.start()
-      ndiServers[windowId] = server
-    })
+    if (this.app.config.settings.remote.ndiEnabled) {
+      Object.keys(settings.windows).forEach(windowId => {
+        const server = new NDIManager(`Countdown ${settings.name}-${windowId}`)
+        server.alpha = this.app.config.settings.remote.ndiAlpha;
+        server.start()
+        ndiServers[windowId] = server
+      })
+    }
 
     this.timers[timerId] = {
       settings,
@@ -198,6 +201,10 @@ export class TimersOrchestrator {
   destroyWindow(timerId: string, windowId: string) {
     this.timers[timerId].windows[windowId].browserWindow.destroy()
     delete this.timers[timerId].windows[windowId]
+    if (this.timers[timerId].ndiServers[windowId]) {
+      this.timers[timerId].ndiServers[windowId].stop()
+      delete this.timers[timerId].ndiServers[windowId]
+    }
   }
 
   destroyTimer(timerId: string) {
@@ -240,7 +247,17 @@ export class TimersOrchestrator {
         Object.keys(timer.windows).forEach(windowId => {
           if (!Object.keys(this.timers[timerId].windows).includes(windowId)) {
             this.timers[timerId].windows[windowId] = this._createWindow(timerId, timer.name, windowId, timer.windows[windowId])
+            if (this.app.config.settings.remote.ndiEnabled) {
+              const server = new NDIManager(`Countdown ${timer.name}-${windowId}`)
+              server.alpha = this.app.config.settings.remote.ndiAlpha
+              server.start()
+              this.timers[timerId].ndiServers[windowId] = server
+            }
           }
+        })
+
+        Object.keys(this.timers[timerId].ndiServers).forEach(windowId => {
+          this.timers[timerId].ndiServers[windowId].alpha = this.app.config.settings.remote.ndiAlpha
         })
 
         Object.keys(this.timers[timerId].windows).forEach(windowId => {
@@ -281,7 +298,7 @@ export class TimersOrchestrator {
       Object.keys(this.timers).forEach(timerId => {
         const timer = this.timers[timerId];
 
-        Object.keys(timer.windows).forEach(async windowId => {
+        Object.keys(timer.ndiServers).forEach(async windowId => {
           const windowHandler = this.timers[timerId].windows[windowId]
           const ndiServer = timer.ndiServers[windowId]
           if (!ndiServer.hasConnections()) return
@@ -295,10 +312,44 @@ export class TimersOrchestrator {
     }
   }
 
+  startNdi(): void {
+    Object.keys(this.timers).forEach(timerId => {
+      const timer = this.timers[timerId];
+      Object.keys(timer.windows).forEach(windowId => {
+        if (timer.ndiServers[windowId]) return
+        const server = new NDIManager(`Countdown ${timer.settings.name}-${windowId}`)
+        server.alpha = this.app.config.settings.remote.ndiAlpha
+        server.start()
+        timer.ndiServers[windowId] = server
+      })
+    })
+  }
+
+  stopNdi(): void {
+    Object.keys(this.timers).forEach(timerId => {
+      const timer = this.timers[timerId];
+      Object.keys(timer.ndiServers).forEach(windowId => {
+        timer.ndiServers[windowId].stop()
+        delete timer.ndiServers[windowId]
+      })
+    })
+  }
+
+  setNdiAlpha(alpha: boolean): void {
+    Object.keys(this.timers).forEach(timerId => {
+      Object.keys(this.timers[timerId].ndiServers).forEach(windowId => {
+        this.timers[timerId].ndiServers[windowId].alpha = alpha
+      })
+    })
+  }
+
   cleanUp(): void {
     Object.keys(this.timers).forEach(timerId => {
       const timer = this.timers[timerId];
       timer.engine.reset()
+      Object.keys(timer.ndiServers).forEach(windowId => {
+        timer.ndiServers[windowId].stop()
+      })
     })
   }
 }
