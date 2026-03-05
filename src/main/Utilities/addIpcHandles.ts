@@ -25,25 +25,27 @@ export default function addIpcHandles(app: CountdownApp)
     return app.config.get(key)
   })
 
-  ipcMain.handle('settings:set', (event, key: string, value: string) => {
-    const newSettings = app.config.set(key, JSON.parse(value))
+  ipcMain.handle('settings:set', (event, key: string, value) => {
+    const newSettings = app.config.set(key, value)
 
     app.timersOrchestrator.configUpdated()
 
-    if (newSettings.remote.ndiEnabled) {
-      app.timersOrchestrator.startNdi();
-      app.startNdiTimer();
-    } else {
-      app.timersOrchestrator.stopNdi();
-      app.stopNdiTimer();
+    if (key === 'remote' || key === null) {
+      if (newSettings.remote.ndiEnabled) {
+        app.timersOrchestrator.startNdi();
+        app.startNdiTimer();
+      } else {
+        app.timersOrchestrator.stopNdi();
+        app.stopNdiTimer();
+      }
+      if (newSettings.remote.oscEnabled) {
+        app.oscServer.port = newSettings.remote.oscPort;
+        app.oscServer.start();
+      } else {
+        app.oscServer.stop();
+      }
+      app.timersOrchestrator.setNdiAlpha(newSettings.remote.ndiAlpha);
     }
-    if (newSettings.remote.oscEnabled) {
-      app.oscServer.port = newSettings.remote.oscPort;
-      app.oscServer.start();
-    } else {
-      app.oscServer.stop();
-    }
-    app.timersOrchestrator.setNdiAlpha(newSettings.remote.ndiAlpha);
 
     return newSettings
   })

@@ -53,7 +53,7 @@
         const window = windows[windowId]
         if (!oldTimers[timerId]) return
         if (JSON.stringify(window) !== JSON.stringify(oldTimers[timerId][windowId])) {
-          await ipcRenderer.invoke('settings:set', `timers.${timerId}.windows.${windowId}.bounds`, JSON.stringify(window))
+          await ipcRenderer.invoke('settings:set', `timers.${timerId}.windows.${windowId}.bounds`, window)
           ipcRenderer.send('window-updated', timerId, windowId);
         }
       })
@@ -67,7 +67,7 @@
   })
 
   const save = useDebounceFn(async () => {
-    await ipcRenderer.invoke('settings:set', null, JSON.stringify(settingsStore.settings))
+    await ipcRenderer.invoke('settings:set', null, settingsStore.settings)
     ipcRenderer.send('settings-updated')
   }, 200)
 

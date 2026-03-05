@@ -123,7 +123,7 @@ async function save() {
     oscPort: oscPort.value,
   }
 
-  await ipcRenderer.invoke('settings:set', 'remote', JSON.stringify(newRemoteSettings));
+  await ipcRenderer.invoke('settings:set', 'remote', newRemoteSettings);
 
   if (httpServerEnabled.value
     && httpServerPort.value !== parseInt(currentPort.value)
