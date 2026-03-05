@@ -17,6 +17,15 @@ export interface TimerEngineOptions {
   audioFile?: string
 }
 
+export interface TimerEngineConstructorOptions {
+  interval: number
+  options?: TimerEngineOptions
+  onUpdate: UpdateCallback
+  onWebSocketUpdate: WebSocketUpdateCallback
+  onMessageUpdate: MessageUpdateCallback
+  onPlaySound: PlaySoundCallback
+}
+
 export class TimerEngine {
   private _currentSeconds = 0;
   private _secondsSetOnCurrentTimer = 0;
@@ -39,17 +48,17 @@ export class TimerEngine {
   messageUpdate: MessageUpdateCallback = null;
   playSound: PlaySoundCallback = null;
 
-  constructor(interval: number, options: TimerEngineOptions, update: UpdateCallback, webSocketUpdate: WebSocketUpdateCallback, messageUpdate: MessageUpdateCallback, playSound: PlaySoundCallback) {
+  constructor({ interval, options, onUpdate, onWebSocketUpdate, onMessageUpdate, onPlaySound }: TimerEngineConstructorOptions) {
     this._timer = new Timer(interval, this._timerTick.bind(this), this._timerStatusChanged.bind(this))
     this.options = {
       ...this.options,
       ...options,
     }
 
-    this.update = update;
-    this.webSocketUpdate = webSocketUpdate;
-    this.messageUpdate = messageUpdate;
-    this.playSound = playSound;
+    this.update = onUpdate;
+    this.webSocketUpdate = onWebSocketUpdate;
+    this.messageUpdate = onMessageUpdate;
+    this.playSound = onPlaySound;
   }
 
   extraSeconds() {

@@ -3,7 +3,7 @@ import {
   WindowBounds,
   WindowSettings
 } from "../../common/config.ts";
-import {TimerEngine, TimerEngineOptions} from "../TimerEngine.ts";
+import {TimerEngine, TimerEngineConstructorOptions, TimerEngineOptions} from "../TimerEngine.ts";
 import BrowserWinHandler from "./BrowserWinHandler.ts";
 import createCountdownWindow from "../countdownWindow.ts";
 import {BrowserWindow, screen} from "electron";
@@ -55,28 +55,29 @@ export class TimersOrchestrator {
       audioFile: settings.audioFile,
     }
 
-    const timerEngine = new TimerEngine(
-      settings.timerDuration,
+    const constructorOptions: TimerEngineConstructorOptions = {
+      interval: settings.timerDuration,
       options,
-      (update: TimerEngineUpdate) => {
+      onUpdate: (update: TimerEngineUpdate) => {
         this._timerEngineUpdate(timerId, update)
       },
-      (update: TimerEngineWebSocketUpdate) => {
+      onWebSocketUpdate: (update: TimerEngineWebSocketUpdate) => {
         this._timerEngineWebSocketUpdate(timerId, {
           timerId,
           ...update
         })
       },
-      (update: MessageUpdate) => {
+      onMessageUpdate: (update: MessageUpdate) => {
         this._timerEngineMessageUpdate(timerId, {
           ...update,
           timerId,
         })
       },
-      async (audioFilePath) => {
+      onPlaySound: async (audioFilePath) => {
         await this._playSound(timerId, audioFilePath)
       }
-    )
+    }
+    const timerEngine = new TimerEngine(constructorOptions)
 
     let windows: WindowsKV = {}
     Object.keys(settings.windows).forEach(windowId => {
