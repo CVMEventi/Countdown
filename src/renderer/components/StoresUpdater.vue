@@ -6,7 +6,7 @@
   import {useTimersStore} from "../stores/timers.ts"
   import {ipcRenderer} from "electron"
   import {useSettingsStore} from '../stores/settings.ts'
-  import {onBeforeMount, watch} from 'vue'
+  import {onBeforeMount, toRaw, watch} from 'vue'
   import {useDebounceFn, watchIgnorable} from '@vueuse/core'
   import {WindowBounds} from '../../common/config.ts'
   import {useGlobalStore} from '../stores/global.ts'
@@ -67,7 +67,7 @@
   })
 
   const save = useDebounceFn(async () => {
-    await ipcRenderer.invoke('settings:set', null, settingsStore.settings)
+    await ipcRenderer.invoke('settings:set', null, toRaw(settingsStore.settings))
     ipcRenderer.send('settings-updated')
   }, 200)
 
