@@ -11,7 +11,7 @@
           @focus="($event.target as HTMLInputElement).select()"
           v-model="settingsStore.settings.remote.webServerPort"
           :disabled="settingsStore.settings.remote.webServerEnabled"
-          class="input w-full">
+          class="input w-full disabled:opacity-40 disabled:cursor-not-allowed">
         <p :class="[isRunning ? 'text-emerald-300' : 'text-red-300']">{{ isRunning ? `Server running on port ${currentPort}` : "Server not running" }}</p>
         <p class="text-sm italic">Last error: {{ lastError }}</p>
         <SButton
@@ -41,7 +41,7 @@
           @focus="($event.target as HTMLInputElement).select()"
           v-model="settingsStore.settings.remote.oscPort"
           :disabled="settingsStore.settings.remote.oscEnabled"
-          class="input w-full">
+          class="input w-full disabled:opacity-40 disabled:cursor-not-allowed">
       </card>
     </div>
   </BaseContainer>

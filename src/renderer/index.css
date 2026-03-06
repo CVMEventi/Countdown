@@ -4,7 +4,7 @@
 
 @layer base {
   .input {
-    @apply border-0 rounded-lg px-3 py-1 bg-zinc-700 text-white disabled:opacity-40 disabled:cursor-not-allowed;
+    @apply border-0 rounded-lg px-3 py-1 bg-zinc-700 text-white;
   }
 }
 
