@@ -1,29 +1,21 @@
 <template>
   <BaseContainer>
-    <TopBar>
-      <template v-slot:right>
-        <SButton
-          class="self-end"
-          @click="save"
-        >
-          Save
-        </SButton>
-      </template>
-    </TopBar>
+    <TopBar />
     <div class="flex flex-1 gap-2 p-1 min-h-0 text-white">
       <card class="flex flex-col w-[300px]">
         <p class="text-2xl pb-2">HTTP Server</p>
-        <check-box id="httpServerEnabled" v-model="httpServerEnabled">Enable</check-box>
+        <check-box id="httpServerEnabled" v-model="settingsStore.settings.remote.webServerEnabled">Enable</check-box>
         <p>Port</p>
         <input
           @click="($event.target as HTMLInputElement).select()"
           @focus="($event.target as HTMLInputElement).select()"
-          v-model="httpServerPort"
+          v-model="settingsStore.settings.remote.webServerPort"
+          :disabled="settingsStore.settings.remote.webServerEnabled"
           class="input w-full">
         <p :class="[isRunning ? 'text-emerald-300' : 'text-red-300']">{{ isRunning ? `Server running on port ${currentPort}` : "Server not running" }}</p>
         <p class="text-sm italic">Last error: {{ lastError }}</p>
         <SButton
-          :disabled="!httpServerEnabled"
+          :disabled="!settingsStore.settings.remote.webServerEnabled"
           class="uppercase mt-3"
           type="warning"
           @click="toggleHttpServer">
@@ -37,17 +29,18 @@
       </card>
       <card class="flex flex-col w-[300px]">
         <p class="text-2xl pb-2">NDI</p>
-        <CheckBox id="ndiEnabled" v-model="ndiEnabled">Enable</CheckBox>
-        <CheckBox id="ndiAlpha" v-model="ndiAlpha">Alpha</CheckBox>
+        <CheckBox id="ndiEnabled" v-model="settingsStore.settings.remote.ndiEnabled">Enable</CheckBox>
+        <CheckBox id="ndiAlpha" v-model="settingsStore.settings.remote.ndiAlpha">Alpha</CheckBox>
       </card>
       <card class="flex flex-col w-[300px]">
         <p class="text-2xl pb-2">OSC</p>
-        <CheckBox id="oscEnabled" v-model="oscEnabled">Enable</CheckBox>
+        <CheckBox id="oscEnabled" v-model="settingsStore.settings.remote.oscEnabled">Enable</CheckBox>
         <p>Port</p>
         <input
           @click="($event.target as HTMLInputElement).select()"
           @focus="($event.target as HTMLInputElement).select()"
-          v-model="oscPort"
+          v-model="settingsStore.settings.remote.oscPort"
+          :disabled="settingsStore.settings.remote.oscEnabled"
           class="input w-full">
       </card>
     </div>
@@ -55,89 +48,39 @@
 </template>
 
 <script lang="ts" setup>
-import {computed, onBeforeMount, onMounted, ref} from "vue";
+import {computed, onMounted, ref} from "vue";
 import Card from "../components/Card.vue";
 import CheckBox from "../components/CheckBox.vue";
 import { ipcRenderer } from "electron";
 import SButton from "../components/SButton.vue";
-import {
-  DEFAULT_NDI_ALPHA,
-  DEFAULT_NDI_ENABLED, DEFAULT_OSC_ENABLED, DEFAULT_OSC_PORT, DEFAULT_STORE,
-  DEFAULT_WEBSERVER_ENABLED,
-  DEFAULT_WEBSERVER_PORT, RemoteSettings
-} from "../../common/config.ts";
 import TopBar from '../components/TopBar.vue'
 import BaseContainer from '../components/BaseContainer.vue'
+import {useSettingsStore} from '../stores/settings.ts'
 
 defineOptions({
   'name': 'RemoteTab',
 });
 
-const emit = defineEmits<{
-  'settings-updated': []
-}>();
+const settingsStore = useSettingsStore()
 
-let httpServerEnabled = ref(DEFAULT_WEBSERVER_ENABLED);
-let httpServerPort = ref(DEFAULT_WEBSERVER_PORT);
-let ndiEnabled = ref(DEFAULT_NDI_ENABLED);
-let ndiAlpha = ref(DEFAULT_NDI_ALPHA);
-let oscEnabled = ref(DEFAULT_OSC_ENABLED);
-let oscPort = ref(DEFAULT_OSC_PORT);
 let currentPort = ref('');
 let isRunning = ref(false);
 let lastError = ref('');
 let isLoading = ref(false);
 
-onBeforeMount(async () => {
-  const remoteSettings: RemoteSettings = await ipcRenderer.invoke('settings:get', 'remote')
-  httpServerEnabled.value = remoteSettings.webServerEnabled
-  httpServerPort.value = remoteSettings.webServerPort
-  ndiEnabled.value = remoteSettings.ndiEnabled
-  ndiAlpha.value = remoteSettings.ndiAlpha
-  oscEnabled.value = remoteSettings.oscEnabled
-  oscPort.value = remoteSettings.oscPort
-
+onMounted(async () => {
   const update = await ipcRenderer.invoke('server-running');
   updateReceived(update)
-})
 
-onMounted(async () => {
-  ipcRenderer.on('webserver-update', (event, update) => {
+  ipcRenderer.on('webserver-update', (_event, update) => {
     updateReceived(update)
   })
 });
 
 function updateReceived(update: any) {
-  isRunning.value =  update.isRunning;
+  isRunning.value = update.isRunning;
   lastError.value = update.lastError;
   currentPort.value = update.port;
-}
-
-async function save() {
-  const newRemoteSettings: RemoteSettings = {
-    webServerEnabled: httpServerEnabled.value,
-    webServerPort: httpServerPort.value,
-    ndiEnabled: ndiEnabled.value,
-    ndiAlpha: ndiAlpha.value,
-    oscEnabled: oscEnabled.value,
-    oscPort: oscPort.value,
-  }
-
-  await ipcRenderer.invoke('settings:set', 'remote', newRemoteSettings);
-
-  if (httpServerEnabled.value
-    && httpServerPort.value !== parseInt(currentPort.value)
-    && isRunning.value) {
-    isRunning.value = await ipcRenderer.invoke('webserver-manager', 'stop')
-    isRunning.value = await ipcRenderer.invoke('webserver-manager', 'start', httpServerPort.value)
-  }
-
-  if (!httpServerEnabled.value
-    && isRunning.value) {
-    isRunning.value = await ipcRenderer.invoke('webserver-manager', 'stop');
-  }
-
-  emit('settings-updated')
 }
 
 async function toggleHttpServer() {
@@ -145,16 +88,12 @@ async function toggleHttpServer() {
   if (isRunning.value) {
     isRunning.value = await ipcRenderer.invoke('webserver-manager', 'stop')
   } else {
-    isRunning.value = await ipcRenderer.invoke('webserver-manager', 'start', httpServerPort.value)
+    isRunning.value = await ipcRenderer.invoke('webserver-manager', 'start', settingsStore.settings.remote.webServerPort)
   }
   isLoading.value = false;
 }
 
 let httpToggleText = computed(() => isRunning.value ? "Stop" : "Start");
-
-defineExpose({
-  save,
-});
 </script>
 
 <style scoped>
