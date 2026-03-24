@@ -30,16 +30,6 @@
   src: url("./assets/fonts/digital-7.woff2");
 }
 
-@font-face {
-  font-family: B612;
-  src: url("./assets/fonts/B612Mono-Regular.ttf");
-}
-
-@font-face {
-  font-family: Xanh;
-  src: url("./assets/fonts/XanhMono-Regular.ttf");
-}
-
 html, body, #app, #app > div {
   height: 100%;
   width: 100%;
