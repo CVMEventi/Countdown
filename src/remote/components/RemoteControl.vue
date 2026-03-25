@@ -7,6 +7,7 @@
         :updates="updates"
         v-model:currentTimerId="currentTimerId"
         :controller="controller"
+        is-in-browser
       />
       <div v-if="!connected" class="text-red-400 text-sm">WebSocket disconnected — reconnecting…</div>
     </div>

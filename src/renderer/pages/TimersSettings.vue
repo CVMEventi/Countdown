@@ -128,10 +128,7 @@
     </div>
     <div class="flex flex-row justify-end text-white bg-zinc-800 px-1 py-1 -mb-1 -mx-2 gap-2">
       <div>
-        <SButton title="Open timer in browser" class="inline-flex" tiny type="info" @click="openTimerInBrowser">
-          <ArrowUpRightIcon class="w-5" />
-          <GlobeAltIcon class="w-5" />
-        </SButton>
+        <OpenTimerInBrowserButton :server-port="settingsStore.settings.remote.webServerPort" :timer-id="currentTimer" />
       </div>
       <div>
         <input :value="currentTimer" readonly type="text" @click="clipboard.writeText(currentTimer);" class="input text-center w-[18.5rem]" />
@@ -162,6 +159,7 @@ import EditTimerModal from '../components/EditTimerModal.vue'
 import {ulid} from 'ulid'
 import DeleteTimerModal from '../components/DeleteTimerModal.vue'
 import {clipboard} from 'electron'
+import OpenTimerInBrowserButton from '@common/components/OpenTimerInBrowserButton.vue'
 
 const screens = ref<Electron.Display[]>([])
 const settingsStore = useSettingsStore()
@@ -190,11 +188,6 @@ onBeforeMount(async () => {
   const firstTimer = Object.keys(settingsStore.settings.timers)[0]
   currentTimer.value = firstTimer
 })
-
-const openTimerInBrowser = (url: string) => {
-  const serverPort = settingsStore.settings.remote.webServerPort
-  shell.openExternal(`http://127.0.0.1:${serverPort}/remote/index.html#/countdown/${currentTimer.value}}`);
-}
 
 const updateYellowOption = (timerId: string) => {
   if (timers.value[timerId].yellowAtOption === 'minutes') {

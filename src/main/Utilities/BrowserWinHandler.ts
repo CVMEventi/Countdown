@@ -1,6 +1,6 @@
 /* eslint-disable */
 import { EventEmitter } from 'events'
-import { BrowserWindow, app } from 'electron'
+import { BrowserWindow, app, shell } from 'electron'
 import BrowserWindowConstructorOptions = Electron.BrowserWindowConstructorOptions;
 const DEV_SERVER_URL = process.env.DEV_SERVER_URL
 const isProduction = process.env.NODE_ENV === 'production'
@@ -47,6 +47,10 @@ export default class BrowserWinHandler {
         contextIsolation: false, // https://github.com/electron/electron/issues/18037#issuecomment-806320028
         backgroundThrottling: false, // countdown will not run when window is behind other windows
       },
+    })
+    this.browserWindow.webContents.setWindowOpenHandler(({ url }) => {
+      shell.openExternal(url)
+      return { action: 'deny' }
     })
     this.browserWindow.on('closed', () => {
       // Dereference the window object

@@ -11,6 +11,7 @@
           {{ timer.name }}
         </TimerTabButton>
       </TimersNavigation>
+      <OpenTimerInBrowserButton :server-port="settingsStore.settings.remote.webServerPort" :timer-id="globalStore.currentTimer" :is-in-browser="false" />
     </TopBar>
     <div class="p-1">
       <ControlPanel
@@ -20,6 +21,7 @@
         :controller="timerControl"
         :presets="settingsStore.settings.presets"
         :show-nav="false"
+        :is-in-browser="false"
       />
     </div>
   </BaseContainer>
@@ -39,6 +41,7 @@ import { TimerControl } from '../TimerControl'
 import { useTimersStore } from '../stores/timers.ts'
 import { useSettingsStore } from '../stores/settings.ts'
 import { useGlobalStore } from '../stores/global.ts'
+import OpenTimerInBrowserButton from '@common/components/OpenTimerInBrowserButton.vue'
 
 defineOptions({ name: 'index' })
 

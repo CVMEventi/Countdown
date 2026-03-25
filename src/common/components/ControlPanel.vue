@@ -1,6 +1,6 @@
 <template>
   <div class="flex flex-col gap-2">
-    <div  v-if="showNav">
+    <div  v-if="showNav" class="inline-flex gap-2">
       <TimersNavigation>
         <TimerTabButton
           v-for="(timer, key) in timers"
@@ -11,6 +11,7 @@
           {{ timer.name }}
         </TimerTabButton>
       </TimersNavigation>
+      <OpenTimerInBrowserButton :server-port="serverPort" :timer-id="currentTimerId" :window-id="firstWindowId" :is-in-browser="isInBrowser" />
     </div>
 
     <div v-if="currentTimerId" class="flex gap-2 flex-wrap">
@@ -106,6 +107,7 @@ import Jog from './Jog.vue'
 import InputWithButton from './InputWithButton.vue'
 import TimerTabButton from './TimerTabButton.vue'
 import TimersNavigation from './TimersNavigation.vue'
+import OpenTimerInBrowserButton from '@common/components/OpenTimerInBrowserButton.vue'
 
 const props = defineProps<{
   timers: Timers
@@ -114,6 +116,8 @@ const props = defineProps<{
   controller: ITimerController
   presets?: number[]
   showNav?: boolean
+  serverPort?: number
+  isInBrowser: boolean
 }>()
 
 const showNav = computed(() => props.showNav ?? true)
@@ -146,6 +150,11 @@ const followingTimerId = computed<string | null>(() => {
   const followTimer = (props.timers[props.currentTimerId] as TimerSettings)?.followTimer
   if (currentUpdate.value.isReset && followTimer) return followTimer
   return null
+})
+
+const firstWindowId = computed(() => {
+  if (Object.keys(props.timers).length === 0) return ""
+  return Object.keys(props.timers[props.currentTimerId].windows)[0]
 })
 
 const displayUpdate = computed<TimerEngineUpdate>(() => {
