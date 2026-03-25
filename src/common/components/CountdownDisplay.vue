@@ -2,12 +2,12 @@
   <div
     :style="{ backgroundColor }"
     v-if="settings.contentAtReset === ContentAtReset.Empty && update.isReset"
-    class="h-full drag"
+    class="h-full drag overflow-hidden"
   />
   <div
     v-if="settings.contentAtReset !== ContentAtReset.Empty || (settings.contentAtReset === ContentAtReset.Empty && !update.isReset)"
     :style="{ backgroundColor, ...cssVars }"
-    class="h-full flex justify-center flex-col drag"
+    class="h-full flex justify-center flex-col drag overflow-hidden"
   >
     <div
       :class="{
