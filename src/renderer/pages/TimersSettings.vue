@@ -126,7 +126,13 @@
         </Card>
       </div>
     </div>
-    <div class="flex flex-row justify-end text-white bg-zinc-800 px-1 py-1 -mb-1 -mx-2">
+    <div class="flex flex-row justify-end text-white bg-zinc-800 px-1 py-1 -mb-1 -mx-2 gap-2">
+      <div>
+        <SButton title="Open timer in browser" class="inline-flex" tiny type="info" @click="openTimerInBrowser">
+          <ArrowUpRightIcon class="w-5" />
+          <GlobeAltIcon class="w-5" />
+        </SButton>
+      </div>
       <div>
         <input :value="currentTimer" readonly type="text" @click="clipboard.writeText(currentTimer);" class="input text-center w-[18.5rem]" />
       </div>
@@ -138,19 +144,19 @@
 
 <script setup lang="ts">
 import {computed, onBeforeMount, ref} from 'vue'
-import {DEFAULT_TIMER_SETTINGS, DEFAULT_WINDOW_SETTINGS} from '../../common/config.ts'
+import {DEFAULT_TIMER_SETTINGS, DEFAULT_WINDOW_SETTINGS} from '@common/config.ts'
 import TimersNavigation from "@common/components/TimersNavigation.vue";
 import TimerTabButton from "@common/components/TimerTabButton.vue";
 import Card from "@common/components/Card.vue";
 import InputWithButton from "@common/components/InputWithButton.vue";
-import {ArrowsRightLeftIcon, PlusIcon, TrashIcon, WindowIcon, ArrowUturnLeftIcon, CogIcon, ClipboardIcon, EyeIcon, EyeSlashIcon} from "@heroicons/vue/20/solid";
+import {ArrowsRightLeftIcon, PlusIcon, TrashIcon, WindowIcon, ArrowUturnLeftIcon, CogIcon, ClipboardIcon, EyeIcon, EyeSlashIcon, GlobeAltIcon, ArrowUpRightIcon} from "@heroicons/vue/20/solid";
 import CheckBox from "@common/components/CheckBox.vue";
 import TopBar from '../components/TopBar.vue'
 import BaseContainer from '../components/BaseContainer.vue'
 import {useSettingsStore} from '../stores/settings.ts'
 import CreateTimerModal from '../components/CreateTimerModal.vue'
 import ScreensDrag from '../components/ScreensDrag.vue'
-import {ipcRenderer} from 'electron'
+import { ipcRenderer, shell } from 'electron'
 import SButton from '@common/components/SButton.vue'
 import EditTimerModal from '../components/EditTimerModal.vue'
 import {ulid} from 'ulid'
@@ -184,6 +190,11 @@ onBeforeMount(async () => {
   const firstTimer = Object.keys(settingsStore.settings.timers)[0]
   currentTimer.value = firstTimer
 })
+
+const openTimerInBrowser = (url: string) => {
+  const serverPort = settingsStore.settings.remote.webServerPort
+  shell.openExternal(`http://127.0.0.1:${serverPort}/remote/index.html#/countdown/${currentTimer.value}}`);
+}
 
 const updateYellowOption = (timerId: string) => {
   if (timers.value[timerId].yellowAtOption === 'minutes') {
