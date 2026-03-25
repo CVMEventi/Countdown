@@ -132,9 +132,9 @@ const classes = computed(() => {
     disabled: props.disabled
   }
 })
-const formattedSeconds = computed(() => padNumber(seconds.value))
-const formattedMinutes = computed(() => padNumber(minutes.value))
-const formattedHours = computed(() => padNumber(hours.value))
+const formattedSeconds = computed(() => padNumber(Math.abs(seconds.value)))
+const formattedMinutes = computed(() => padNumber(Math.abs(minutes.value)))
+const formattedHours = computed(() => padNumber(Math.abs(hours.value)))
 </script>
 
 <style scoped>

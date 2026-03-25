@@ -34,7 +34,7 @@
             <span>{{ displayUpdate.timerEndsAt }}</span>
           </div>
         </div>
-        <TimeInput :modelValue="displayUpdate.countSeconds" color="green" :disabled="true" />
+        <TimeInput :modelValue="countSeconds" color="green" :disabled="true" />
         <div class="uppercase mt-2 text-white">Extra</div>
         <TimeInput color="red" :modelValue="displayUpdate.extraSeconds" :disabled="true" />
       </Card>
@@ -150,6 +150,10 @@ const followingTimerId = computed<string | null>(() => {
 
 const displayUpdate = computed<TimerEngineUpdate>(() => {
   return (followingTimerId.value ? props.updates[followingTimerId.value] : null) ?? currentUpdate.value
+})
+
+const countSeconds = computed(() => {
+  return displayUpdate.value.countSeconds > 0 ? displayUpdate.value.countSeconds : 0
 })
 
 function jog(seconds: number) {
