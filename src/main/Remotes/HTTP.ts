@@ -100,7 +100,7 @@ export default class HTTP {
     }
 
     this.fastifyServer.get('/', (req, res) => {
-      res.send('Countdown')
+      res.redirect('/remote', 301)
     })
 
     this.fastifyServer.get('/timers', (req, res) => {
