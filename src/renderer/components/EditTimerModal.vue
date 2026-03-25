@@ -78,8 +78,8 @@ import { Dialog, DialogPanel, TransitionChild, TransitionRoot } from '@headlessu
 import {ref} from "vue";
 import {ContentAtReset, WindowSettings} from '../../common/config.ts'
 import {XMarkIcon} from '@heroicons/vue/24/outline'
-import Card from './Card.vue'
-import CheckBox from './CheckBox.vue'
+import Card from '@common/components/Card.vue'
+import CheckBox from '@common/components/CheckBox.vue'
 import ColorInput from './ColorInput.vue'
 
 const windowId = defineModel<string|null>('windowId')

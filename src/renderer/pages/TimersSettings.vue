@@ -139,19 +139,19 @@
 <script setup lang="ts">
 import {computed, onBeforeMount, ref} from 'vue'
 import {DEFAULT_TIMER_SETTINGS, DEFAULT_WINDOW_SETTINGS} from '../../common/config.ts'
-import TimersNavigation from "../components/TimersNavigation.vue";
-import TimerTabButton from "../components/TimerTabButton.vue";
-import Card from "../components/Card.vue";
-import InputWithButton from "../components/InputWithButton.vue";
+import TimersNavigation from "@common/components/TimersNavigation.vue";
+import TimerTabButton from "@common/components/TimerTabButton.vue";
+import Card from "@common/components/Card.vue";
+import InputWithButton from "@common/components/InputWithButton.vue";
 import {ArrowsRightLeftIcon, PlusIcon, TrashIcon, WindowIcon, ArrowUturnLeftIcon, CogIcon, ClipboardIcon, EyeIcon, EyeSlashIcon} from "@heroicons/vue/20/solid";
-import CheckBox from "../components/CheckBox.vue";
+import CheckBox from "@common/components/CheckBox.vue";
 import TopBar from '../components/TopBar.vue'
 import BaseContainer from '../components/BaseContainer.vue'
 import {useSettingsStore} from '../stores/settings.ts'
 import CreateTimerModal from '../components/CreateTimerModal.vue'
 import ScreensDrag from '../components/ScreensDrag.vue'
 import {ipcRenderer} from 'electron'
-import SButton from '../components/SButton.vue'
+import SButton from '@common/components/SButton.vue'
 import EditTimerModal from '../components/EditTimerModal.vue'
 import {ulid} from 'ulid'
 import DeleteTimerModal from '../components/DeleteTimerModal.vue'

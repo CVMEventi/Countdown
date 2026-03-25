@@ -49,10 +49,10 @@
 
 <script lang="ts" setup>
 import {computed, onMounted, ref} from "vue";
-import Card from "../components/Card.vue";
-import CheckBox from "../components/CheckBox.vue";
+import Card from "@common/components/Card.vue";
+import CheckBox from "@common/components/CheckBox.vue";
 import { ipcRenderer } from "electron";
-import SButton from "../components/SButton.vue";
+import SButton from "@common/components/SButton.vue";
 import TopBar from '../components/TopBar.vue'
 import BaseContainer from '../components/BaseContainer.vue'
 import {useSettingsStore} from '../stores/settings.ts'

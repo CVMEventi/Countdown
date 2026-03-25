@@ -1,5 +1,5 @@
 import {ipcRenderer} from "electron";
-import {TimerEngineUpdate} from "../common/TimerInterfaces.ts";
+import type {ITimerController} from "../common/TimerController.ts";
 import {
   IpcJogCurrent,
   IpcJogSet,
@@ -13,7 +13,7 @@ import {
   IpcTogglePause
 } from "../common/IpcInterfaces.ts";
 
-export class TimerControl {
+export class TimerControl implements ITimerController {
 
   async set(timerId: string, seconds: number) {
     const command: IpcSetSeconds = {

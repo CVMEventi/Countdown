@@ -1,3 +1,4 @@
+import type { ModuleOptions } from 'webpack'
 import {VueLoaderPlugin} from "vue-loader";
 import MiniCssExtractPlugin from "mini-css-extract-plugin";
 import CssMinimizerPlugin from "css-minimizer-webpack-plugin";
@@ -5,42 +6,40 @@ const isProd = process.env.NODE_ENV === 'production';
 import {Configuration, DefinePlugin} from 'webpack';
 import path from "path";
 
-export const rendererConfig: Configuration = {
-  target: 'electron-renderer',
+export const rules: Required<ModuleOptions>['rules'] = [
+  {
+    test: /\.tsx?$/,
+    exclude: /(node_modules|\.webpack)/,
+    use: {
+      loader: 'ts-loader',
+      options: {
+        transpileOnly: true,
+      },
+    },
+  },
+  {
+    test: /\.css$/i,
+    use: [
+      isProd ? MiniCssExtractPlugin.loader : 'style-loader',
+      "css-loader",
+      'postcss-loader',
+    ],
+  },
+  {
+    test: /\.vue$/,
+    loader: 'vue-loader'
+  },
+  {
+    test: /\.(woff|woff2|eot|ttf|otf|png|jpeg|jpg|mp3)$/i,
+    type: 'asset/resource',
+  }
+];
+
+export const remoteRendererConfig: Configuration = {
+  target: 'web',
   // Put your normal webpack config below here
   module: {
-    rules: [
-      {
-        test: /native_modules[/\\].+\.node$/,
-        use: 'node-loader',
-      },
-      {
-        test: /\.tsx?$/,
-        exclude: /(node_modules|\.webpack)/,
-        use: {
-          loader: 'ts-loader',
-          options: {
-            transpileOnly: true,
-          },
-        },
-      },
-      {
-        test: /\.css$/i,
-        use: [
-          isProd ? MiniCssExtractPlugin.loader : 'style-loader',
-          "css-loader",
-          'postcss-loader',
-        ],
-      },
-      {
-        test: /\.vue$/,
-        loader: 'vue-loader'
-      },
-      {
-        test: /\.(woff|woff2|eot|ttf|otf|png|jpeg|jpg|mp3)$/i,
-        type: 'asset/resource',
-      },
-    ],
+    rules,
   },
   optimization: {
     minimizer: [
@@ -65,5 +64,7 @@ export const rendererConfig: Configuration = {
     },
     extensions: ['.js', '.ts', '.vue', '.css'],
   },
+  devtool: 'source-map',
 };
+
 

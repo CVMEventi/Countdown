@@ -29,9 +29,9 @@
 
 <script lang="ts" setup>
 import draggable from 'vuedraggable'
-import Card from '../components/Card.vue'
-import SButton from '../components/SButton.vue'
-import CheckBox from "../components/CheckBox.vue";
+import Card from '@common/components/Card.vue'
+import SButton from '@common/components/SButton.vue'
+import CheckBox from "@common/components/CheckBox.vue";
 import EditPreset from "../components/EditPreset.vue";
 import {CloseAction} from "../../common/config.ts";
 import TopBar from '../components/TopBar.vue'

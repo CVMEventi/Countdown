@@ -2,6 +2,8 @@ module.exports = {
   mode: 'jit',
   content: [
     './src/renderer/**/*.{vue,js,ts,html}',
+    './src/remote/**/*.{vue,js,ts,html}',
+    './src/common/**/*.{vue,js,ts,html}',
   ],
   theme: {
     extend: {

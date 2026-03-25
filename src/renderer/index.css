@@ -27,7 +27,7 @@
 
 @font-face {
   font-family: digital-7;
-  src: url("./assets/fonts/digital-7.woff2");
+  src: url("../common/assets/fonts/digital-7.woff2");
 }
 
 html, body, #app, #app > div {

@@ -1,4 +1,3 @@
-import "v8-compile-cache";
 import './index.css';
 import { createApp } from 'vue';
 import Control from './pages/Control.vue';

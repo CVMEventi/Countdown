@@ -1,0 +1,35 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  .input {
+    @apply border-0 rounded-lg px-3 py-1 bg-zinc-700 text-white;
+  }
+}
+
+.input-big {
+  @apply text-5xl
+}
+
+.disabled {
+  @apply text-gray-700
+}
+
+.input-number-fixed {
+  @apply w-24 text-center border-0 font-mono
+}
+
+@font-face {
+  font-family: digital-7;
+  src: url("../common/assets/fonts/digital-7.woff2");
+}
+
+html, body, #app, #app > div {
+  height: 100%;
+  width: 100%;
+}
+
+#app {
+  @apply overflow-x-hidden;
+}

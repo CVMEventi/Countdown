@@ -14,7 +14,9 @@
     "noEmit": true,
     "resolveJsonModule": true,
     "paths": {
-      "*": ["node_modules/*"]
+      "*": ["node_modules/*"],
+      "@common/*": ["src/common/*"],
+      "@/*": ["src/renderer/*"]
     }
   },
   "include": ["types/index.d.ts", "src/**/*"]

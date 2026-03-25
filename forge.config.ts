@@ -8,6 +8,7 @@ import { WebpackPlugin } from '@electron-forge/plugin-webpack';
 
 import { mainConfig } from './webpack.main.config';
 import { rendererConfig } from './webpack.renderer.config';
+import { remoteRendererConfig } from './webpack.remote.renderer.config';
 
 import * as fs from "fs";
 import * as path from "path";
@@ -23,12 +24,12 @@ const config: ForgeConfig = {
     asar: {
       unpack: "**/node_modules/grandiose/**/*",
     },
-    osxSign: {},
+    /*osxSign: {},
     osxNotarize: {
       appleId: process.env.APPLE_ID,
       appleIdPassword: process.env.APPLE_ID_PASSWORD,
       teamId: process.env.APPLE_TEAM_ID
-    },
+    },*/
     icon: "src/icons/icon.icns",
     win32metadata: {
       "CompanyName": "CVM Eventi",
@@ -59,16 +60,30 @@ const config: ForgeConfig = {
     new AutoUnpackNativesPlugin({}),
     new WebpackPlugin({
       mainConfig,
-      renderer: {
-        config: rendererConfig,
-        entryPoints: [
-          {
-            html: './src/renderer/index.html',
-            js: './src/renderer/index.ts',
-            name: 'main_window',
-          },
-        ],
-      },
+      renderer: [
+        {
+          config: rendererConfig,
+          nodeIntegration: true,
+          entryPoints: [
+            {
+              html: './src/renderer/index.html',
+              js: './src/renderer/index.ts',
+              name: 'main_window',
+            },
+          ],
+        },
+        {
+          config: remoteRendererConfig,
+          nodeIntegration: false,
+          entryPoints: [
+            {
+              html: './src/remote/index.html',
+              js: './src/remote/index.ts',
+              name: 'remote',
+            },
+          ],
+        },
+      ],
       loggerPort: 9050
     }),
     {

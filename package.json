@@ -74,6 +74,7 @@
     "webpack": "^5.97.1"
   },
   "dependencies": {
+    "@fastify/static": "^9.0.0",
     "@fastify/websocket": "^11.0.2",
     "@headlessui-float/vue": "^0.15.0",
     "@headlessui/vue": "^1.7.14",

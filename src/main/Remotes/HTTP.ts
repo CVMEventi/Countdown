@@ -1,11 +1,16 @@
 import fastify, {FastifyInstance, FastifyRequest, RequestGenericInterface} from 'fastify';
 import FastifyWebSocket from '@fastify/websocket';
-import {BrowserWindow, ipcMain} from "electron";
+import FastifyStatic from '@fastify/static';
+import {BrowserWindow, ipcMain, app} from "electron";
+import path from 'path';
+import fs from 'fs';
 import {TimerEngineWebSocketUpdate, WebSocketUpdate} from '../../common/TimerInterfaces.ts'
 import {TimersOrchestrator} from "../Utilities/TimersOrchestrator.ts";
 import {TimerEngine} from "../TimerEngine.ts";
 // @ts-ignore
 import {WebSocket} from "ws";
+
+declare const REMOTE_WEBPACK_ENTRY: string;
 
 const secondsPerMinute = 60;
 const secondsPerHour = secondsPerMinute * 60;
@@ -70,6 +75,30 @@ export default class HTTP {
   }
 
   setupRoutes() {
+    if (app.isPackaged) {
+      const rendererPath = path.join(process.resourcesPath, 'app.asar/.webpack/renderer');
+
+      this.fastifyServer.register(FastifyStatic, {
+        root: rendererPath,
+        prefix: '/',
+      });
+      this.fastifyServer.get('/remote', (req, res) => {
+        res.sendFile(path.join(rendererPath, 'remote/index.html'));
+      });
+    } else {
+      this.fastifyServer.get('/remote', async (req, res) => {
+        const r = await fetch(REMOTE_WEBPACK_ENTRY);
+        res.header('content-type', 'text/html').send(await r.text());
+      });
+      this.fastifyServer.get('/remote/*', async (req, res) => {
+        const asset = (req.params as { '*': string })['*'];
+        const remotePath = REMOTE_WEBPACK_ENTRY.replace('index.html', '');
+        const r = await fetch(`${remotePath}/${asset}`);
+        const contentType = r.headers.get('content-type') || 'application/octet-stream';
+        res.header('content-type', contentType).send(Buffer.from(await r.arrayBuffer()));
+      });
+    }
+
     this.fastifyServer.get('/', (req, res) => {
       res.send('Countdown')
     })
