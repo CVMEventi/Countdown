@@ -20,9 +20,9 @@ const router = useRouter()
 
 const openTimerInBrowser = (url: string) => {
   if (props.isInBrowser) {
-    window.open(`/remote#/countdown/${props.timerId}}`, '_blank');
+    window.open(`/remote#/countdown/${props.timerId}`, '_blank');
   } else {
-    window.open(`http://127.0.0.1:${props.serverPort}/remote/index.html#/countdown/${props.timerId}}`, '_blank');
+    window.open(`http://127.0.0.1:${props.serverPort}/remote/index.html#/countdown/${props.timerId}`, '_blank');
   }
 }
 </script>
