@@ -12,6 +12,9 @@ Simple countdown for live events
 - Send messages
 - Custom colors
 - Many customization options
+- Remote control/timer through browser
+- Multiple concurrent timers
+- Multiple windows per timer
 
 ### Download
 
@@ -28,11 +31,12 @@ Main window to set timer
 
 Settings window
 ![Setting Window](./docs/images/settings.png)
+![Setting Window part2](./docs/images/settings2.png)
 
-Countdown going
+Timer going
 ![Countdown Window going](./docs/images/countdown-going.png)
 
-Countdown stopped
+Timer stopped
 ![Countdown Window stopped](./docs/images/countdown.png)
 
 #### Build Setup
