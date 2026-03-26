@@ -23,7 +23,7 @@ You can download latest release from [releases](https://github.com/CVMEventi/Cou
 ### APIs
 
 - [HTTP APIs](https://github.com/CVMEventi/Countdown/wiki/HTTP-APIs)
-- OSC
+- [OSC](https://github.com/CVMEventi/Countdown/wiki/OSC-APIs)
 
 ### Images (To be updated)
 Main window to set timer
