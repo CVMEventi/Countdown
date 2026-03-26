@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {ClockIcon} from '@heroicons/vue/24/solid';
 import dayjs from "dayjs";
-import {onMounted, ref} from "vue";
+import {onMounted, onUnmounted, ref} from "vue";
 
 export interface Props {
   isBig: boolean
@@ -31,6 +31,11 @@ onMounted(() => {
   if (currentTimeTimerId === null) {
     currentTimeTimerId = setInterval(updateTime, 1000)
   }
+})
+
+onUnmounted(() => {
+  clearInterval(currentTimeTimerId)
+  currentTimeTimerId = null
 })
 </script>
 

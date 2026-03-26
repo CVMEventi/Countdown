@@ -6,7 +6,7 @@
   import {useTimersStore} from "../stores/timers.ts"
   import {ipcRenderer} from "electron"
   import {useSettingsStore} from '../stores/settings.ts'
-  import {onBeforeMount, toRaw, watch} from 'vue'
+  import {onBeforeMount, onUnmounted, toRaw, watch} from 'vue'
   import {useDebounceFn, watchIgnorable} from '@vueuse/core'
   import {WindowBounds} from '../../common/config.ts'
   import {useGlobalStore} from '../stores/global.ts'
@@ -19,8 +19,13 @@
     (e: 'mounted'): void
   }>()
 
-  ipcRenderer.on('update', (event, timerId: string, update) => {
+  const onTimerUpdate = (event: Electron.IpcRendererEvent, timerId: string, update: unknown) => {
     timersStore.updates[timerId] = update
+  }
+  ipcRenderer.on('update', onTimerUpdate)
+
+  onUnmounted(() => {
+    ipcRenderer.removeListener('update', onTimerUpdate)
   })
 
   const { stop, ignoreUpdates } = watchIgnorable(() => settingsStore.settings, () => {
