@@ -8,7 +8,6 @@
 <script setup lang="ts">
 import { ArrowUpRightIcon, GlobeAltIcon } from '@heroicons/vue/20/solid'
 import SButton from '@common/components/SButton.vue'
-import { useRouter } from 'vue-router'
 
 const props = defineProps<{
   serverPort?: number
@@ -16,9 +15,7 @@ const props = defineProps<{
   isInBrowser: boolean
 }>()
 
-const router = useRouter()
-
-const openTimerInBrowser = (url: string) => {
+const openTimerInBrowser = () => {
   if (props.isInBrowser) {
     window.open(`/remote#/countdown/${props.timerId}`, '_blank');
   } else {
