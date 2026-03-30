@@ -148,6 +148,7 @@ const currentUpdate = computed<TimerEngineUpdate>(() => {
 const followingTimerId = computed<string | null>(() => {
   if (!props.currentTimerId) return null
   const followTimer = (props.timers[props.currentTimerId] as TimerSettings)?.followTimer
+  if (!Object.keys(props.timers).find((timerId) => timerId === followTimer)) return null
   if (currentUpdate.value.isReset && followTimer) return followTimer
   return null
 })

@@ -245,6 +245,11 @@ const removeWindow = (windowId: string) => {
 }
 
 const deleteTimer = (timerId: string) => {
+  for (const [key, value] of Object.entries(timers.value)) {
+    if (value.followTimer === timerId) {
+      timers.value[key].followTimer = null
+    }
+  }
   delete timers.value[timerId]
 }
 </script>
