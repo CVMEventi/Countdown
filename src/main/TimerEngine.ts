@@ -6,15 +6,14 @@ import {
   UpdateCallback,
   WebSocketUpdateCallback
 } from "../common/TimerInterfaces.ts";
-import {DEFAULT_SET_TIME_LIVE, DEFAULT_STOP_TIMER_AT_ZERO, DEFAULT_YELLOW_AT_OPTION} from "../common/config.ts";
+import {ColorThreshold, DEFAULT_SET_TIME_LIVE, DEFAULT_STOP_TIMER_AT_ZERO, getActiveThreshold} from "../common/config.ts";
 dayjs.extend(duration);
 
 export interface TimerEngineOptions {
-  yellowAt?: number
-  yellowAtOption?: string
   setTimeLive?: boolean
   stopTimerAtZero?: boolean
   audioFile?: string
+  colorThresholds?: ColorThreshold[]
 }
 
 export interface TimerEngineConstructorOptions {
@@ -35,8 +34,6 @@ export class TimerEngine {
 
   options: TimerEngineOptions = {
     stopTimerAtZero: DEFAULT_STOP_TIMER_AT_ZERO,
-    yellowAt: 0,
-    yellowAtOption: DEFAULT_YELLOW_AT_OPTION,
     setTimeLive: DEFAULT_SET_TIME_LIVE,
     audioFile: null,
   }
@@ -90,17 +87,11 @@ export class TimerEngine {
       return false;
     }
 
-    if (this.options.yellowAtOption === 'minutes'
-        && this.options.yellowAt >= this._currentSeconds / 60) {
-      return true;
-    }
-
-    if (this.options.yellowAtOption === 'percent'
-        && this.options.yellowAt >= this._currentSeconds * 100 / this._timer.secondsSet) {
-      return true;
-    }
-
-    return false;
+    return getActiveThreshold(
+      this.options.colorThresholds ?? [],
+      this._currentSeconds,
+      this._timer.secondsSet,
+    ) !== null;
   }
 
   endsAt() {

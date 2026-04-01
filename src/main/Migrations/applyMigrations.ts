@@ -3,12 +3,14 @@ import {BaseMigration} from "./BaseMigration.ts";
 import {MoveBlackAtResetToContentAtReset} from "./MoveBlackAtResetToContentAtReset.ts";
 import {RemoveFont} from "./RemoveFont.ts";
 import {MoveSettingsToWindow} from "./MoveSettingsToWindow.ts";
+import {MigrateToColorThresholds} from "./MigrateToColorThresholds.ts";
 
 const migrations: BaseMigration[] = [
   new MergeOpacityToBackgroundColor,
   new MoveBlackAtResetToContentAtReset,
   new RemoveFont,
   new MoveSettingsToWindow,
+  new MigrateToColorThresholds,
 ];
 
 export function applyMigrations(oldConfig: {[key: string]: unknown}): {[key: string]: unknown} {

@@ -1,6 +1,39 @@
 import {ulid} from 'ulid'
 
-export const CURRENT_CONFIG_VERSION: number = 2
+export interface ColorThreshold {
+  id: string
+  type: 'minutes' | 'percent'
+  value: number
+  background: string
+  text: string
+  progressBar?: string
+  progressBarTrack?: string
+  clock?: string
+  clockText?: string
+}
+
+export function getActiveThreshold(
+  thresholds: ColorThreshold[],
+  currentSeconds: number,
+  setSeconds: number,
+): ColorThreshold | null {
+  if (thresholds.length === 0) return null
+
+  const matching = thresholds.filter(t => {
+    if (t.type === 'minutes') return currentSeconds / 60 <= t.value
+    return setSeconds > 0 && (currentSeconds * 100 / setSeconds) <= t.value
+  })
+
+  if (matching.length === 0) return null
+
+  return matching.reduce((best, t) => {
+    const bestSec = best.type === 'minutes' ? best.value * 60 : best.value * setSeconds / 100
+    const tSec = t.type === 'minutes' ? t.value * 60 : t.value * setSeconds / 100
+    return tSec < bestSec ? t : best
+  })
+}
+
+export const CURRENT_CONFIG_VERSION: number = 3
 
 export const DEFAULT_TIMER_NAME = 'Timer'
 
@@ -8,9 +41,31 @@ export const DEFAULT_BACKGROUND_COLOR = '#000000ff';
 export const DEFAULT_RESET_BACKGROUND_COLOR = '#000000ff';
 export const DEFAULT_BACKGROUND_OPACITY = '255';
 export const DEFAULT_TEXT_COLOR = '#ffffff';
-export const DEFAULT_TIMER_FINISHED_TEXT_COLOR = '#ff0000';
+export const DEFAULT_RESET_TEXT_COLOR = '#ffffff';
+export const DEFAULT_EXPIRED_BACKGROUND_COLOR = '#000000ff';
+export const DEFAULT_EXPIRED_TEXT_COLOR = '#ff0000';
 export const DEFAULT_CLOCK_COLOR = '#ffffff';
 export const DEFAULT_CLOCK_TEXT_COLOR = '#ffffff';
+export const DEFAULT_PROGRESS_BAR_COLOR = '#22c55e';
+export const DEFAULT_PROGRESS_BAR_TRACK_COLOR = '#bbf7d0';
+export const DEFAULT_RESET_PROGRESS_BAR_COLOR = '#e5e7eb';
+export const DEFAULT_RESET_CLOCK_COLOR = '#ffffff';
+export const DEFAULT_RESET_CLOCK_TEXT_COLOR = '#ffffff';
+export const DEFAULT_EXPIRED_PROGRESS_BAR_COLOR = '#b91c1c';
+export const DEFAULT_EXPIRED_CLOCK_COLOR = '#ffffff';
+export const DEFAULT_EXPIRED_CLOCK_TEXT_COLOR = '#ffffff';
+
+export const DEFAULT_COLOR_THRESHOLD: ColorThreshold = {
+  id: 'default',
+  type: 'minutes',
+  value: 2,
+  background: '#000000ff',
+  text: '#ffff00',
+  progressBar: '#eab308',
+  progressBarTrack: '#fef9c3',
+  clock: DEFAULT_CLOCK_COLOR,
+  clockText: DEFAULT_CLOCK_TEXT_COLOR,
+};
 
 export const DEFAULT_PRESETS = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60];
 
@@ -35,9 +90,6 @@ export enum ContentAtReset {
 export const DEFAULT_CONTENT_AT_RESET: ContentAtReset = ContentAtReset.Full;
 export const DEFAULT_TIMER_ALWAYS_ON_TOP = false;
 export const DEFAULT_SET_WINDOW_ALWAYS_ON_TOP = false;
-export const DEFAULT_YELLOW_AT_OPTION = 'minutes';
-export const DEFAULT_YELLOW_AT_MINUTES = 2;
-export const DEFAULT_YELLOW_AT_PERCENT = 10;
 
 export const DEFAULT_SET_TIME_LIVE = false;
 
@@ -77,11 +129,22 @@ export const DEFAULT_WINDOW_BOUNDS: WindowBounds = {
 
 export const DEFAULT_TIMER_COLORS: WindowColors = {
   background: DEFAULT_BACKGROUND_COLOR,
-  resetBackground: DEFAULT_RESET_BACKGROUND_COLOR,
   text: DEFAULT_TEXT_COLOR,
-  timerFinishedText: DEFAULT_TIMER_FINISHED_TEXT_COLOR,
+  progressBar: DEFAULT_PROGRESS_BAR_COLOR,
+  progressBarTrack: DEFAULT_PROGRESS_BAR_TRACK_COLOR,
   clock: DEFAULT_CLOCK_COLOR,
   clockText: DEFAULT_CLOCK_TEXT_COLOR,
+  resetBackground: DEFAULT_RESET_BACKGROUND_COLOR,
+  resetText: DEFAULT_RESET_TEXT_COLOR,
+  resetProgressBar: DEFAULT_RESET_PROGRESS_BAR_COLOR,
+  resetClock: DEFAULT_RESET_CLOCK_COLOR,
+  resetClockText: DEFAULT_RESET_CLOCK_TEXT_COLOR,
+  expiredBackground: DEFAULT_EXPIRED_BACKGROUND_COLOR,
+  expiredText: DEFAULT_EXPIRED_TEXT_COLOR,
+  expiredProgressBar: DEFAULT_EXPIRED_PROGRESS_BAR_COLOR,
+  expiredClock: DEFAULT_EXPIRED_CLOCK_COLOR,
+  expiredClockText: DEFAULT_EXPIRED_CLOCK_TEXT_COLOR,
+  thresholds: [{ ...DEFAULT_COLOR_THRESHOLD, id: ulid() }],
 }
 
 export const DEFAULT_WINDOW_SETTINGS: WindowSettings = {
@@ -96,9 +159,6 @@ export const DEFAULT_WINDOW_SETTINGS: WindowSettings = {
 
 export const DEFAULT_TIMER_SETTINGS: TimerSettings = {
   name: DEFAULT_TIMER_NAME,
-  yellowAtOption: DEFAULT_YELLOW_AT_OPTION,
-  yellowAtMinutes: DEFAULT_YELLOW_AT_MINUTES,
-  yellowAtPercent: DEFAULT_YELLOW_AT_PERCENT,
   timerDuration: DEFAULT_TIMER_DURATION,
   setTimeLive: DEFAULT_SET_TIME_LIVE,
   stopTimerAtZero: DEFAULT_STOP_TIMER_AT_ZERO,
@@ -151,11 +211,22 @@ export interface WindowBounds {
 
 export interface WindowColors {
   background: string
-  resetBackground: string
   text: string
-  timerFinishedText: string
+  progressBar: string
+  progressBarTrack: string
   clock: string
   clockText: string
+  resetBackground: string
+  resetText: string
+  resetProgressBar: string
+  resetClock: string
+  resetClockText: string
+  expiredBackground: string
+  expiredText: string
+  expiredProgressBar: string
+  expiredClock: string
+  expiredClockText: string
+  thresholds: ColorThreshold[]
 }
 
 export interface WindowSettings {
@@ -174,9 +245,6 @@ export interface Windows {
 
 export interface TimerSettings {
   name: string
-  yellowAtOption: string
-  yellowAtMinutes: number
-  yellowAtPercent: number
   timerDuration: number
   setTimeLive: boolean
   stopTimerAtZero: boolean

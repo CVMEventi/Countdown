@@ -20,16 +20,6 @@
         <div class="inline-flex flex-row items-center gap-10 justify-between">
           <CheckBox id="stopTimerAtZero" v-model="timers[currentTimer].stopTimerAtZero">Stop timer at 0</CheckBox>
           <CheckBox id="setTimeLive" v-model="timers[currentTimer].setTimeLive">Set time live</CheckBox>
-          <div class="flex flex-row gap-2 items-center">
-            <span class="text-sm">Bar turns yellow at</span>
-            <input-with-button
-              @click="updateYellowOption(currentTimer)"
-              @input="updateYellowValue($event, currentTimer)"
-              type="number"
-              :model-value="timers[currentTimer].yellowAtOption === 'minutes' ? timers[currentTimer].yellowAtMinutes : timers[currentTimer].yellowAtPercent">
-              {{ timers[currentTimer].yellowAtOption === 'minutes' ? 'm' : '%' }} <arrows-right-left-icon class="ml-3 w-4 h-4" />
-            </input-with-button>
-          </div>
           <div class="inline-flex flex-row gap-2 items-center">
             <p class="text-sm">Ms per second</p>
             <input class="input rounded-lg text-center px-2 sm:text-sm border-gray-300 w-24" type="number" @input="(event) => timers[currentTimer].timerDuration = parseInt(event.target.value)" :value="timers[currentTimer].timerDuration">
@@ -145,8 +135,7 @@ import {DEFAULT_TIMER_SETTINGS, DEFAULT_WINDOW_SETTINGS} from '@common/config.ts
 import TimersNavigation from "@common/components/TimersNavigation.vue";
 import TimerTabButton from "@common/components/TimerTabButton.vue";
 import Card from "@common/components/Card.vue";
-import InputWithButton from "@common/components/InputWithButton.vue";
-import {ArrowsRightLeftIcon, PlusIcon, TrashIcon, WindowIcon, ArrowUturnLeftIcon, CogIcon, ClipboardIcon, EyeIcon, EyeSlashIcon, GlobeAltIcon, ArrowUpRightIcon} from "@heroicons/vue/20/solid";
+import {PlusIcon, TrashIcon, WindowIcon, ArrowUturnLeftIcon, CogIcon, EyeIcon, EyeSlashIcon} from "@heroicons/vue/20/solid";
 import CheckBox from "@common/components/CheckBox.vue";
 import TopBar from '../components/TopBar.vue'
 import BaseContainer from '../components/BaseContainer.vue'
@@ -188,26 +177,6 @@ onBeforeMount(async () => {
   const firstTimer = Object.keys(settingsStore.settings.timers)[0]
   currentTimer.value = firstTimer
 })
-
-const updateYellowOption = (timerId: string) => {
-  if (timers.value[timerId].yellowAtOption === 'minutes') {
-    timers.value[timerId].yellowAtOption = 'percent';
-  } else {
-    timers.value[timerId].yellowAtOption = 'minutes';
-  }
-}
-
-const updateYellowValue = (value: number, timerId: string) => {
-  if (value > 100) {
-    value = 100;
-  }
-
-  if (timers.value[timerId].yellowAtOption === 'minutes') {
-    timers.value[timerId].yellowAtMinutes = value;
-  } else {
-    timers.value[timerId].yellowAtPercent = value;
-  }
-}
 
 const createTimer = (name: string) => {
   timers.value[ulid()] = {

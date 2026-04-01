@@ -15,9 +15,9 @@ import {
   DEFAULT_WINDOW_SETTINGS,
   TimerSettings,
   WindowSettings,
-} from '../../common/config.ts'
-import { MessageUpdate, TimerEngineUpdate, TimerEngineUpdates } from '../../common/TimerInterfaces.ts'
-import { IpcGetWindowSettingsArgs } from '../../common/IpcInterfaces.ts'
+} from '@common/config.ts'
+import { MessageUpdate, TimerEngineUpdate, TimerEngineUpdates } from '@common/TimerInterfaces.ts'
+import { IpcGetWindowSettingsArgs } from '@common/IpcInterfaces.ts'
 import CountdownDisplay from '@common/components/CountdownDisplay.vue'
 
 const updates = ref<TimerEngineUpdates>({})

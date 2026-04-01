@@ -1,4 +1,5 @@
 import {
+  ColorThreshold,
   TimerSettings,
   WindowBounds,
   WindowSettings
@@ -47,12 +48,12 @@ export class TimersOrchestrator {
   }
 
   public createTimer(timerId: string, settings: TimerSettings) {
+    const colorThresholds: ColorThreshold[] = Object.values(settings.windows).flatMap(w => w.colors?.thresholds ?? [])
     const options: TimerEngineOptions = {
-      yellowAtOption: settings.yellowAtOption,
-      yellowAt: settings.yellowAtOption === 'minutes' ? settings.yellowAtMinutes : settings.yellowAtPercent,
       stopTimerAtZero: settings.stopTimerAtZero,
       setTimeLive: settings.setTimeLive,
       audioFile: settings.audioFile,
+      colorThresholds,
     }
 
     const constructorOptions: TimerEngineConstructorOptions = {
@@ -232,12 +233,12 @@ export class TimersOrchestrator {
       const timer = this.app.config.settings.timers[timerId];
 
       if (Object.keys(this.timers).includes(timerId)) {
+        const colorThresholds: ColorThreshold[] = Object.values(timer.windows).flatMap(w => w.colors?.thresholds ?? [])
         const options: TimerEngineOptions = {
-          yellowAtOption: timer.yellowAtOption,
-          yellowAt: timer.yellowAtOption === 'minutes' ? timer.yellowAtMinutes : timer.yellowAtPercent,
           stopTimerAtZero: timer.stopTimerAtZero,
           setTimeLive: timer.setTimeLive,
           audioFile: timer.audioFile,
+          colorThresholds,
         }
 
         this.timers[timerId].engine.options = options

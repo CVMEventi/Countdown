@@ -27,15 +27,14 @@
     </div>
     <progress-bar
       v-if="settings.show.progress && ((settings.contentAtReset === ContentAtReset.Full && update.isReset) || !update.isReset)"
-      :is-expiring="update.isExpiring"
-      :is-counting-up="update.isCountingUp"
-      :is-reset="update.isReset"
       :value="progressBarPercent"
+      :fill-color="progressBarFillColor"
+      :track-color="progressBarTrackColor"
     />
     <clock
       v-if="showClock"
-      :clock-color="settings.colors.clock"
-      :text-color="settings.colors.clockText"
+      :clock-color="clockIconColor"
+      :text-color="clockTextColor"
       :is-big="settings.contentAtReset === ContentAtReset.Time && update.isReset"
       :seconds-on-clock="settings.show.secondsOnClock"
       :use12-hour-clock="settings.use12HourClock"
@@ -47,7 +46,7 @@
 import { computed } from 'vue'
 import dayjs from 'dayjs'
 import duration from 'dayjs/plugin/duration'
-import { ContentAtReset, WindowSettings } from '../config.ts'
+import { ColorThreshold, ContentAtReset, WindowSettings, getActiveThreshold } from '../config.ts'
 import { TimerEngineUpdate } from '../TimerInterfaces.ts'
 import ProgressBar from './ProgressBar.vue'
 import Clock from './Clock.vue'
@@ -97,15 +96,61 @@ const progressBarPercent = computed(() => {
   return props.update.currentSeconds * 100 / props.update.secondsSetOnCurrentTimer
 })
 
+const activeThreshold = computed((): ColorThreshold | null => {
+  if (props.update.isReset || props.update.isCountingUp) return null
+  return getActiveThreshold(
+    props.settings.colors.thresholds ?? [],
+    props.update.currentSeconds,
+    props.update.secondsSetOnCurrentTimer,
+  )
+})
+
+const isThresholdActive = computed(() => activeThreshold.value !== null)
+
 const timerText = computed(() => {
-  if (props.update.isCountingUp && !props.update.isReset) {
-    return props.settings.colors.timerFinishedText
+  if (props.update.isReset) {
+    return props.settings.colors.resetText ?? props.settings.colors.text
   }
+  if (props.update.isCountingUp) {
+    return props.settings.colors.expiredText ?? '#ff0000'
+  }
+  if (activeThreshold.value) return activeThreshold.value.text
   return props.settings.colors.text
 })
 
 const backgroundColor = computed(() => {
-  return props.update.isReset ? props.settings.colors.resetBackground : props.settings.colors.background
+  if (props.update.isReset) return props.settings.colors.resetBackground
+  if (props.update.isCountingUp) {
+    return props.settings.colors.expiredBackground ?? props.settings.colors.background
+  }
+  if (activeThreshold.value) return activeThreshold.value.background
+  return props.settings.colors.background
+})
+
+const progressBarFillColor = computed(() => {
+  if (props.update.isReset) return props.settings.colors.resetProgressBar
+  if (props.update.isCountingUp) return props.settings.colors.expiredProgressBar
+  if (activeThreshold.value?.progressBar) return activeThreshold.value.progressBar
+  return props.settings.colors.progressBar
+})
+
+const progressBarTrackColor = computed(() => {
+  if (props.update.isReset) return undefined
+  if (props.update.isCountingUp) return undefined
+  if (activeThreshold.value?.progressBarTrack) return activeThreshold.value.progressBarTrack
+  return props.settings.colors.progressBarTrack
+})
+
+const clockIconColor = computed(() => {
+  if (props.update.isReset) return props.settings.colors.resetClock
+  if (props.update.isCountingUp) return props.settings.colors.expiredClock
+  return activeThreshold.value?.clock ?? props.settings.colors.clock
+})
+
+const clockTextColor = computed(() => {
+  if (props.update.isReset) return props.settings.colors.resetClockText
+  if (props.update.isCountingUp) return props.settings.colors.expiredClockText
+  return activeThreshold.value?.clockText ?? props.settings.colors.clockText
 })
 
 const cssVars = computed(() => ({
