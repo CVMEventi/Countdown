@@ -1,5 +1,6 @@
 import { Configuration } from 'webpack';
 import { rules } from "./webpack.rules";
+import path from 'path'
 
 rules.push({
   test: /\.(woff|woff2|eot|ttf|otf|png|jpeg|jpg|mp3|ico)$/i,
@@ -17,9 +18,14 @@ export const mainConfig: Configuration = {
     rules: rules,
   },
   externals: {
-    grandiose: 'grandiose'
+    grandiose: 'grandiose',
+    bufferutil: 'bufferutil',
+    'utf-8-validate': 'utf-8-validate',
   },
   resolve: {
+    alias: {
+      '@common': path.resolve(__dirname, 'src/common'),
+    },
     extensions: ['.js', '.ts', '.jsx', '.tsx', '.css', '.json'],
   },
   output: {

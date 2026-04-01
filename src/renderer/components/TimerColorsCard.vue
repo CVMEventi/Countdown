@@ -47,7 +47,8 @@
       <!-- Threshold rows -->
       <template v-for="(threshold, index) in thresholds" :key="threshold.id">
         <ThresholdRow
-          v-model="threshold"
+          :model-value="window.colors.thresholds[index]"
+          @update:modelValue="window.colors.thresholds[index] = $event"
           @toggle-type="toggleThresholdType(threshold)"
           @remove="removeThreshold(index)"
         />
