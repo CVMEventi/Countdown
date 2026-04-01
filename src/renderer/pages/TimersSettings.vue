@@ -128,7 +128,7 @@
     </div>
     <div class="flex flex-row justify-end text-white bg-zinc-800 px-1 py-1 -mb-1 -mx-2 gap-2">
       <div>
-        <OpenTimerInBrowserButton :server-port="settingsStore.settings.remote.webServerPort" :timer-id="currentTimer" />
+        <OpenTimerInBrowserButton :is-in-browser="false" :server-port="settingsStore.settings.remote.webServerPort" :timer-id="currentTimer" />
       </div>
       <div>
         <input :value="currentTimer" readonly type="text" @click="clipboard.writeText(currentTimer);" class="input text-center w-[18.5rem]" />

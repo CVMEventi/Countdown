@@ -10,8 +10,8 @@ import { ArrowUpRightIcon, GlobeAltIcon } from '@heroicons/vue/20/solid'
 import SButton from '@common/components/SButton.vue'
 
 const props = defineProps<{
-  serverPort?: number
-  timerId: string
+  serverPort?: number|string
+  timerId?: string
   isInBrowser: boolean
 }>()
 
