@@ -41,7 +41,7 @@ export default class NDIManager {
    */
   async sendFrame(image: NativeImage) {
     const size = image.getSize();
-    const buffer = image.getBitmap();
+    const buffer = image.toBitmap();
     /*
     convert from ARGB (Electron/Chromium on big endian CPU)
     to BGRA (supported input of NDI SDK). On little endian
