@@ -1,4 +1,6 @@
-module.exports = {
+import forms from '@tailwindcss/forms';
+
+export default {
   mode: 'jit',
   content: [
     './src/renderer/**/*.{vue,js,ts,html}',
@@ -19,6 +21,6 @@ module.exports = {
     extend: {}
   },
   plugins: [
-    require('@tailwindcss/forms'),
+    forms,
   ]
 }

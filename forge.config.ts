@@ -6,13 +6,13 @@ import { MakerRpm } from '@electron-forge/maker-rpm';
 import { AutoUnpackNativesPlugin } from '@electron-forge/plugin-auto-unpack-natives';
 import { WebpackPlugin } from '@electron-forge/plugin-webpack';
 
-import { mainConfig } from './webpack.main.config';
-import { rendererConfig } from './webpack.renderer.config';
-import { remoteRendererConfig } from './webpack.remote.renderer.config';
+import { mainConfig } from './webpack.main.config.ts';
+import { rendererConfig } from './webpack.renderer.config.ts';
+import { remoteRendererConfig } from './webpack.remote.renderer.config.ts';
 
 import * as fs from "fs";
 import * as path from "path";
-import { APP_VERSION } from "./src/version";
+import { APP_VERSION } from "./src/version.ts";
 import MakerDMG from "@electron-forge/maker-dmg";
 import PublisherGithub from "@electron-forge/publisher-github";
 import MakerFlatpak from '@electron-forge/maker-flatpak'

@@ -1,6 +1,9 @@
 import { Configuration } from 'webpack';
-import { rules } from "./webpack.rules";
-import path from 'path'
+import { rules } from "./webpack.rules.ts";
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = fileURLToPath(new URL('.', import.meta.url));
 
 rules.push({
   test: /\.(woff|woff2|eot|ttf|otf|png|jpeg|jpg|mp3|ico)$/i,
@@ -31,5 +34,6 @@ export const mainConfig: Configuration = {
   output: {
     // [file] is the key thing here. [query] and [fragment] are optional
     assetModuleFilename: '[file][query][fragment]',
+    filename: 'index.cjs',
   },
 };

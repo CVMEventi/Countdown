@@ -5,6 +5,9 @@ import CssMinimizerPlugin from "css-minimizer-webpack-plugin";
 const isProd = process.env.NODE_ENV === 'production';
 import {Configuration, DefinePlugin} from 'webpack';
 import path from "path";
+import { fileURLToPath } from 'url';
+
+const __dirname = fileURLToPath(new URL('.', import.meta.url));
 
 export const rules: Required<ModuleOptions>['rules'] = [
   {

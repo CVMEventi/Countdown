@@ -3,7 +3,7 @@
   "productName": "countdown",
   "version": "1.0.0-beta.16",
   "description": "CVM Countdown",
-  "main": ".webpack/main",
+  "main": ".webpack/main/index.cjs",
   "repository": "CVMEventi/Countdown",
   "scripts": {
     "preinstall": "node -p \"'export const APP_VERSION = ' + JSON.stringify(require('./package.json').version) + ';'\" > src/version.ts",
@@ -23,6 +23,10 @@
     "email": "matteo.piccina@cvm.it"
   },
   "license": "MIT",
+  "type": "module",
+  "ts-node": {
+    "esm": true
+  },
   "config": {},
   "devDependencies": {
     "@electron-forge/cli": "^7.6.1",
