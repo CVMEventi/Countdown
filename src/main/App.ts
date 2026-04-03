@@ -19,7 +19,7 @@ import {OSC} from "./Remotes/OSC.ts";
 import {IpcTimerController} from "./Remotes/IpcTimerController.ts";
 import macosTrayIcon from "../icons/tray/TrayTemplate.png?no-inline"
 import macOsTrayIcon2x from "../icons/tray/TrayTemplate@2x.png?no-inline"
-import otherOsTrayIcon from "../icons/icon.ico"
+import otherOsTrayIcon from "../icons/icon.ico?no-inline"
 import path from "path";
 import * as process from "node:process";
 import {Config} from "./Utilities/Config.ts";
