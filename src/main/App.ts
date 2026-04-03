@@ -17,8 +17,8 @@ import {
 import HTTP from "./Remotes/HTTP.ts";
 import {OSC} from "./Remotes/OSC.ts";
 import {IpcTimerController} from "./Remotes/IpcTimerController.ts";
-import macosTrayIcon from "../icons/tray/TrayTemplate.png"
-import macOsTrayIcon2x from "../icons/tray/TrayTemplate@2x.png"
+import macosTrayIcon from "../icons/tray/TrayTemplate.png?no-inline"
+import macOsTrayIcon2x from "../icons/tray/TrayTemplate@2x.png?no-inline"
 import otherOsTrayIcon from "../icons/icon.ico"
 import path from "path";
 import * as process from "node:process";
@@ -29,7 +29,7 @@ import { fileURLToPath } from 'url'
 // To be packaged, otherwise it doesn't work
 console.log(macOsTrayIcon2x)
 
-const __dirname = fileURLToPath(import.meta.url);
+const __dirname = import.meta.dirname;
 
 export class CountdownApp {
   mainWindowHandler: BrowserWinHandler = null
@@ -63,7 +63,7 @@ export class CountdownApp {
 
       let appIcon: Tray
       if (process.platform === 'darwin') {
-        const image = nativeImage.createFromPath(path.resolve(
+        const image = nativeImage.createFromPath(path.join(
           __dirname,
           macosTrayIcon,
         ));
@@ -72,10 +72,7 @@ export class CountdownApp {
 
         appIcon = new Tray(image)
       } else {
-        const image = otherOsTrayIcon.startsWith('data:')
-          ? nativeImage.createFromDataURL(otherOsTrayIcon)
-          : nativeImage.createFromPath(path.resolve(__dirname, otherOsTrayIcon))
-        appIcon = new Tray(image)
+        appIcon = new Tray(path.join(__dirname, otherOsTrayIcon))
       }
 
       appIcon.on('right-click', () => {

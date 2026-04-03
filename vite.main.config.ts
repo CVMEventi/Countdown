@@ -11,8 +11,8 @@ export default defineConfig({
       '@common': path.resolve(__dirname, 'src/common'),
     },
   },
+  assetsInclude: ["**/*.png", "**/*.ico"],
   build: {
-    assetsInlineLimit: 0,
     lib: {
       entry: 'src/main/index.ts',
       formats: ['es'],
