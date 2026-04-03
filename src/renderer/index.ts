@@ -8,14 +8,6 @@ import {createPinia} from "pinia";
 import TimersSettings from './pages/TimersSettings.vue'
 import RemoteSettings from './pages/RemoteSettings.vue'
 import GeneralSettings from './pages/GeneralSettings.vue'
-import {useSettingsStore} from './stores/settings.ts'
-import {useGlobalStore} from './stores/global.ts'
-import {useTimersStore} from './stores/timers.ts'
-import {usePiniaWebpackHotHMR} from './piniaHmr.ts'
-
-if (import.meta.webpackHot) {
-  usePiniaWebpackHotHMR(import.meta.webpackHot, [useSettingsStore, useGlobalStore, useTimersStore]);
-}
 
 const routes = [
   { path: '/countdown', component: Countdown },

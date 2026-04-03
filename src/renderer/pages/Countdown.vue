@@ -9,7 +9,7 @@
 
 <script lang="ts" setup>
 import { computed, onMounted, ref } from 'vue'
-import { ipcRenderer } from 'electron'
+const { api } = window
 import {
   DEFAULT_TIMER_SETTINGS,
   DEFAULT_WINDOW_SETTINGS,
@@ -59,18 +59,18 @@ onMounted(async () => {
     timerId: timerId.value,
     windowId: windowId.value,
   }
-  settings.value = await ipcRenderer.invoke('settings:get-window', args)
-  timerSettings.value = await ipcRenderer.invoke('settings:get', `timers.${timerId.value}`)
+  settings.value = await api.getWindowSettings(args)
+  timerSettings.value = await api.getSettings(`timers.${timerId.value}`)
 
-  ipcRenderer.on('update', (event, id: string, update: TimerEngineUpdate) => {
+  api.onUpdate((event, id: string, update: TimerEngineUpdate) => {
     updates.value[id] = update
   })
-  ipcRenderer.on('message', (event, arg) => {
+  api.onMessage((event, arg) => {
     messageUpdate.value = arg
   })
-  ipcRenderer.on('settings:updated', async (event, arg) => {
+  api.onSettingsUpdated(async (event, arg) => {
     settings.value = { ...settings.value, ...arg }
-    timerSettings.value = await ipcRenderer.invoke('settings:get', `timers.${timerId.value}`)
+    timerSettings.value = await api.getSettings(`timers.${timerId.value}`)
   })
 })
 </script>

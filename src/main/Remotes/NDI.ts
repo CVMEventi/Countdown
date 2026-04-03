@@ -1,4 +1,5 @@
-import grandiose, {FourCC, FrameType, VideoFrame} from "grandiose";
+import grandiose, {VideoFrame} from "grandiose";
+const { FourCC, FrameType } = grandiose;
 import * as process from "process";
 import os from "os";
 import ImageBufferAdjustment from "../Utilities/ImageBufferAdjustment.js";

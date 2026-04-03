@@ -1,3 +1,5 @@
+@import url('vue-accessible-color-picker/styles');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -50,8 +52,6 @@ input[type="color"]::-webkit-color-swatch-wrapper {
 input[type="color"]::-webkit-color-swatch {
   border: none;
 }
-
-@import url('vue-accessible-color-picker/styles');
 
 .vacp-color-picker {
   @apply text-black;

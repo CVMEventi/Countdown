@@ -1,4 +1,4 @@
-import {ipcRenderer} from "electron";
+const { api } = window;
 import type {ITimerController} from "../common/TimerController.ts";
 import {
   IpcJogCurrent,
@@ -21,7 +21,7 @@ export class TimerControl implements ITimerController {
       timerId,
       seconds,
     };
-    await ipcRenderer.invoke('command', command);
+    await api.command(command);
   }
 
   async start(timerId: string) {
@@ -29,7 +29,7 @@ export class TimerControl implements ITimerController {
       name: IpcTimerCommandName.Start,
       timerId,
     };
-    await ipcRenderer.invoke('command', command);
+    await api.command(command);
   }
 
   async reset(timerId: string) {
@@ -37,7 +37,7 @@ export class TimerControl implements ITimerController {
       name: IpcTimerCommandName.Reset,
       timerId,
     };
-    await ipcRenderer.invoke('command', command);
+    await api.command(command);
   }
 
   async toggle(timerId: string) {
@@ -45,7 +45,7 @@ export class TimerControl implements ITimerController {
       name: IpcTimerCommandName.TogglePause,
       timerId,
     };
-    await ipcRenderer.invoke('command', command);
+    await api.command(command);
   }
 
   async pause(timerId: string) {
@@ -53,7 +53,7 @@ export class TimerControl implements ITimerController {
       name: IpcTimerCommandName.Pause,
       timerId,
     };
-    await ipcRenderer.invoke('command', command);
+    await api.command(command);
   }
 
   async resume(timerId: string) {
@@ -61,7 +61,7 @@ export class TimerControl implements ITimerController {
       name: IpcTimerCommandName.Resume,
       timerId,
     };
-    await ipcRenderer.invoke('command', command);
+    await api.command(command);
   }
 
   async jogSet(timerId: string, seconds: number) {
@@ -70,7 +70,7 @@ export class TimerControl implements ITimerController {
       timerId,
       seconds,
     }
-    await ipcRenderer.invoke('command', command);
+    await api.command(command);
   }
 
   async jogCurrent(timerId: string, seconds: number) {
@@ -79,7 +79,7 @@ export class TimerControl implements ITimerController {
       timerId,
       seconds,
     };
-    await ipcRenderer.invoke('command', command);
+    await api.command(command);
   }
 
   async sendMessage(timerId: string, message: string) {
@@ -88,6 +88,6 @@ export class TimerControl implements ITimerController {
       timerId,
       message,
     };
-    await ipcRenderer.invoke('command', command);
+    await api.command(command);
   }
 }

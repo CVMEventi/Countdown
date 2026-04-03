@@ -3,14 +3,14 @@ import FastifyWebSocket from '@fastify/websocket';
 import FastifyStatic from '@fastify/static';
 import {BrowserWindow, ipcMain, app} from "electron";
 import path from 'path';
-import fs from 'fs';
-import {TimerEngineWebSocketUpdate, WebSocketUpdate} from '../../common/TimerInterfaces.ts'
+import {TimerEngineWebSocketUpdate, WebSocketUpdate} from '@common/TimerInterfaces.ts'
 import {TimersOrchestrator} from "../Utilities/TimersOrchestrator.ts";
 import {TimerEngine} from "../TimerEngine.ts";
 // @ts-ignore
 import {WebSocket} from "ws";
 
-declare const REMOTE_WEBPACK_ENTRY: string;
+declare const REMOTE_VITE_DEV_SERVER_URL: string | undefined;
+declare const REMOTE_VITE_NAME: string;
 
 const secondsPerMinute = 60;
 const secondsPerHour = secondsPerMinute * 60;
@@ -55,7 +55,9 @@ export default class HTTP {
 
   reset() {
     this.fastifyServer = fastify();
-    this.fastifyServer.register(FastifyWebSocket);
+    this.fastifyServer.register(FastifyWebSocket).after(err => {
+      if (err) throw err
+    });
     this.setupRoutes()
   }
 
@@ -76,24 +78,23 @@ export default class HTTP {
 
   setupRoutes() {
     if (app.isPackaged) {
-      const rendererPath = path.join(process.resourcesPath, 'app.asar/.webpack/renderer');
+      const rendererPath = path.join(process.resourcesPath, 'app.asar', '.vite', 'renderer');
 
       this.fastifyServer.register(FastifyStatic, {
-        root: rendererPath,
+        root: path.join(rendererPath, REMOTE_VITE_NAME),
         prefix: '/',
       });
       this.fastifyServer.get('/remote', (req, res) => {
-        res.sendFile(path.join(rendererPath, 'remote/index.html'));
+        res.sendFile('src/remote/index.html');
       });
     } else {
       this.fastifyServer.get('/remote', async (req, res) => {
-        const r = await fetch(REMOTE_WEBPACK_ENTRY);
+        const r = await fetch(REMOTE_VITE_DEV_SERVER_URL);
         res.header('content-type', 'text/html').send(await r.text());
       });
-      this.fastifyServer.get('/remote/*', async (req, res) => {
+      this.fastifyServer.get('/*', async (req, res) => {
         const asset = (req.params as { '*': string })['*'];
-        const remotePath = REMOTE_WEBPACK_ENTRY.replace('index.html', '');
-        const r = await fetch(`${remotePath}/${asset}`);
+        const r = await fetch(`${REMOTE_VITE_DEV_SERVER_URL}/${asset}`);
         const contentType = r.headers.get('content-type') || 'application/octet-stream';
         res.header('content-type', contentType).send(Buffer.from(await r.arrayBuffer()));
       });
@@ -273,6 +274,7 @@ export default class HTTP {
     const promise = new Promise((resolve) => {
       this.fastifyServer.listen({ port: this.port, host: '0.0.0.0' }, err => {
         if (err) {
+          console.log(err)
           this.isRunning = false
           this.lastError = err.message
           this.sendIpcStatusUpdate()

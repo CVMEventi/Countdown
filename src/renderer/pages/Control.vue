@@ -29,7 +29,7 @@
 
 <script lang="ts" setup>
 import { onMounted, watch } from 'vue'
-import { ipcRenderer } from 'electron'
+const { api } = window;
 // @ts-ignore
 import { Howl } from 'howler'
 import ControlPanel from '@common/components/ControlPanel.vue'
@@ -58,8 +58,7 @@ watch(() => settingsStore.settings.timers, (timers) => {
 
 onMounted(async () => {
   globalStore.currentTimer = Object.keys(settingsStore.settings.timers)[0]
-
-  ipcRenderer.on('audio:play', async (event, audioFile, mimeType) => {
+  api.onAudioPlay((_, audioFile, mimeType) => {
     const sound = new Howl({ src: [`data:${mimeType};base64,${audioFile}`] })
     sound.play()
   })

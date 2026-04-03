@@ -51,7 +51,7 @@
 import {computed, onMounted, ref} from "vue";
 import Card from "@common/components/Card.vue";
 import CheckBox from "@common/components/CheckBox.vue";
-import { ipcRenderer } from "electron";
+const { api } = window
 import SButton from "@common/components/SButton.vue";
 import TopBar from '../components/TopBar.vue'
 import BaseContainer from '../components/BaseContainer.vue'
@@ -69,10 +69,10 @@ let lastError = ref('');
 let isLoading = ref(false);
 
 onMounted(async () => {
-  const update = await ipcRenderer.invoke('server-running');
+  const update = await api.isServerRunning();
   updateReceived(update)
 
-  ipcRenderer.on('webserver-update', (_event, update) => {
+  api.onWebserverUpdate((_event, update) => {
     updateReceived(update)
   })
 });
@@ -86,9 +86,9 @@ function updateReceived(update: any) {
 async function toggleHttpServer() {
   isLoading.value = true;
   if (isRunning.value) {
-    isRunning.value = await ipcRenderer.invoke('webserver-manager', 'stop')
+    isRunning.value = await api.manageServer('stop')
   } else {
-    isRunning.value = await ipcRenderer.invoke('webserver-manager', 'start', settingsStore.settings.remote.webServerPort)
+    isRunning.value = await api.manageServer('start', settingsStore.settings.remote.webServerPort)
   }
   isLoading.value = false;
 }

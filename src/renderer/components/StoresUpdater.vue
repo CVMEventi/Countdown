@@ -4,7 +4,7 @@
 
 <script setup lang="ts">
   import {useTimersStore} from "../stores/timers.ts"
-  import {ipcRenderer} from "electron"
+  const {api} = window;
   import {useSettingsStore} from '../stores/settings.ts'
   import {onBeforeMount, onUnmounted, toRaw, watch} from 'vue'
   import {useDebounceFn, watchIgnorable} from '@vueuse/core'
@@ -22,11 +22,13 @@
   const onTimerUpdate = (event: Electron.IpcRendererEvent, timerId: string, update: unknown) => {
     timersStore.updates[timerId] = update
   }
-  ipcRenderer.on('update', onTimerUpdate)
+  api.onUpdate(onTimerUpdate)
 
+  /*
   onUnmounted(() => {
     ipcRenderer.removeListener('update', onTimerUpdate)
   })
+  */
 
   const { stop, ignoreUpdates } = watchIgnorable(() => settingsStore.settings, () => {
     save();
@@ -58,8 +60,8 @@
         const window = windows[windowId]
         if (!oldTimers[timerId]) return
         if (JSON.stringify(window) !== JSON.stringify(oldTimers[timerId][windowId])) {
-          await ipcRenderer.invoke('settings:set', `timers.${timerId}.windows.${windowId}.bounds`, window)
-          ipcRenderer.send('window-updated', timerId, windowId);
+          await api.setSettings(`timers.${timerId}.windows.${windowId}.bounds`, window)
+          api.windowUpdated(timerId, windowId)
         }
       })
     })
@@ -67,17 +69,17 @@
 
   watch(() => globalStore.currentTimer, () => {
     if (globalStore.currentTimer) {
-      ipcRenderer.send('current-timer:set', globalStore.currentTimer)
+      api.currentTimerSet(globalStore.currentTimer)
     }
   })
 
   const save = useDebounceFn(async () => {
-    await ipcRenderer.invoke('settings:set', null, toRaw(settingsStore.settings))
-    ipcRenderer.send('settings-updated')
+    await api.setSettings(null, toRaw(settingsStore.settings))
+    api.settingsUpdated()
   }, 200)
 
   onBeforeMount(async () => {
-    const newSettings = await ipcRenderer.invoke('settings:get')
+    const newSettings = await api.getSettings()
     ignoreUpdates(() => {
       settingsStore.settings = newSettings
     })

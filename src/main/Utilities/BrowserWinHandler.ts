@@ -1,12 +1,14 @@
 /* eslint-disable */
 import { EventEmitter } from 'events'
 import { BrowserWindow, app, shell } from 'electron'
+import path from 'path'
 import BrowserWindowConstructorOptions = Electron.BrowserWindowConstructorOptions;
-const DEV_SERVER_URL = process.env.DEV_SERVER_URL
-const isProduction = process.env.NODE_ENV === 'production'
-const isDev = process.env.NODE_ENV === 'development'
+import { fileURLToPath } from 'url'
 
-declare const MAIN_WINDOW_WEBPACK_ENTRY: string;
+declare const MAIN_WINDOW_VITE_DEV_SERVER_URL: string | undefined;
+declare const MAIN_WINDOW_VITE_NAME: string;
+
+const __dirname = import.meta.dirname;
 
 export default class BrowserWinHandler {
   allowRecreate: boolean
@@ -43,8 +45,7 @@ export default class BrowserWinHandler {
       ...this.options,
       webPreferences: {
         ...this.options.webPreferences,
-        nodeIntegration: true, // allow loading modules via the require () function
-        contextIsolation: false, // https://github.com/electron/electron/issues/18037#issuecomment-806320028
+        preload: path.join(__dirname, 'preload.js'),
         backgroundThrottling: false, // countdown will not run when window is behind other windows
       },
     })
@@ -81,14 +82,17 @@ export default class BrowserWinHandler {
 
   async loadPage(pagePath: string, query?: Record<string, string>) {
     if (!this.browserWindow) return Promise.reject(new Error('The page could not be loaded before win \'created\' event'))
-    const serverUrl = MAIN_WINDOW_WEBPACK_ENTRY;
-    const urlSearchParams = new URLSearchParams(query);
-    let queryString = urlSearchParams.toString()
-    if (queryString !== "") {
-      queryString = "?" + queryString
+    if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
+      const urlSearchParams = new URLSearchParams(query);
+      let queryString = urlSearchParams.toString();
+      if (queryString !== "") queryString = "?" + queryString;
+      await this.browserWindow.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL + queryString + '#' + pagePath);
+    } else {
+      await this.browserWindow.loadFile(
+        path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/src/renderer/index.html`),
+        { query, hash: pagePath }
+      );
     }
-    const fullPath = serverUrl + queryString + '#' + pagePath;
-    await this.browserWindow.loadURL(fullPath)
   }
 
   /**

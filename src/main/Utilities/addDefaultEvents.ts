@@ -1,9 +1,9 @@
 import {app} from "electron";
-import * as process from "process";
+import { handleStartupEvent } from './handleStartupEvent.ts'
 
 export default function addDefaultEvents() {
   // Handle creating/removing shortcuts on Windows when installing/uninstalling.
-  if (require('electron-squirrel-startup')) {
+  if (handleStartupEvent()) {
     app.quit();
   }
 

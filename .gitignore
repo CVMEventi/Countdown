@@ -91,3 +91,6 @@ out/
 src/version.ts
 build
 .idea
+.vite
+.serena
+CLAUDE.md

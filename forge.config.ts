@@ -4,11 +4,7 @@ import { MakerZIP } from '@electron-forge/maker-zip';
 import { MakerDeb } from '@electron-forge/maker-deb';
 import { MakerRpm } from '@electron-forge/maker-rpm';
 import { AutoUnpackNativesPlugin } from '@electron-forge/plugin-auto-unpack-natives';
-import { WebpackPlugin } from '@electron-forge/plugin-webpack';
-
-import { mainConfig } from './webpack.main.config.ts';
-import { rendererConfig } from './webpack.renderer.config.ts';
-import { remoteRendererConfig } from './webpack.remote.renderer.config.ts';
+import { VitePlugin } from '@electron-forge/plugin-vite';
 
 import * as fs from "fs";
 import * as path from "path";
@@ -58,33 +54,29 @@ const config: ForgeConfig = {
   ],
   plugins: [
     new AutoUnpackNativesPlugin({}),
-    new WebpackPlugin({
-      mainConfig,
+    new VitePlugin({
+      build: [
+        {
+          entry: 'src/main/index.ts',
+          config: 'vite.main.config.ts',
+          target: 'main',
+        },
+        {
+          entry: 'src/preload/index.ts',
+          config: 'vite.preload.config.ts',
+          target: 'preload',
+        }
+      ],
       renderer: [
         {
-          config: rendererConfig,
-          nodeIntegration: true,
-          entryPoints: [
-            {
-              html: './src/renderer/index.html',
-              js: './src/renderer/index.ts',
-              name: 'main_window',
-            },
-          ],
+          name: 'main_window',
+          config: 'vite.renderer.config.ts',
         },
         {
-          config: remoteRendererConfig,
-          nodeIntegration: false,
-          entryPoints: [
-            {
-              html: './src/remote/index.html',
-              js: './src/remote/index.ts',
-              name: 'remote',
-            },
-          ],
+          name: 'remote',
+          config: 'vite.remote.config.ts',
         },
       ],
-      loggerPort: 9050
     }),
     {
       name: "@timfish/forge-externals-plugin",

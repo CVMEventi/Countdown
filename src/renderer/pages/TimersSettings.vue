@@ -142,12 +142,11 @@ import BaseContainer from '../components/BaseContainer.vue'
 import {useSettingsStore} from '../stores/settings.ts'
 import CreateTimerModal from '../components/CreateTimerModal.vue'
 import ScreensDrag from '../components/ScreensDrag.vue'
-import { ipcRenderer, shell } from 'electron'
+const { api, clipboard } = window
 import SButton from '@common/components/SButton.vue'
 import EditTimerModal from '../components/EditTimerModal.vue'
 import {ulid} from 'ulid'
 import DeleteTimerModal from '../components/DeleteTimerModal.vue'
-import {clipboard} from 'electron'
 import OpenTimerInBrowserButton from '@common/components/OpenTimerInBrowserButton.vue'
 
 const screens = ref<Electron.Display[]>([])
@@ -168,10 +167,10 @@ const otherTimers = computed(() => {
 })
 
 onBeforeMount(async () => {
-  screens.value = await ipcRenderer.invoke('screens:get')
+  screens.value = await api.getScreens()
 
-  ipcRenderer.on('screens-updated', async () => {
-    screens.value = await ipcRenderer.invoke('screens:get');
+  api.onScreensUpdated(async () => {
+    screens.value = await api.getScreens()
   })
 
   const firstTimer = Object.keys(settingsStore.settings.timers)[0]
@@ -191,7 +190,7 @@ const createTimer = (name: string) => {
 }
 
 const selectFile = async () => {
-  const file = await ipcRenderer.invoke('audio:select-file')
+  const file = await api.selectAudioFile()
   if (file) {
     timers.value[currentTimer.value].audioFile = file
   }
@@ -202,7 +201,7 @@ const createWindow = () => {
 }
 
 const getWindowBounds = async (windowId: string) => {
-  timers.value[currentTimer.value].windows[windowId].bounds = await ipcRenderer.invoke('countdown-bounds', currentTimer.value, windowId)
+  timers.value[currentTimer.value].windows[windowId].bounds = await api.getWindowBounds(currentTimer.value, windowId)
 }
 
 const editWindow = (windowId: string) => {

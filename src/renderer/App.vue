@@ -14,14 +14,14 @@ import Drawer from './components/Drawer.vue'
 import SidebarMenu from './components/SidebarMenu.vue'
 import {useGlobalStore} from './stores/global.ts'
 import {onBeforeMount, ref} from 'vue'
-import {ipcRenderer} from 'electron'
+const {api} = window
 import {useSettingsStore} from './stores/settings.ts'
 
 const globalStore = useGlobalStore()
 const settingsStore = useSettingsStore()
 
 onBeforeMount(async () => {
-  settingsStore.settings = await ipcRenderer.invoke('settings:get')
+  settingsStore.settings = await api.getSettings()
 })
 
 </script>
