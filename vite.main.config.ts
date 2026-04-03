@@ -12,6 +12,7 @@ export default defineConfig({
     },
   },
   build: {
+    assetsInlineLimit: 0,
     lib: {
       entry: 'src/main/index.ts',
       formats: ['es'],
