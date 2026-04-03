@@ -72,10 +72,7 @@ export class CountdownApp {
 
         appIcon = new Tray(image)
       } else {
-        appIcon = new Tray(path.resolve(
-          __dirname,
-          otherOsTrayIcon,
-        ))
+        appIcon = new Tray(otherOsTrayIcon)
       }
 
       appIcon.on('right-click', () => {
