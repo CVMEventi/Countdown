@@ -1,13 +1,11 @@
-import { clipboard } from 'electron'
-
 declare module '*.png' {
   const value: string;
-  export = value;
+  export default value;
 }
 
 declare module '*.ico' {
   const value: string;
-  export = value;
+  export default value;
 }
 
 interface IpcGetWindowSettingsArgs {
@@ -44,6 +42,6 @@ interface API {
 declare global {
   interface Window {
     api: API,
-    clipboard: typeof clipboard;
+    clipboard: typeof import('electron').clipboard;
   }
 }
