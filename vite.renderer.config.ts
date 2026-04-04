@@ -12,7 +12,7 @@ export default defineConfig({
       name: 'serve-renderer-root',
       configureServer(server) {
         server.middlewares.use((req, _res, next) => {
-          if (req.url === '/') req.url = '/src/renderer/index.html';
+          if (new URL(req.url ?? '/', 'http://localhost').pathname === '/') req.url = '/src/renderer/index.html';
           next();
         });
       },
