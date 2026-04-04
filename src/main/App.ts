@@ -24,7 +24,6 @@ import path from "path";
 import * as process from "node:process";
 import {Config} from "./Utilities/Config.ts";
 import {TimersOrchestrator} from "./Utilities/TimersOrchestrator.ts";
-import { fileURLToPath } from 'url'
 
 // To be packaged, otherwise it doesn't work
 console.log(macOsTrayIcon2x)
