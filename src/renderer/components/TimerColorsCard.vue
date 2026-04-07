@@ -41,7 +41,7 @@
           <p class="text-xs uppercase text-zinc-400">Time thresholds</p>
           <p class="text-xs text-zinc-500">Applied when ≤ value, most specific wins.</p>
         </div>
-        <button @click="addThreshold" class="text-xs bg-green-600 hover:bg-green-700 rounded px-1.5 py-0.5">+ Add</button>
+        <button @click="addThreshold" class="text-xs bg-green-600 hover:bg-green-700 rounded-sm px-1.5 py-0.5">+ Add</button>
       </div>
 
       <!-- Threshold rows -->

@@ -13,8 +13,8 @@
                 Are you sure you want to delete timer "{{ timerName }}"?
               </div>
               <div class="mt-5 sm:grid sm:grid-flow-row-dense sm:grid-cols-2 sm:gap-3">
-                <button type="button" class="inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-100" @click="open = false" ref="cancelButtonRef">Cancel</button>
-                <button type="button" class="inline-flex w-full justify-center rounded-md bg-red-500 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-600 outline-none" @click="deleteTimer">Delete</button>
+                <button type="button" class="inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-xs ring-1 ring-inset ring-gray-300 hover:bg-gray-100" @click="open = false" ref="cancelButtonRef">Cancel</button>
+                <button type="button" class="inline-flex w-full justify-center rounded-md bg-red-500 px-3 py-2 text-sm font-semibold text-white shadow-xs hover:bg-red-600 outline-hidden" @click="deleteTimer">Delete</button>
               </div>
             </DialogPanel>
           </TransitionChild>

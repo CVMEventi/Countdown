@@ -47,7 +47,7 @@
               <SButton :disabled="!timers[currentTimer].audioFile" tiny type="danger" @click="timers[currentTimer].audioFile = null"><TrashIcon class="w-5"/></SButton>
               <SButton tiny @click="selectFile">Select file</SButton>
             </div>
-            <div class="flex-1 break-words">Current: {{ timers[currentTimer].audioFile }}</div>
+            <div class="flex-1 wrap-break-word">Current: {{ timers[currentTimer].audioFile }}</div>
           </div>
         </div>
       </Card>
@@ -121,7 +121,7 @@
         <OpenTimerInBrowserButton :is-in-browser="false" :server-port="settingsStore.settings.remote.webServerPort" :timer-id="currentTimer" />
       </div>
       <div>
-        <input :value="currentTimer" readonly type="text" @click="clipboard.writeText(currentTimer);" class="input text-center w-[18.5rem]" />
+        <input :value="currentTimer" readonly type="text" @click="clipboard.writeText(currentTimer);" class="input text-center w-74" />
       </div>
     </div>
     <EditTimerModal v-model:window="editingWindow" v-model:window-id="editingWindowId" />

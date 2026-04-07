@@ -3,7 +3,7 @@
     @click.stop.prevent="click"
     @focus="($event.target as HTMLButtonElement).blur();"
     :disabled="disabled"
-    class="rounded-lg ring-transparent text-white"
+    class="rounded-lg ring-transparent text-white cursor-pointer"
     :class="{
       'px-4': !tiny,
       'py-2': !tiny,

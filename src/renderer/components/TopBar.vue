@@ -1,6 +1,6 @@
 <template>
   <div class="flex flex-row justify-between p-1 gap-2 items-center">
-    <button type="button" class="-m-2.5 p-2.5 text-gray-400" @click="globalStore.sidebarOpen = true">
+    <button type="button" class="-m-2.5 p-2.5 text-gray-400 cursor-pointer" @click="globalStore.sidebarOpen = true">
       <span class="sr-only">Open sidebar</span>
       <Bars3Icon class="size-6" aria-hidden="true" />
     </button>

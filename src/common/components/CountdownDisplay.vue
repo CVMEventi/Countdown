@@ -19,7 +19,7 @@
     </div>
     <div
       v-if="settings.show.timer && ((settings.contentAtReset === ContentAtReset.Full && update.isReset) || !update.isReset)"
-      class="text-center text-time font-digital-clock transition-opacity duration-[1000ms]"
+      class="text-center text-time font-digital-clock transition-opacity duration-1000"
       :style="{ color: timerText }"
       :class="timerOpacity"
     >

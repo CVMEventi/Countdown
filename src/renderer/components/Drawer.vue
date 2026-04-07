@@ -15,7 +15,7 @@
                 </div>
                 <TransitionChild as="template" enter="ease-in-out duration-300" enter-from="opacity-0" enter-to="opacity-100" leave="ease-in-out duration-300" leave-from="opacity-100" leave-to="opacity-0">
                   <div class="absolute right-0 top-0 -mr-8 flex pl-2 pt-4 sm:-mr-10 sm:pl-4">
-                    <button type="button" class="relative rounded-md text-gray-300 hover:text-white focus:outline-none focus:ring-2 focus:ring-white" @click="open = false">
+                    <button type="button" class="relative rounded-md text-gray-300 hover:text-white focus:outline-hidden focus:ring-2 focus:ring-white" @click="open = false">
                       <span class="absolute -inset-2.5" />
                       <span class="sr-only">Close panel</span>
                       <XMarkIcon class="size-6" aria-hidden="true" />

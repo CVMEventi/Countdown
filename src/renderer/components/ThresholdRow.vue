@@ -5,11 +5,11 @@
       type="number"
       min="0"
       v-model.number="threshold.value"
-      class="input w-12 text-center text-sm px-1 rounded"
+      class="input w-12 text-center text-sm px-1 rounded-sm"
     />
     <button
       @click="$emit('toggleType')"
-      class="text-sm bg-zinc-700 hover:bg-zinc-600 rounded px-1.5 py-0.5 shrink-0 w-9"
+      class="text-sm bg-zinc-700 hover:bg-zinc-600 rounded-sm px-1.5 py-0.5 shrink-0 w-9"
     >{{ threshold.type === 'minutes' ? 'min' : '%' }}</button>
   </div>
   <ColorInput :alpha-channel="true" v-model="threshold.background" default-value="#000000ff"></ColorInput>

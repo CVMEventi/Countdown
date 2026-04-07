@@ -11,7 +11,7 @@ defineProps<Props>();
 <template>
   <div class="relative pt-1 px-5">
     <div
-      class="overflow-hidden progress-bar mb-4 text-xs flex rounded"
+      class="overflow-hidden progress-bar mb-4 text-xs flex rounded-sm"
       :style="trackColor ? { backgroundColor: trackColor } : {}"
     >
       <div

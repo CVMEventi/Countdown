@@ -12,7 +12,7 @@
               <div v-if="window">
                 <div class="flex flex-row justify-between mb-2">
                   <span class="text-2xl uppercase">Settings</span>
-                  <button type="button" class="relative rounded-md text-gray-300 hover:text-white focus:outline-none focus:ring-2 focus:ring-zinc-700" @click="windowId = null">
+                  <button type="button" class="relative rounded-md text-gray-300 hover:text-white focus:outline-hidden focus:ring-2 focus:ring-zinc-700" @click="windowId = null">
                     <XMarkIcon class="size-6" aria-hidden="true" />
                   </button>
                 </div>
