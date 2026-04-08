@@ -12,7 +12,7 @@ dayjs.extend(duration);
 export interface TimerEngineOptions {
   setTimeLive?: boolean
   stopTimerAtZero?: boolean
-  audioFile?: string
+  audioFile?: string | null
   colorThresholds?: ColorThreshold[]
 }
 
@@ -40,10 +40,10 @@ export class TimerEngine {
   totalSeconds = 0;
   timerIsRunning = false;
   audioEnabled = true;
-  update: UpdateCallback = null;
-  webSocketUpdate: WebSocketUpdateCallback = null;
-  messageUpdate: MessageUpdateCallback = null;
-  playSound: PlaySoundCallback = null;
+  update: UpdateCallback | null = null;
+  webSocketUpdate: WebSocketUpdateCallback | null = null;
+  messageUpdate: MessageUpdateCallback | null = null;
+  playSound: PlaySoundCallback | null = null;
 
   constructor({ interval, options, onUpdate, onWebSocketUpdate, onMessageUpdate, onPlaySound }: TimerEngineConstructorOptions) {
     this._timer = new Timer(interval, this._timerTick.bind(this), this._timerStatusChanged.bind(this))
@@ -108,7 +108,7 @@ export class TimerEngine {
   start() {
     this._secondsSetOnCurrentTimer = this.totalSeconds;
     this._audioRun = false;
-    this._timer.start(this.totalSeconds, this.options.stopTimerAtZero);
+    this._timer.start(this.totalSeconds, this.options.stopTimerAtZero ?? false);
     this._sendUpdate();
     this._sendWebSocketUpdate();
   }
@@ -196,7 +196,7 @@ export class TimerEngine {
   }
 
   setMessage(message?: string) {
-    this.messageUpdate({
+    this.messageUpdate?.({
       timerId: '',
       message,
     });
@@ -215,7 +215,7 @@ export class TimerEngine {
       currentSeconds = this.totalSeconds;
     }
 
-    this.update({
+    this.update?.({
       setSeconds: this.totalSeconds,
       currentSeconds: currentSeconds,
       countSeconds: this.countSeconds(),
@@ -225,7 +225,7 @@ export class TimerEngine {
       isReset: this.isReset(),
       isRunning: this.timerIsRunning,
       isCountingUp: this.isCountingUp(),
-      timerEndsAt: this.endsAt(),
+      timerEndsAt: this.endsAt() ?? "",
     })
   }
 
@@ -238,8 +238,8 @@ export class TimerEngine {
     } else if (!this.timerIsRunning) {
       state = 'Paused';
     } else if (isExpired) {
-      if (this.audioEnabled && !this._audioRun) {
-        this.playSound(this.options.audioFile)
+      if (this.audioEnabled && !this._audioRun && this.options.audioFile) {
+        this.playSound?.(this.options.audioFile)
         this._audioRun = true;
       }
       state = 'Expired';
@@ -251,8 +251,7 @@ export class TimerEngine {
     const currentTimeDuration = dayjs.duration(Math.abs(this._currentSeconds), 'seconds');
     const timeSetOnCurrentTimerDuration = dayjs.duration(this._timer.secondsSet, 'seconds');
 
-    this.webSocketUpdate({
-
+    this.webSocketUpdate?.({
       state: state,
       setTime: this.totalSeconds,
       setTimeHms: setTimeDuration.format('HH:mm:ss'),
@@ -272,7 +271,7 @@ export class TimerEngine {
       timeSetOnCurrentTimerH: timeSetOnCurrentTimerDuration.format('HH'),
       timeSetOnCurrentTimerM: timeSetOnCurrentTimerDuration.format('mm'),
       timeSetOnCurrentTimerS: timeSetOnCurrentTimerDuration.format('ss'),
-      timerEndsAt: this.endsAt(),
+      timerEndsAt: this.endsAt() ?? "",
     })
   }
 

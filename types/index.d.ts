@@ -39,7 +39,7 @@ interface API {
   getWindowBounds(timerId: string, windowId: string): Promise<any>
 }
 
-declare global {
+export declare global {
   interface Window {
     api: API,
     clipboard: typeof import('electron').clipboard;
