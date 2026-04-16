@@ -873,10 +873,10 @@
     http-errors "^2.0.0"
     mime "^3"
 
-"@fastify/static@^9.0.0":
-  version "9.1.0"
-  resolved "https://registry.yarnpkg.com/@fastify/static/-/static-9.1.0.tgz#209445724896a0e9c44916e2faf532d1ec61cff1"
-  integrity sha512-EPRNQYqEYEYTK8yyGbcM0iHpyJaupb94bey5O6iCQfLTADr02kaZU+qeHSdd9H9TiMwTBVkrMa59V8CMbn3avQ==
+"@fastify/static@^9.1.1":
+  version "9.1.1"
+  resolved "https://registry.yarnpkg.com/@fastify/static/-/static-9.1.1.tgz#e70fb7a31f9a50a0002e6a0de4c1a14473707acc"
+  integrity sha512-LHxFea3qdwe0Pbbkh/yux7/k6nFNLGTNcbLKVYgmRDB6LdDE/8TFSO7qWZ0IzM/nF6iwR8W03oFlwe4v79R1Ow==
   dependencies:
     "@fastify/accept-negotiator" "^2.0.0"
     "@fastify/send" "^4.0.0"
