@@ -22,6 +22,7 @@ export default defineConfig({
       external: [
         'electron',
         'grandiose',
+        'openmediatransport',
         'bufferutil',
         'utf-8-validate',
         ...builtinModules,

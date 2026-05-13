@@ -18,7 +18,7 @@ const appName = "Countdown";
 const config: ForgeConfig = {
   packagerConfig: {
     asar: {
-      unpack: "**/node_modules/grandiose/**/*",
+      unpack: "**/node_modules/{grandiose,openmediatransport}/**/*",
     },
     /*osxSign: {},
     osxNotarize: {
@@ -81,7 +81,7 @@ const config: ForgeConfig = {
     {
       name: "@timfish/forge-externals-plugin",
       config: {
-        "externals": ["grandiose"],
+        "externals": ["grandiose", "openmediatransport"],
         "includeDeps": true,
       }
     }

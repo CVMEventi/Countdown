@@ -9,6 +9,7 @@ import {
   CloseAction,
   DEFAULT_CLOSE_ACTION,
   DEFAULT_NDI_ENABLED,
+  DEFAULT_OMT_ENABLED,
   DEFAULT_OSC_ENABLED,
   DEFAULT_OSC_PORT,
   DEFAULT_WEBSERVER_ENABLED,
@@ -37,6 +38,7 @@ export class CountdownApp {
   timersOrchestrator: TimersOrchestrator
 
   ndiTimer: NodeJS.Timeout = null;
+  omtTimer: NodeJS.Timeout = null;
   webServer: HTTP = null;
   oscServer: OSC = null;
 
@@ -167,6 +169,10 @@ export class CountdownApp {
     if (this.config.settings.remote.ndiEnabled ?? DEFAULT_NDI_ENABLED) {
       this.startNdiTimer();
     }
+
+    if (this.config.settings.remote.omtEnabled ?? DEFAULT_OMT_ENABLED) {
+      this.startOmtTimer();
+    }
   }
 
   startNdiTimer() {
@@ -182,6 +188,21 @@ export class CountdownApp {
 
   async ndiIntervalCallback() {
     this.timersOrchestrator.sendNDIFrames()
+  }
+
+  startOmtTimer() {
+    if (this.omtTimer) return;
+    this.omtTimer = setInterval(this.omtIntervalCallback.bind(this), 100);
+  }
+
+  stopOmtTimer() {
+    if (!this.omtTimer) return;
+    clearInterval(this.omtTimer);
+    this.omtTimer = null;
+  }
+
+  async omtIntervalCallback() {
+    this.timersOrchestrator.sendOMTFrames()
   }
 
   _configUpdated() {

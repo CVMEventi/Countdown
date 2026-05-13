@@ -75,6 +75,8 @@ export const DEFAULT_WEBSERVER_PORT = 6565;
 export const DEFAULT_NDI_ENABLED = false;
 export const DEFAULT_NDI_ALPHA = false;
 
+export const DEFAULT_OMT_ENABLED = false;
+
 export const DEFAULT_OSC_ENABLED = false;
 export const DEFAULT_OSC_PORT = 6566;
 
@@ -172,6 +174,7 @@ export const DEFAULT_REMOTE_SETTINGS: RemoteSettings = {
   webServerPort: DEFAULT_WEBSERVER_PORT,
   ndiEnabled: DEFAULT_NDI_ENABLED,
   ndiAlpha: DEFAULT_NDI_ALPHA,
+  omtEnabled: DEFAULT_OMT_ENABLED,
   oscEnabled: DEFAULT_OSC_ENABLED,
   oscPort: DEFAULT_OSC_PORT,
 }
@@ -258,6 +261,7 @@ export interface RemoteSettings {
   webServerPort: number
   ndiEnabled: boolean
   ndiAlpha: boolean
+  omtEnabled: boolean
   oscEnabled: boolean
   oscPort: number
 }

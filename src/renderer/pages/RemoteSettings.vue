@@ -33,6 +33,10 @@
         <CheckBox id="ndiAlpha" v-model="settingsStore.settings.remote.ndiAlpha">Alpha</CheckBox>
       </card>
       <card class="flex flex-col w-[300px]">
+        <p class="text-2xl pb-2">OMT</p>
+        <CheckBox id="omtEnabled" v-model="settingsStore.settings.remote.omtEnabled">Enable</CheckBox>
+      </card>
+      <card class="flex flex-col w-[300px]">
         <p class="text-2xl pb-2">OSC</p>
         <CheckBox id="oscEnabled" v-model="settingsStore.settings.remote.oscEnabled">Enable</CheckBox>
         <p>Port</p>

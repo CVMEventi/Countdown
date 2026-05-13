@@ -15,6 +15,7 @@ import {promises as fs} from "node:fs";
 // @ts-ignore
 import mime from "mime/lite";
 import NDIManager from "../Remotes/NDI.ts";
+import OMTManager from "../Remotes/OMT.ts";
 
 interface WindowsKV {
   [key: string]: BrowserWinHandler;
@@ -24,11 +25,16 @@ interface NDIManagersKV {
   [key: string]: NDIManager;
 }
 
+interface OMTManagersKV {
+  [key: string]: OMTManager;
+}
+
 interface SingleTimer {
   settings: TimerSettings
   engine: TimerEngine
   windows: WindowsKV
   ndiServers: NDIManagersKV
+  omtServers: OMTManagersKV
 }
 
 interface TimersKV {
@@ -96,11 +102,21 @@ export class TimersOrchestrator {
       })
     }
 
+    let omtServers: OMTManagersKV = {}
+    if (this.app.config.settings.remote.omtEnabled) {
+      Object.keys(settings.windows).forEach(windowId => {
+        const server = new OMTManager(`Countdown ${settings.name}-${windowId}`)
+        server.start()
+        omtServers[windowId] = server
+      })
+    }
+
     this.timers[timerId] = {
       settings,
       engine: timerEngine,
       windows,
       ndiServers,
+      omtServers,
     }
   }
 
@@ -206,6 +222,10 @@ export class TimersOrchestrator {
       this.timers[timerId].ndiServers[windowId].stop()
       delete this.timers[timerId].ndiServers[windowId]
     }
+    if (this.timers[timerId].omtServers[windowId]) {
+      this.timers[timerId].omtServers[windowId].stop()
+      delete this.timers[timerId].omtServers[windowId]
+    }
   }
 
   destroyTimer(timerId: string) {
@@ -254,6 +274,11 @@ export class TimersOrchestrator {
               server.start()
               this.timers[timerId].ndiServers[windowId] = server
             }
+            if (this.app.config.settings.remote.omtEnabled) {
+              const server = new OMTManager(`Countdown ${timer.name}-${windowId}`)
+              server.start()
+              this.timers[timerId].omtServers[windowId] = server
+            }
           }
         })
 
@@ -294,6 +319,25 @@ export class TimersOrchestrator {
     }
   }
 
+  sendOMTFrames() {
+    try {
+      Object.keys(this.timers).forEach(timerId => {
+        const timer = this.timers[timerId];
+
+        Object.keys(timer.omtServers).forEach(async windowId => {
+          const windowHandler = this.timers[timerId].windows[windowId]
+          const omtServer = timer.omtServers[windowId]
+          if (!omtServer.hasConnections()) return
+          const image = await windowHandler.browserWindow.webContents.capturePage()
+          await timer.omtServers[windowId].sendFrame(image)
+        })
+      })
+    } catch (e) {
+      console.log(e);
+      return;
+    }
+  }
+
   sendNDIFrames() {
     try {
       Object.keys(this.timers).forEach(timerId => {
@@ -311,6 +355,28 @@ export class TimersOrchestrator {
       console.log(e);
       return;
     }
+  }
+
+  startOmt(): void {
+    Object.keys(this.timers).forEach(timerId => {
+      const timer = this.timers[timerId];
+      Object.keys(timer.windows).forEach(windowId => {
+        if (timer.omtServers[windowId]) return
+        const server = new OMTManager(`Countdown ${timer.settings.name}-${windowId}`)
+        server.start()
+        timer.omtServers[windowId] = server
+      })
+    })
+  }
+
+  stopOmt(): void {
+    Object.keys(this.timers).forEach(timerId => {
+      const timer = this.timers[timerId];
+      Object.keys(timer.omtServers).forEach(windowId => {
+        timer.omtServers[windowId].stop()
+        delete timer.omtServers[windowId]
+      })
+    })
   }
 
   startNdi(): void {
@@ -350,6 +416,9 @@ export class TimersOrchestrator {
       timer.engine.reset()
       Object.keys(timer.ndiServers).forEach(windowId => {
         timer.ndiServers[windowId].stop()
+      })
+      Object.keys(timer.omtServers).forEach(windowId => {
+        timer.omtServers[windowId].stop()
       })
     })
   }

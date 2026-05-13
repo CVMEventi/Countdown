@@ -38,6 +38,13 @@ export default function addIpcHandles(app: CountdownApp)
         app.timersOrchestrator.stopNdi();
         app.stopNdiTimer();
       }
+      if (newSettings.remote.omtEnabled) {
+        app.timersOrchestrator.startOmt();
+        app.startOmtTimer();
+      } else {
+        app.timersOrchestrator.stopOmt();
+        app.stopOmtTimer();
+      }
       if (newSettings.remote.oscEnabled) {
         app.oscServer.port = newSettings.remote.oscPort;
         app.oscServer.start();

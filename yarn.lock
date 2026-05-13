@@ -5596,6 +5596,11 @@ node-abi@^3.45.0:
   dependencies:
     semver "^7.3.5"
 
+node-addon-api@^8.0.0:
+  version "8.7.0"
+  resolved "https://registry.yarnpkg.com/node-addon-api/-/node-addon-api-8.7.0.tgz#f64f8413456ecbe900221305a3f883c37666473f"
+  integrity sha512-9MdFxmkKaOYVTV+XVRG8ArDwwQ77XIgIPyKASB1k3JPq3M8fGQQQE3YpMOrKm6g//Ktx8ivZr8xo1Qmtqub+GA==
+
 node-api-version@^0.2.0:
   version "0.2.1"
   resolved "https://registry.yarnpkg.com/node-api-version/-/node-api-version-0.2.1.tgz#19bad54f6d65628cbee4e607a325e4488ace2de9"
@@ -5745,6 +5750,13 @@ onetime@^5.1.0, onetime@^5.1.2:
   integrity sha512-kbpaSSGJTWdAY5KPVeMOKXSrPtr8C8C7wodJbcsd51jRnmD+GZu8Y0VoU6Dm5Z4vWr0Ig/1NKuWRKf7j5aaYSg==
   dependencies:
     mimic-fn "^2.1.0"
+
+openmediatransport@^0.0.2:
+  version "0.0.2"
+  resolved "https://registry.yarnpkg.com/openmediatransport/-/openmediatransport-0.0.2.tgz#a12a0559884452e5425c1cd5e910514324fc2ac6"
+  integrity sha512-VDU1VKKZKtnkUa3jggYj9VD8d3pcyaQnf0CXvoY/nYMw3WiBiTq34CkT+DlGX9D8vQ+ZwoSbvYFoIFcWB6eWPQ==
+  dependencies:
+    node-addon-api "^8.0.0"
 
 optionator@^0.9.3:
   version "0.9.4"
