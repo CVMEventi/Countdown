@@ -378,9 +378,9 @@
   optionalDependencies:
     global-agent "^3.0.0"
 
-"@electron/node-gyp@git+https://github.com/electron/node-gyp.git#06b29aafb7708acef8b3669835c8a7857ebc92d2":
+"@electron/node-gyp@https://github.com/electron/node-gyp#06b29aafb7708acef8b3669835c8a7857ebc92d2":
   version "10.2.0-electron.1"
-  resolved "git+https://github.com/electron/node-gyp.git#06b29aafb7708acef8b3669835c8a7857ebc92d2"
+  resolved "https://github.com/electron/node-gyp#06b29aafb7708acef8b3669835c8a7857ebc92d2"
   dependencies:
     env-paths "^2.2.0"
     exponential-backoff "^3.1.1"
@@ -5795,10 +5795,10 @@ onetime@^5.1.0, onetime@^5.1.2:
   dependencies:
     mimic-fn "^2.1.0"
 
-openmediatransport@^0.0.2:
-  version "0.0.2"
-  resolved "https://registry.yarnpkg.com/openmediatransport/-/openmediatransport-0.0.2.tgz#a12a0559884452e5425c1cd5e910514324fc2ac6"
-  integrity sha512-VDU1VKKZKtnkUa3jggYj9VD8d3pcyaQnf0CXvoY/nYMw3WiBiTq34CkT+DlGX9D8vQ+ZwoSbvYFoIFcWB6eWPQ==
+openmediatransport@^0.0.4:
+  version "0.0.4"
+  resolved "https://registry.yarnpkg.com/openmediatransport/-/openmediatransport-0.0.4.tgz#1fc2a5da2756c61ee3b0dcbde993ff5125815d04"
+  integrity sha512-zkaAeO6mDSSqpT2RTz4YuDMx10K4+rXU7ajiuyC4ar5cLd8MpMs6vQwBh6huB5l+3TugiKooDVFKhUsRQnLqNg==
   dependencies:
     node-addon-api "^8.0.0"
 
