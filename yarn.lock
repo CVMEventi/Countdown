@@ -5795,10 +5795,10 @@ onetime@^5.1.0, onetime@^5.1.2:
   dependencies:
     mimic-fn "^2.1.0"
 
-openmediatransport@^0.0.9:
-  version "0.0.9"
-  resolved "https://registry.yarnpkg.com/openmediatransport/-/openmediatransport-0.0.9.tgz#da7ba4f7c2110a05fcfc2e307cb189b3d6f10f62"
-  integrity sha512-KxlYTc+KkC9aObHAv2OAKEFDnD46o8+JRI3v/9xnzVTVPvNabfPUe61OKtgmMr6n6uy5D2UCI+x/5VP0RlsaOQ==
+openmediatransport@^0.0.10:
+  version "0.0.10"
+  resolved "https://registry.yarnpkg.com/openmediatransport/-/openmediatransport-0.0.10.tgz#178b26f0b8ad62e8a056933b0a5450f9811c7453"
+  integrity sha512-kz/u+DreXEHv6Gjpv7UmAcsxDOHx11ihFj31Q2NX6+pN79e4r+Knt+csipMNS/PnN/L86T81+zKnQEV7KhS+qQ==
   dependencies:
     node-addon-api "^8.0.0"
 
