@@ -26,7 +26,7 @@ const config: ForgeConfig = {
     asar: {
       unpack: "**/node_modules/{grandiose,openmediatransport}/**/*",
     },
-    osxSign: true,
+    osxSign: process.env.SKIP_NOTARIZATION ? undefined : true,
     osxNotarize,
     icon: "src/icons/icon.icns",
     win32metadata: {
