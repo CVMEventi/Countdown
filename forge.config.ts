@@ -15,17 +15,19 @@ import MakerFlatpak from '@electron-forge/maker-flatpak'
 
 const appName = "Countdown";
 
+const osxNotarize = process.env.SKIP_NOTARIZATION ? undefined : {
+  appleId: process.env.APPLE_ID ?? "",
+  appleIdPassword: process.env.APPLE_ID_PASSWORD ?? "",
+  teamId: process.env.APPLE_TEAM_ID ?? ""
+}
+
 const config: ForgeConfig = {
   packagerConfig: {
     asar: {
       unpack: "**/node_modules/{grandiose,openmediatransport}/**/*",
     },
-    osxSign: {},
-    osxNotarize: {
-      appleId: process.env.APPLE_ID,
-      appleIdPassword: process.env.APPLE_ID_PASSWORD,
-      teamId: process.env.APPLE_TEAM_ID
-    },
+    osxSign: true,
+    osxNotarize,
     icon: "src/icons/icon.icns",
     win32metadata: {
       "CompanyName": "CVM Eventi",
