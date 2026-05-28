@@ -2,12 +2,12 @@
   <BaseContainer>
     <TopBar />
     <div class="flex flex-1 gap-2 p-1 min-h-0 text-white">
-      <card class="inline-block border flex flex-col p-0">
+      <card class="border flex flex-col p-0">
         <p class="text-lg uppercase">Presets (m)</p>
         <draggable item-key="index" v-model="settingsStore.settings.presets" handle=".handle"
                    class="flex flex-col gap-2 overflow-y-auto items-center pb-1 pr-2">
           <template #item="{element, index}">
-            <div :key="index" class="inline-block w-[140px]">
+            <div :key="index" class="inline-block w-35">
               <EditPreset v-model="settingsStore.settings.presets[index]" @delete="deletePreset(index)"></EditPreset>
             </div>
           </template>
