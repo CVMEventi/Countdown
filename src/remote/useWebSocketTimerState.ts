@@ -16,7 +16,7 @@ export function useWebSocketTimerState() {
       setSeconds: u.setTime,
       countSeconds: u.currentTime ?? 0,
       currentSeconds: u.currentTime ?? 0,
-      extraSeconds: u.currentTime < 0 ? Math.abs(u.currentTime) : 0,
+      extraSeconds: u.currentTime ?? 0 < 0 ? Math.abs(u.currentTime ?? 0) : 0,
       secondsSetOnCurrentTimer: u.timeSetOnCurrentTimer ?? u.setTime,
       isReset: u.state === 'Not Running',
       isRunning: u.state === 'Running' || u.state === 'Expiring' || u.state === 'Expired',

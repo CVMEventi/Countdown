@@ -121,11 +121,11 @@
         <OpenTimerInBrowserButton :is-in-browser="false" :server-port="settingsStore.settings.remote.webServerPort" :timer-id="currentTimer" />
       </div>
       <div>
-        <input :value="currentTimer" readonly type="text" @click="clipboard.writeText(currentTimer);" class="input text-center w-74" />
+        <input :value="currentTimer" readonly type="text" @click="clipboard.writeText(currentTimer!);" class="input text-center w-74" />
       </div>
     </div>
     <EditTimerModal v-model:window="editingWindow" v-model:window-id="editingWindowId" />
-    <DeleteTimerModal v-model:open="deleteOpen" @delete="deleteTimer" :timer-name="timers[currentTimer]?.name ?? null" :timer-id="currentTimer" />
+    <DeleteTimerModal v-model:open="deleteOpen" @delete="deleteTimer" :timer-name="timers[currentTimer!]?.name ?? null" :timer-id="currentTimer" />
   </BaseContainer>
 </template>
 

@@ -8,7 +8,7 @@ export interface TimerEngineUpdate {
   isRunning: boolean
   isReset: boolean
   isCountingUp: boolean
-  timerEndsAt: string
+  timerEndsAt: string | null
 }
 
 export interface TimerEngineUpdates {
