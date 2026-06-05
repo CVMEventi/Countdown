@@ -12,14 +12,16 @@ import SButton from '@common/components/SButton.vue'
 const props = defineProps<{
   serverPort?: number|string
   timerId?: string
+  windowId?: string
   isInBrowser: boolean
 }>()
 
 const openTimerInBrowser = () => {
+  const windowPath = props.windowId ? `/${props.windowId}`: ''
   if (props.isInBrowser) {
-    window.open(`/remote#/countdown/${props.timerId}`, '_blank');
+    window.open(`/remote#/countdown/${props.timerId}${windowPath}`, '_blank');
   } else {
-    window.open(`http://127.0.0.1:${props.serverPort}/remote/#/countdown/${props.timerId}`, '_blank');
+    window.open(`http://127.0.0.1:${props.serverPort}/remote#/countdown/${props.timerId}${windowPath}`, '_blank');
   }
 }
 </script>

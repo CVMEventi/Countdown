@@ -104,6 +104,7 @@
           </div>
           <SButton title="Save current position and size of window" class="inline-flex" tiny type="info" @click="getWindowBounds(key as string)"><ArrowUturnLeftIcon class="w-5" /><WindowIcon class="w-5" /> </SButton>
           <div class="inline-flex ml-auto flex-row gap-2">
+            <OpenTimerInBrowserButton :is-in-browser="false" :server-port="settingsStore.settings.remote.webServerPort" :timer-id="currentTimer" :window-id="key as string" />
             <SButton title="Hide/Show" tiny type="warning" @click="window.bounds.hidden = !window.bounds.hidden">
               <EyeIcon v-if="window.bounds.hidden" class="w-5" />
               <EyeSlashIcon v-if="!window.bounds.hidden" class="w-5" />
@@ -117,9 +118,6 @@
       </div>
     </div>
     <div class="flex flex-row justify-end text-white bg-zinc-800 px-1 py-1 -mb-1 -mx-2 gap-2">
-      <div>
-        <OpenTimerInBrowserButton :is-in-browser="false" :server-port="settingsStore.settings.remote.webServerPort" :timer-id="currentTimer" />
-      </div>
       <div>
         <input :value="currentTimer" readonly type="text" @click="clipboard.writeText(currentTimer!);" class="input text-center w-74" />
       </div>
