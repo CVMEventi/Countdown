@@ -252,7 +252,7 @@ export interface TimerSettings {
   setTimeLive: boolean
   stopTimerAtZero: boolean
   followTimer: string
-  audioFile: string
+  audioFile: string | null
   windows: Windows
 }
 

@@ -15,7 +15,7 @@
         <SButton :disabled="Object.keys(timers).length < 2" tiny type="danger" @click="deleteOpen = true"><TrashIcon class="w-5"/></SButton>
       </template>
     </TopBar>
-    <div v-if="timers[currentTimer]" class="mt-1 flex flex-1 flex-col gap-2 p-1 min-h-0 text-white overflow-y-scroll">
+    <div v-if="currentTimer && timers[currentTimer]" class="mt-1 flex flex-1 flex-col gap-2 p-1 min-h-0 text-white overflow-y-scroll">
       <Card class="inline-flex flex-col gap-2">
         <div class="inline-flex flex-row items-center gap-10 justify-between">
           <CheckBox id="stopTimerAtZero" v-model="timers[currentTimer].stopTimerAtZero">Stop timer at 0</CheckBox>
@@ -131,7 +131,7 @@
 
 <script setup lang="ts">
 import {computed, onBeforeMount, ref} from 'vue'
-import {DEFAULT_TIMER_SETTINGS, DEFAULT_WINDOW_SETTINGS} from '@common/config.ts'
+import { DEFAULT_TIMER_SETTINGS, DEFAULT_WINDOW_SETTINGS, Timers } from '@common/config.ts'
 import TimersNavigation from "@common/components/TimersNavigation.vue";
 import TimerTabButton from "@common/components/TimerTabButton.vue";
 import Card from "@common/components/Card.vue";
@@ -151,12 +151,15 @@ import OpenTimerInBrowserButton from '@common/components/OpenTimerInBrowserButto
 
 const screens = ref<Electron.Display[]>([])
 const settingsStore = useSettingsStore()
-const timers = computed(() => settingsStore.settings.timers)
+const timers = computed<Timers>(() => settingsStore.settings.timers)
 const currentTimer = ref<string|null>(null)
 const createModalOpen = ref<boolean>(false)
 const editingWindowId = ref<string|null>(null)
 const editingWindow = computed(() => {
   if (editingWindowId.value === null) {
+    return null
+  }
+  if (!currentTimer.value) {
     return null
   }
   return timers.value[currentTimer.value].windows[editingWindowId.value]
