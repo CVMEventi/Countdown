@@ -150,12 +150,15 @@ export class TimersOrchestrator {
     }
     const mimeType = mime.getType(audioFilePath)
 
+    if (!mainBrowserWindow || mainBrowserWindow.isDestroyed()) return;
     mainBrowserWindow.webContents.send('audio:play', audioFile, mimeType)
   }
 
   _timerEngineUpdate(timerId: string, update: TimerEngineUpdate) {
     const mainBrowserWindow = this.app.mainWindowHandler.browserWindow;
-    mainBrowserWindow.webContents.send('update', timerId, update);
+    if (mainBrowserWindow && !mainBrowserWindow.isDestroyed()) {
+      mainBrowserWindow.webContents.send('update', timerId, update);
+    }
     Object.keys(this.timers).forEach((timer) => {
       Object.keys(this.timers[timer].windows).forEach(windowId => {
         if (update.isReset
@@ -180,6 +183,7 @@ export class TimersOrchestrator {
   _timerEngineMessageUpdate(timerId: string, update: MessageUpdate) {
     Object.keys(this.timers[timerId].windows).forEach(windowId => {
       const browserWinHandler = this.timers[timerId].windows[windowId];
+      if (!browserWinHandler.browserWindow || browserWinHandler.browserWindow.isDestroyed()) return;
       browserWinHandler.browserWindow.webContents.send('message', update);
     })
   }
