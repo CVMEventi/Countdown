@@ -167,7 +167,8 @@ export class TimersOrchestrator {
           return
         }
         const browserWinHandler = this.timers[timer].windows[windowId];
-        if (!browserWinHandler.browserWindow) return
+        const browserWindow = browserWinHandler.browserWindow;
+        if (!browserWindow || browserWindow.isDestroyed()) return
         browserWinHandler.browserWindow.webContents.send('update', timerId, update);
       })
     })
