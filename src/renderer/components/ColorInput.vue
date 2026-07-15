@@ -2,7 +2,7 @@
   <div class="flex flex-row items-center mt-1">
     <Popover v-slot="{ open }">
       <Float
-        placement="left"
+        placement="top"
         :shift="10"
         enter="transition duration-200 ease-out"
         enter-from="scale-95 opacity-0"
