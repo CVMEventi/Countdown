@@ -1,5 +1,5 @@
 import { ref, reactive, onMounted, onUnmounted } from 'vue'
-import type { TimerEngineUpdate, TimerEngineUpdates, TimerEngineWebSocketUpdate, WebSocketUpdate } from '../common/TimerInterfaces.ts'
+import type { ConfigWebSocketUpdate, TimerEngineUpdate, TimerEngineUpdates, TimerEngineWebSocketUpdate, WebSocketUpdate } from '../common/TimerInterfaces.ts'
 import type { Timers } from '../common/config.ts'
 
 export function useWebSocketTimerState() {
@@ -37,9 +37,14 @@ export function useWebSocketTimerState() {
     }
     ws.onmessage = (event) => {
       try {
-        const data: WebSocketUpdate<TimerEngineWebSocketUpdate> = JSON.parse(event.data)
-        if (data.type === 'timerEngine' && data.update?.timerId) {
-          updates[data.update.timerId] = mapUpdate(data.update)
+        const data: WebSocketUpdate<TimerEngineWebSocketUpdate> | WebSocketUpdate<ConfigWebSocketUpdate> = JSON.parse(event.data)
+        if (data.type === 'timerEngine') {
+          const update = data.update as TimerEngineWebSocketUpdate
+          if (update.timerId) {
+            updates[update.timerId] = mapUpdate(update)
+          }
+        } else if (data.type === 'config') {
+          timers.value = data.update as ConfigWebSocketUpdate
         }
       } catch {}
     }

@@ -1,3 +1,5 @@
+import type {Timers} from "./config.ts";
+
 export interface TimerEngineUpdate {
   setSeconds: number
   secondsSetOnCurrentTimer: number
@@ -24,6 +26,8 @@ export interface WebSocketUpdate<PayloadType> {
   type: string
   update: PayloadType
 }
+
+export type ConfigWebSocketUpdate = Timers
 
 export interface TimerEngineWebSocketUpdate {
   timerId?: string,

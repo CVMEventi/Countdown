@@ -3,7 +3,7 @@ import FastifyWebSocket from '@fastify/websocket';
 import FastifyStatic from '@fastify/static';
 import {BrowserWindow, ipcMain, app} from "electron";
 import path from 'path';
-import {TimerEngineWebSocketUpdate, WebSocketUpdate} from '@common/TimerInterfaces.ts'
+import {ConfigWebSocketUpdate, TimerEngineWebSocketUpdate, WebSocketUpdate} from '@common/TimerInterfaces.ts'
 import {TimersOrchestrator} from "../Utilities/TimersOrchestrator.ts";
 import {TimerEngine} from "../TimerEngine.ts";
 // @ts-ignore
@@ -241,7 +241,7 @@ export default class HTTP {
     })
   }
 
-  sendToWebSocket(update: WebSocketUpdate<TimerEngineWebSocketUpdate>): void {
+  sendToWebSocket(update: WebSocketUpdate<TimerEngineWebSocketUpdate> | WebSocketUpdate<ConfigWebSocketUpdate>): void {
     if (!this.fastifyServer.websocketServer) {
       return;
     }

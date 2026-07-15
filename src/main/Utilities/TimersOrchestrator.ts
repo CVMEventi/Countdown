@@ -181,6 +181,13 @@ export class TimersOrchestrator {
     })
   }
 
+  _configWebSocketUpdate() {
+    this.app.webServer.sendToWebSocket({
+      type: 'config',
+      update: this.app.config.settings.timers
+    })
+  }
+
   _timerEngineMessageUpdate(timerId: string, update: MessageUpdate) {
     Object.keys(this.timers[timerId].windows).forEach(windowId => {
       const browserWinHandler = this.timers[timerId].windows[windowId];
@@ -299,6 +306,8 @@ export class TimersOrchestrator {
         this.createTimer(timerId, timer)
       }
     })
+
+    this._configWebSocketUpdate()
   }
 
   windowUpdated(timerId: string, windowId: number): void {
