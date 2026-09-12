@@ -23,7 +23,7 @@ export class Timer {
 
   setInterval(interval: number) {
     this.interval = interval;
-    this.adjustingTimer.interval = interval;
+    this.adjustingTimer.setInterval(interval);
   }
 
   start(seconds: number, stopsAtZero: boolean) {

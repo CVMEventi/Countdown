@@ -102,7 +102,6 @@ export class TimerEngine {
   setTimerInterval(interval: number) {
     this._currentInterval = interval;
     this._timer.setInterval(interval);
-    this._timer.adjustingTimer.interval = interval;
   }
 
   start() {

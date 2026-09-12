@@ -203,7 +203,7 @@ describe('Timer', () => {
     it('updates the interval on the timer and underlying AdjustingInterval', () => {
       timer.setInterval(500);
       expect(timer.interval).toBe(500);
-      expect(timer.adjustingTimer.interval).toBe(500);
+      expect(timer.adjustingTimer._interval).toBe(500);
     });
   });
 });
