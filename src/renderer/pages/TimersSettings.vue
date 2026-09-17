@@ -179,7 +179,8 @@ onBeforeMount(async () => {
 })
 
 const createTimer = (name: string) => {
-  timers.value[ulid()] = {
+  const timerId = ulid()
+  timers.value[timerId] = {
     ...structuredClone(DEFAULT_TIMER_SETTINGS),
     ...{
       name,
@@ -188,6 +189,7 @@ const createTimer = (name: string) => {
       }
     }
   }
+  currentTimer.value = timerId
 }
 
 const selectFile = async () => {
