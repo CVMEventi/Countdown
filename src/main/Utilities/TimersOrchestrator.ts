@@ -47,6 +47,8 @@ export class TimersOrchestrator {
   app: CountdownApp
   timers: TimersKV = {}
   currentTimer: string|null = null
+  // Timers whose end sound is playing in the main window
+  playingSounds = new Set<string>()
   // Windows being placed from settings: their bounds change on purpose and must not be saved back
   private _positioningWindows = new WeakSet<BrowserWinHandler>()
 
@@ -164,6 +166,11 @@ export class TimersOrchestrator {
   }
 
   async _playSound(timerId: string, audioFilePath: string) {
+    this.app.webServer.sendToWebSocket({
+      type: 'audio',
+      update: { timerId }
+    })
+
     const mainBrowserWindow = this.app.mainWindowHandler.browserWindow;
     let audioFile;
     try {
@@ -172,9 +179,43 @@ export class TimersOrchestrator {
       return
     }
     const mimeType = mime.getType(audioFilePath)
+    const deviceId = this.timers[timerId]?.settings.audioOutputDeviceId ?? null
 
     if (!mainBrowserWindow || mainBrowserWindow.isDestroyed()) return;
-    mainBrowserWindow.webContents.send('audio:play', audioFile, mimeType)
+    mainBrowserWindow.webContents.send('audio:play', timerId, audioFile, mimeType, deviceId)
+    this.setSoundPlaying(timerId, true)
+  }
+
+  stopSound(timerId: string) {
+    this.app.webServer.sendToWebSocket({
+      type: 'audioStop',
+      update: { timerId }
+    })
+
+    this.setSoundPlaying(timerId, false)
+
+    const mainBrowserWindow = this.app.mainWindowHandler.browserWindow;
+    if (!mainBrowserWindow || mainBrowserWindow.isDestroyed()) return;
+    mainBrowserWindow.webContents.send('audio:stop', timerId)
+  }
+
+  setSoundPlaying(timerId: string, playing: boolean) {
+    if (playing === this.playingSounds.has(timerId)) return
+    if (playing) {
+      this.playingSounds.add(timerId)
+    } else {
+      this.playingSounds.delete(timerId)
+    }
+
+    const playingTimerIds = [...this.playingSounds]
+    this.app.webServer.sendToWebSocket({
+      type: 'audioState',
+      update: { playingTimerIds }
+    })
+
+    const mainBrowserWindow = this.app.mainWindowHandler.browserWindow;
+    if (!mainBrowserWindow || mainBrowserWindow.isDestroyed()) return;
+    mainBrowserWindow.webContents.send('audio:state', playingTimerIds)
   }
 
   _timerEngineUpdate(timerId: string, update: TimerEngineUpdate) {

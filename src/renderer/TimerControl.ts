@@ -9,6 +9,7 @@ import {
   IpcResume,
   IpcSetSeconds,
   IpcStart,
+  IpcStopSound,
   IpcTimerCommandName,
   IpcTogglePause
 } from "../common/IpcInterfaces.ts";
@@ -87,6 +88,14 @@ export class TimerControl implements ITimerController {
       name: IpcTimerCommandName.Message,
       timerId,
       message,
+    };
+    await api.command(command);
+  }
+
+  async stopSound(timerId: string) {
+    const command: IpcStopSound = {
+      name: IpcTimerCommandName.StopSound,
+      timerId,
     };
     await api.command(command);
   }

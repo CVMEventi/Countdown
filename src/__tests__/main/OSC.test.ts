@@ -14,17 +14,24 @@ function makeOrchestrator(timerIds: string[] = ['timer1']) {
   };
   const timers: Record<string, { engine: typeof engine }> = {};
   timerIds.forEach(id => { timers[id] = { engine }; });
-  return { orchestrator: { timers } as any, engine };
+  return { orchestrator: { timers, stopSound: vi.fn() } as any, engine };
 }
 
 describe('OSC._messageReceived', () => {
   let osc: OSC;
   let engine: ReturnType<typeof makeOrchestrator>['engine'];
+  let orchestrator: ReturnType<typeof makeOrchestrator>['orchestrator'];
 
   beforeEach(() => {
-    const { orchestrator, engine: e } = makeOrchestrator();
+    const { orchestrator: o, engine: e } = makeOrchestrator();
     engine = e;
+    orchestrator = o;
     osc = new OSC(6566, orchestrator);
+  });
+
+  it('/stop-sound stops the timer sound', () => {
+    osc._messageReceived(['/stop-sound', 'timer1']);
+    expect(orchestrator.stopSound).toHaveBeenCalledWith('timer1');
   });
 
   it('ignores messages with an unknown timerId', () => {

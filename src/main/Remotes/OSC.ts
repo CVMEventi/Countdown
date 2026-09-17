@@ -69,6 +69,9 @@ export class OSC {
       case '/jog-current':
         this.timersOrchestrator.timers[timerId].engine.jogCurrent(hours * secondsPerHour + minutes * secondsPerMinute + seconds);
         break;
+      case '/stop-sound':
+        this.timersOrchestrator.stopSound(timerId);
+        break;
     }
   }
 }

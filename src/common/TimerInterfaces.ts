@@ -24,6 +24,14 @@ export interface MessageUpdate {
 
 export type MessageWebSocketUpdate = MessageUpdate
 
+export interface AudioWebSocketUpdate {
+  timerId: string
+}
+
+export interface AudioStateWebSocketUpdate {
+  playingTimerIds: string[]
+}
+
 export interface WebSocketUpdate<PayloadType> {
   type: string
   update: PayloadType
@@ -59,6 +67,8 @@ export type AnyWebSocketUpdate =
   | WebSocketUpdate<TimerEngineWebSocketUpdate>
   | WebSocketUpdate<ConfigWebSocketUpdate>
   | WebSocketUpdate<MessageWebSocketUpdate>
+  | WebSocketUpdate<AudioWebSocketUpdate>
+  | WebSocketUpdate<AudioStateWebSocketUpdate>
 
 export type UpdateCallback = (update: TimerEngineUpdate) => void;
 export type WebSocketUpdateCallback = (update: TimerEngineWebSocketUpdate) => void;

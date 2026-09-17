@@ -35,6 +35,10 @@ export default function addIpcHandles(app: CountdownApp)
     return listLocalIPv4Addresses()
   })
 
+  ipcMain.on('audio:ended', (event, timerId: string) => {
+    app.timersOrchestrator.setSoundPlaying(timerId, false)
+  })
+
   ipcMain.on('window-updated', async (event, timerId, windowId) => {
     app.timersOrchestrator.windowUpdated(timerId, windowId)
   })

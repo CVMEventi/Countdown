@@ -6,4 +6,5 @@ export interface ITimerController {
   jogSet(timerId: string, seconds: number): Promise<void>
   jogCurrent(timerId: string, seconds: number): Promise<void>
   sendMessage(timerId: string, message: string): Promise<void>
+  stopSound(timerId: string): Promise<void>
 }

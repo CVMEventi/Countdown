@@ -3,6 +3,9 @@ import FastifyWebSocket from '@fastify/websocket';
 import FastifyStatic from '@fastify/static';
 import {BrowserWindow, ipcMain, app} from "electron";
 import path from 'path';
+import {createReadStream, promises as fs} from 'node:fs';
+// @ts-ignore
+import mime from 'mime/lite';
 import {AnyWebSocketUpdate} from '@common/TimerInterfaces.ts'
 import {TimersOrchestrator} from "../Utilities/TimersOrchestrator.ts";
 import {TimerEngine} from "../TimerEngine.ts";
@@ -165,6 +168,25 @@ export default class HTTP {
         this.timerEngine(req.params.timerId).setMessage(req.params.message)
         res.code(200).send()
       })
+      timerRoutes.get<GenericRequest>('/stop-sound', (req, res) => {
+        this.timersOrchestrator.stopSound(req.params.timerId)
+        res.code(200).send()
+      })
+      // Only the file configured for the timer is served, so the browser countdown can play its end sound
+      timerRoutes.get<GenericRequest>('/audio', async (req, res) => {
+        const audioFile = this.timersOrchestrator.timers[req.params.timerId].settings.audioFile
+        if (!audioFile) return res.code(404).send()
+        try {
+          await fs.access(audioFile)
+        } catch {
+          return res.code(404).send()
+        }
+        return res
+          .code(200)
+          .header('Content-Type', mime.getType(audioFile) ?? 'application/octet-stream')
+          .header('Cache-Control', 'no-store')
+          .send(createReadStream(audioFile))
+      })
     }, { prefix: '/timer/:timerId' })
 
     /* Legacy */
@@ -239,6 +261,7 @@ export default class HTTP {
     this.fastifyServer.register(async (fastify) => {
       fastify.get('/ws', { websocket: true }, (socket: WebSocket) => {
         this.sendCurrentMessages(socket)
+        this.sendPlayingSounds(socket)
       });
     })
   }
@@ -264,6 +287,13 @@ export default class HTTP {
         update: { timerId, message },
       }))
     })
+  }
+
+  private sendPlayingSounds(socket: WebSocket): void {
+    socket.send(JSON.stringify({
+      type: 'audioState',
+      update: { playingTimerIds: [...this.timersOrchestrator.playingSounds] },
+    }))
   }
 
   setupIpc(): void {

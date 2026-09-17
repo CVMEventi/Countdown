@@ -28,16 +28,15 @@
         :presets="settingsStore.settings.presets"
         :show-nav="false"
         :is-in-browser="false"
+        :playing-sounds="playingTimerIds"
       />
     </div>
   </BaseContainer>
 </template>
 
 <script lang="ts" setup>
-import { onMounted, watch } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 const { api } = window;
-// @ts-ignore
-import { Howl } from 'howler'
 import ControlPanel from '@common/components/ControlPanel.vue'
 import TimersNavigation from '@common/components/TimersNavigation.vue'
 import TimerTabButton from '@common/components/TimerTabButton.vue'
@@ -58,6 +57,9 @@ const timersStore = useTimersStore()
 const globalStore = useGlobalStore()
 const webServerStore = useWebServerStore()
 
+const playingSounds = new Map<string, HTMLAudioElement>()
+const playingTimerIds = ref<string[]>([])
+
 // Keep the selection on a timer that still exists: it may have been deleted in the
 // settings, and it should survive navigating away from this page and back
 watch(() => Object.keys(settingsStore.settings.timers), (timerIds) => {
@@ -66,9 +68,31 @@ watch(() => Object.keys(settingsStore.settings.timers), (timerIds) => {
 }, { immediate: true })
 
 onMounted(async () => {
-  api.onAudioPlay((_, audioFile, mimeType) => {
-    const sound = new Howl({ src: [`data:${mimeType};base64,${audioFile}`] })
-    sound.play()
+  api.onAudioPlay(async (_, timerId, audioFile, mimeType, deviceId) => {
+    const sound = new Audio(`data:${mimeType};base64,${audioFile}`)
+    if (deviceId) {
+      // The device may have been unplugged: fall back to the default output
+      await sound.setSinkId(deviceId).catch(() => {})
+    }
+    playingSounds.get(timerId)?.pause()
+    playingSounds.set(timerId, sound)
+    const finished = () => {
+      // A newer sound for the same timer may have replaced this one
+      if (playingSounds.get(timerId) !== sound) return
+      playingSounds.delete(timerId)
+      api.audioEnded(timerId)
+    }
+    sound.addEventListener('ended', finished)
+    await sound.play().catch(finished)
+  })
+
+  api.onAudioState((_, timerIds) => {
+    playingTimerIds.value = timerIds
+  })
+
+  api.onAudioStop((_, timerId) => {
+    playingSounds.get(timerId)?.pause()
+    playingSounds.delete(timerId)
   })
 })
 </script>

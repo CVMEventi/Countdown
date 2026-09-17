@@ -8,6 +8,7 @@ export enum IpcTimerCommandName {
   JogSet,
   JogCurrent,
   Message,
+  StopSound,
 }
 
 export interface IpcSetSeconds {
@@ -59,7 +60,12 @@ export interface IpcMessage {
   message?: string
 }
 
-export type IpcTimerCommand = IpcSetSeconds | IpcStart | IpcReset | IpcTogglePause | IpcPause | IpcResume | IpcJogSet | IpcJogCurrent | IpcMessage;
+export interface IpcStopSound {
+  name: IpcTimerCommandName.StopSound
+  timerId: string
+}
+
+export type IpcTimerCommand = IpcSetSeconds | IpcStart | IpcReset | IpcTogglePause | IpcPause | IpcResume | IpcJogSet | IpcJogCurrent | IpcMessage | IpcStopSound;
 
 export interface IpcGetWindowSettingsArgs {
   timerId: string

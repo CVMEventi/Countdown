@@ -45,6 +45,9 @@ export class IpcTimerController {
       case IpcTimerCommandName.Message:
         timerEngine.setMessage(command.message);
         break;
+      case IpcTimerCommandName.StopSound:
+        this.timersOrchestrator.stopSound(command.timerId);
+        break;
     }
   }
 }

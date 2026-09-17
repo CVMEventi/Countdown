@@ -78,6 +78,16 @@
             <TrashIcon class="w-5 h-5 inline-flex" />
           </SButton>
         </div>
+        <SButton
+          v-if="isSoundPlaying"
+          class="mt-2 inline-flex items-center gap-1"
+          tiny
+          type="info"
+          @click="controller.stopSound(currentTimerId)"
+        >
+          <SpeakerXMarkIcon class="w-4 h-4" />
+          Stop sound
+        </SButton>
       </Card>
     </div>
 
@@ -96,7 +106,7 @@
 
 <script lang="ts" setup>
 import { computed, ref } from 'vue'
-import { PlayPauseIcon, PlusIcon, MinusIcon, TrashIcon, ArrowRightIcon } from '@heroicons/vue/24/outline'
+import { PlayPauseIcon, PlusIcon, MinusIcon, TrashIcon, ArrowRightIcon, SpeakerXMarkIcon } from '@heroicons/vue/24/outline'
 import type { ITimerController } from '../TimerController.ts'
 import type { TimerEngineUpdate, TimerEngineUpdates } from '../TimerInterfaces.ts'
 import type { TimerSettings, Timers } from '../config.ts'
@@ -118,6 +128,7 @@ const props = defineProps<{
   showNav?: boolean
   serverPort?: number
   isInBrowser: boolean
+  playingSounds?: string[]
 }>()
 
 const showNav = computed(() => props.showNav ?? true)
@@ -155,6 +166,11 @@ const followingTimerId = computed<string | null>(() => {
   if (!Object.keys(props.timers).find((timerId) => timerId === followTimer)) return null
   if (currentUpdate.value.isReset && followTimer) return followTimer
   return null
+})
+
+const isSoundPlaying = computed(() => {
+  if (!props.currentTimerId || !currentTimer.value?.audioFile) return false
+  return props.playingSounds?.includes(props.currentTimerId) ?? false
 })
 
 const firstWindowId = computed(() => {

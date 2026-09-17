@@ -35,7 +35,10 @@ interface API {
   windowUpdated(timerId: string, windowId: string): void
   currentTimerSet(currentTimerId: string): void
   settingsUpdated(): void
-  onAudioPlay(callback: (event: any, audioFile: string, mimeType: string) => void): any
+  onAudioPlay(callback: (event: any, timerId: string, audioFile: string, mimeType: string, deviceId: string | null) => void): any
+  onAudioStop(callback: (event: any, timerId: string) => void): any
+  onAudioState(callback: (event: any, playingTimerIds: string[]) => void): any
+  audioEnded(timerId: string): void
   getWindowSettings(args: IpcGetWindowSettingsArgs): Promise<any>
   isServerRunning(): Promise<WebServerStatus>
   manageServer(command: string, port?: number): Promise<any>

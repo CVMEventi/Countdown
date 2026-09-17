@@ -1,6 +1,8 @@
 import { ref, reactive, onMounted, onUnmounted } from 'vue'
 import type {
   AnyWebSocketUpdate,
+  AudioStateWebSocketUpdate,
+  AudioWebSocketUpdate,
   ConfigWebSocketUpdate,
   MessageWebSocketUpdate,
   TimerEngineUpdate,
@@ -19,6 +21,19 @@ export function useWebSocketTimerState() {
   const messages = reactive<Messages>({})
   const currentTimerId = ref<string | null>(null)
   const connected = ref(false)
+  const playingSounds = ref<string[]>([])
+
+  const audioListeners: ((timerId: string) => void)[] = []
+
+  const audioStopListeners: ((timerId: string) => void)[] = []
+
+  function onAudio(listener: (timerId: string) => void) {
+    audioListeners.push(listener)
+  }
+
+  function onAudioStop(listener: (timerId: string) => void) {
+    audioStopListeners.push(listener)
+  }
 
   let ws: WebSocket | null = null
   let retryTimer: ReturnType<typeof setTimeout> | null = null
@@ -73,6 +88,14 @@ export function useWebSocketTimerState() {
           if (update.timerId) {
             messages[update.timerId] = update.message || null
           }
+        } else if (data.type === 'audio') {
+          const update = data.update as AudioWebSocketUpdate
+          audioListeners.forEach(listener => listener(update.timerId))
+        } else if (data.type === 'audioStop') {
+          const update = data.update as AudioWebSocketUpdate
+          audioStopListeners.forEach(listener => listener(update.timerId))
+        } else if (data.type === 'audioState') {
+          playingSounds.value = (data.update as AudioStateWebSocketUpdate).playingTimerIds
         }
       } catch {}
     }
@@ -92,5 +115,5 @@ export function useWebSocketTimerState() {
 
   onUnmounted(disconnect)
 
-  return { timers, updates, messages, currentTimerId, connected }
+  return { timers, updates, messages, currentTimerId, connected, playingSounds, onAudio, onAudioStop }
 }

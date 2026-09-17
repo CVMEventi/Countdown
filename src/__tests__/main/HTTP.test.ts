@@ -34,6 +34,7 @@ function makeOrchestrator(timerIds: string[] = ['timer1']) {
     orchestrator: {
       timers,
       app: { config: { settings: { timers: {} } } },
+      stopSound: vi.fn(),
     } as any,
     engine,
   };
@@ -42,10 +43,12 @@ function makeOrchestrator(timerIds: string[] = ['timer1']) {
 describe('HTTP routes', () => {
   let http: HTTP;
   let engine: ReturnType<typeof makeEngine>;
+  let orchestrator: ReturnType<typeof makeOrchestrator>['orchestrator'];
 
   beforeEach(() => {
-    const { orchestrator, engine: e } = makeOrchestrator();
+    const { orchestrator: o, engine: e } = makeOrchestrator();
     engine = e;
+    orchestrator = o;
     http = new HTTP(orchestrator, null as any);
   });
 
@@ -129,6 +132,20 @@ describe('HTTP routes', () => {
       const res = await http.fastifyServer.inject({ method: 'GET', url: '/timer/timer1/message/hello' });
       expect(res.statusCode).toBe(200);
       expect(engine.setMessage).toHaveBeenCalledWith('hello');
+    });
+  });
+
+  describe('sound routes', () => {
+    it('/stop-sound stops the timer sound', async () => {
+      const res = await http.fastifyServer.inject({ method: 'GET', url: '/timer/timer1/stop-sound' });
+      expect(res.statusCode).toBe(200);
+      expect(orchestrator.stopSound).toHaveBeenCalledWith('timer1');
+    });
+
+    it('/stop-sound returns 404 for unknown timerId', async () => {
+      const res = await http.fastifyServer.inject({ method: 'GET', url: '/timer/unknown/stop-sound' });
+      expect(res.statusCode).toBe(404);
+      expect(orchestrator.stopSound).not.toHaveBeenCalled();
     });
   });
 

@@ -166,6 +166,7 @@ export const DEFAULT_TIMER_SETTINGS: TimerSettings = {
   stopTimerAtZero: DEFAULT_STOP_TIMER_AT_ZERO,
   followTimer: null,
   audioFile: null,
+  audioOutputDeviceId: null,
   windows: {[ulid()]: DEFAULT_WINDOW_SETTINGS},
 }
 
@@ -253,6 +254,7 @@ export interface TimerSettings {
   stopTimerAtZero: boolean
   followTimer: string
   audioFile: string | null
+  audioOutputDeviceId: string | null
   windows: Windows
 }
 

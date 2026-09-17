@@ -35,4 +35,8 @@ export class HttpTimerController implements ITimerController {
       await fetch(`/timer/${timerId}/message`)
     }
   }
+
+  async stopSound(timerId: string): Promise<void> {
+    await fetch(`/timer/${timerId}/stop-sound`)
+  }
 }

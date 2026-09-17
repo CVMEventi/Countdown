@@ -59,6 +59,16 @@
       <SButton class="self-start" tiny type="info" @click="selectFile">
         {{ timer.audioFile ? 'Replace…' : 'Choose file…' }}
       </SButton>
+      <div class="flex flex-col gap-1">
+        <label for="audioOutputDevice" class="text-sm">Output</label>
+        <select id="audioOutputDevice" v-model="audioOutputDeviceId" class="input p-2 w-full">
+          <option :value="null">System default</option>
+          <option v-for="device in audioOutputDevices" :key="device.deviceId" :value="device.deviceId">
+            {{ device.label }}
+          </option>
+          <option v-if="isSelectedDeviceMissing" :value="audioOutputDeviceId">Unavailable device</option>
+        </select>
+      </div>
     </div>
 
     <div class="flex flex-col gap-1 border-t border-zinc-700 pt-3 min-w-0">
@@ -75,7 +85,7 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { CheckIcon, ClipboardDocumentIcon, MusicalNoteIcon, XMarkIcon } from '@heroicons/vue/20/solid'
 import { TimerSettings, Timers } from '@common/config.ts'
 import { copyText } from '@common/clipboard.ts'
@@ -118,6 +128,42 @@ const updateTimerDuration = (event: Event) => {
     timer.value.timerDuration = value
   }
 }
+
+interface AudioOutputDevice {
+  deviceId: string
+  label: string
+}
+
+const audioOutputDevices = ref<AudioOutputDevice[]>([])
+
+// Older timers were saved before the output could be chosen
+const audioOutputDeviceId = computed({
+  get: () => timer.value.audioOutputDeviceId ?? null,
+  set: (deviceId: string | null) => timer.value.audioOutputDeviceId = deviceId,
+})
+
+const isSelectedDeviceMissing = computed(() => audioOutputDeviceId.value !== null
+  && !audioOutputDevices.value.some((device) => device.deviceId === audioOutputDeviceId.value))
+
+const loadAudioOutputDevices = async () => {
+  const devices = await navigator.mediaDevices.enumerateDevices()
+  audioOutputDevices.value = devices
+    // "default" follows the system choice, which is what the "System default" option already does
+    .filter((device) => device.kind === 'audiooutput' && device.deviceId !== 'default')
+    .map((device, index) => ({
+      deviceId: device.deviceId,
+      label: device.label || `Output ${index + 1}`,
+    }))
+}
+
+onMounted(() => {
+  loadAudioOutputDevices()
+  navigator.mediaDevices.addEventListener('devicechange', loadAudioOutputDevices)
+})
+
+onUnmounted(() => {
+  navigator.mediaDevices.removeEventListener('devicechange', loadAudioOutputDevices)
+})
 
 const selectFile = async () => {
   const file = await api.selectAudioFile()

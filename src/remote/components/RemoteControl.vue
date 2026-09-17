@@ -8,6 +8,7 @@
         v-model:currentTimerId="currentTimerId"
         :controller="controller"
         is-in-browser
+        :playing-sounds="playingSounds"
       />
       <div v-if="!connected" class="text-red-400 text-sm">WebSocket disconnected — reconnecting…</div>
     </div>
@@ -20,5 +21,5 @@ import { HttpTimerController } from '../HttpTimerController.ts'
 import { useWebSocketTimerState } from '../useWebSocketTimerState.ts'
 
 const controller = new HttpTimerController()
-const { timers, updates, currentTimerId, connected } = useWebSocketTimerState()
+const { timers, updates, currentTimerId, connected, playingSounds } = useWebSocketTimerState()
 </script>
