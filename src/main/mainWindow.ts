@@ -6,10 +6,10 @@ import {APP_VERSION} from "../version.ts";
 export default function createMainWindow (options: BrowserWindowConstructorOptions = {}) {
   options = {
     ...{
-      height: 590,
-      width: 920,
-      minWidth: 920,
-      minHeight: 590,
+      height: 600,
+      width: 1050,
+      minWidth: 1050,
+      minHeight: 600,
       title: `Countdown v${APP_VERSION}`
     },
     ...options,
