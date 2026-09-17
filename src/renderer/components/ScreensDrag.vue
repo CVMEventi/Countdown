@@ -2,27 +2,40 @@
   <svg
     xmlns="http://www.w3.org/2000/svg"
     :viewBox="svgSize"
-    style="width: 100%;height: 100%;"
+    style="width: 100%;height: 100%;touch-action: none;"
     ref="svg"
+    @pointermove="onPointerMove"
+    @pointerup="endInteraction"
+    @pointercancel="endInteraction"
   >
-    <g v-for="(window, key, index) in windows">
-    <rect
-      class="draggable"
-      @mousedown="startDrag($event, key as string)"
-      @mousemove="drag($event, key as string)"
-      @mouseup="endDrag($event)"
-      @mouseleave="endDrag"
-      :x="windowCoordinates(key as string).x"
-      :y="windowCoordinates(key as string).y"
-      :width="windowCoordinates(key as string).width"
-      :height="windowCoordinates(key as string).height"
-      stroke="#ffffff" stroke-width="10" fill="black"></rect>
+    <g v-for="(window, key, index) in windows" :key="key">
+      <rect
+        :class="window.bounds.fullscreenOn ? 'fullscreen' : 'draggable'"
+        @pointerdown="startInteraction($event, key as string, 'move')"
+        :x="windowCoordinates(key as string).x"
+        :y="windowCoordinates(key as string).y"
+        :width="windowCoordinates(key as string).width"
+        :height="windowCoordinates(key as string).height"
+        stroke="#ffffff" stroke-width="10" fill="black"></rect>
       <text
         :x="windowCoordinates(key as string).x + windowCoordinates(key as string).width / 2"
         :y="windowCoordinates(key as string).y + windowCoordinates(key as string).height / 2"
         :width="windowCoordinates(key as string).width"
         :height="windowCoordinates(key as string).height"
         dominant-baseline="middle" text-anchor="middle" fill="white" font-size="150">{{ index + 1 }}</text>
+      <template v-if="!window.bounds.fullscreenOn">
+        <rect
+          v-for="handle in handleRects(key as string)"
+          :key="handle.handle"
+          :class="`handle handle-${handle.handle}`"
+          @pointerdown="startInteraction($event, key as string, handle.handle)"
+          :x="handle.x"
+          :y="handle.y"
+          :width="handle.width"
+          :height="handle.height"
+          :fill="handle.handle.length === 2 ? '#ffffff' : 'transparent'"
+        ></rect>
+      </template>
     </g>
     <rect
       v-for="screen in screens"
@@ -48,23 +61,37 @@
 </template>
 
 <script lang="ts" setup>
-import {computed, ref} from "vue";
+import {computed, nextTick, onBeforeUnmount, onMounted, ref, watch} from "vue";
 import Display = Electron.Display;
-import {WindowBounds, Windows, WindowSettings} from '../../common/config'
+import {WindowBounds, Windows} from '../../common/config'
 
 defineOptions({
   name: 'ScreensDrag',
 });
 
-let dragging = ref<string|null>(null);
-let offset = ref<{
+type Handle = 'move' | 'n' | 's' | 'e' | 'w' | 'ne' | 'nw' | 'se' | 'sw'
+
+interface Rect {
   x: number
   y: number
-}>({
-  x: 0,
-  y: 0,
-});
-let svg = ref();
+  width: number
+  height: number
+}
+
+const MIN_WIDTH = 160;
+const MIN_HEIGHT = 90;
+// Handle size in on-screen pixels, converted to SVG units using the current scale
+const HANDLE_PX = 4;
+
+const interaction = ref<{
+  key: string
+  handle: Handle
+  pointerId: number
+  start: { x: number, y: number }
+  startBounds: Rect
+} | null>(null);
+const svg = ref<SVGSVGElement>();
+const svgScale = ref(1);
 
 export interface Props {
   screens: Display[]
@@ -97,41 +124,148 @@ const svgSize = computed(() => {
   return `${minX - 10} ${minY - 10} ${maxX + 20} ${maxY + 20}`
 })
 
-function startDrag(event: MouseEvent, key: string) {
-  if (windows.value[key].bounds.fullscreenOn) {
-    return;
+const handleSize = computed(() => HANDLE_PX / svgScale.value);
+
+function updateScale() {
+  const CTM = svg.value?.getScreenCTM();
+  if (CTM && CTM.a > 0) {
+    svgScale.value = CTM.a;
   }
-  dragging.value = key;
-  offset.value = getMousePosition(event);
-  offset.value.x -= parseFloat((event.target as HTMLElement).getAttributeNS(null, "x"));
-  offset.value.y -= parseFloat((event.target as HTMLElement).getAttributeNS(null, "y"));
 }
 
-function drag(event: MouseEvent, key: string) {
-  if (windows.value[key].bounds.fullscreenOn) {
-    return;
-  }
-  if (dragging.value !== key) {
+let resizeObserver: ResizeObserver | null = null;
+
+onMounted(() => {
+  updateScale();
+  resizeObserver = new ResizeObserver(updateScale);
+  resizeObserver.observe(svg.value);
+});
+
+onBeforeUnmount(() => {
+  resizeObserver?.disconnect();
+});
+
+watch(svgSize, () => nextTick(updateScale));
+
+function handleRects(key: string): (Rect & { handle: Handle })[] {
+  const {x, y, width, height} = windowCoordinates(key);
+  const h = handleSize.value;
+  const c = h * 2;
+
+  // Edges first, corners last so corners are on top
+  return [
+    {handle: 'n', x, y: y - h / 2, width, height: h},
+    {handle: 's', x, y: y + height - h / 2, width, height: h},
+    {handle: 'w', x: x - h / 2, y, width: h, height},
+    {handle: 'e', x: x + width - h / 2, y, width: h, height},
+    {handle: 'nw', x: x - c / 2, y: y - c / 2, width: c, height: c},
+    {handle: 'ne', x: x + width - c / 2, y: y - c / 2, width: c, height: c},
+    {handle: 'sw', x: x - c / 2, y: y + height - c / 2, width: c, height: c},
+    {handle: 'se', x: x + width - c / 2, y: y + height - c / 2, width: c, height: c},
+  ];
+}
+
+function startInteraction(event: PointerEvent, key: string, handle: Handle) {
+  if (event.button !== 0 || windows.value[key].bounds.fullscreenOn) {
     return;
   }
   event.preventDefault();
-  const mouseCoordinates = getMousePosition(event);
+  updateScale();
 
-  const newWindow: WindowBounds = {
-    ...windows.value[key].bounds,
-    x: Math.round(mouseCoordinates.x - offset.value.x),
-    y: Math.round(mouseCoordinates.y - offset.value.y),
-  }
-
-  windows.value[key].bounds = newWindow;
+  const {x, y, width, height} = windows.value[key].bounds;
+  interaction.value = {
+    key,
+    handle,
+    pointerId: event.pointerId,
+    start: getMousePosition(event),
+    startBounds: {x, y, width, height},
+  };
+  svg.value.setPointerCapture(event.pointerId);
 }
 
-function endDrag(event: MouseEvent) {
-  dragging.value = null;
+function onPointerMove(event: PointerEvent) {
+  const current = interaction.value;
+  if (!current || current.pointerId !== event.pointerId) {
+    return;
+  }
+  if (windows.value[current.key]?.bounds.fullscreenOn) {
+    return;
+  }
+  event.preventDefault();
+
+  const mouse = getMousePosition(event);
+  const dx = mouse.x - current.start.x;
+  const dy = mouse.y - current.start.y;
+
+  const newRect = computeBounds(current.handle, current.startBounds, dx, dy, event.shiftKey);
+
+  const newWindow: WindowBounds = {
+    ...windows.value[current.key].bounds,
+    x: Math.round(newRect.x),
+    y: Math.round(newRect.y),
+    width: Math.round(newRect.width),
+    height: Math.round(newRect.height),
+  }
+
+  windows.value[current.key].bounds = newWindow;
+}
+
+function computeBounds(handle: Handle, start: Rect, dx: number, dy: number, keepRatio: boolean): Rect {
+  if (handle === 'move') {
+    return {...start, x: start.x + dx, y: start.y + dy};
+  }
+
+  const right = start.x + start.width;
+  const bottom = start.y + start.height;
+
+  let width = start.width;
+  let height = start.height;
+
+  if (handle.includes('e')) width = start.width + dx;
+  if (handle.includes('w')) width = start.width - dx;
+  if (handle.includes('s')) height = start.height + dy;
+  if (handle.includes('n')) height = start.height - dy;
+
+  width = Math.max(MIN_WIDTH, width);
+  height = Math.max(MIN_HEIGHT, height);
+
+  // Shift on a corner keeps the original aspect ratio
+  if (keepRatio && handle.length === 2 && start.height > 0) {
+    const ratio = start.width / start.height;
+    if (width / ratio > height) {
+      height = width / ratio;
+    } else {
+      width = height * ratio;
+    }
+    if (width < MIN_WIDTH) {
+      width = MIN_WIDTH;
+      height = width / ratio;
+    }
+    if (height < MIN_HEIGHT) {
+      height = MIN_HEIGHT;
+      width = height * ratio;
+    }
+  }
+
+  // Keep the opposite edge fixed when dragging west/north edges
+  const x = handle.includes('w') ? right - width : start.x;
+  const y = handle.includes('n') ? bottom - height : start.y;
+
+  return {x, y, width, height};
+}
+
+function endInteraction(event: PointerEvent) {
+  if (!interaction.value || interaction.value.pointerId !== event.pointerId) {
+    return;
+  }
+  if (svg.value?.hasPointerCapture(event.pointerId)) {
+    svg.value.releasePointerCapture(event.pointerId);
+  }
+  interaction.value = null;
 }
 
 function getMousePosition(event: MouseEvent) {
-  const CTM = (svg.value as SVGGraphicsElement).getScreenCTM();
+  const CTM = svg.value.getScreenCTM();
   return {
     x: (event.clientX - CTM.e) / CTM.a,
     y: (event.clientY - CTM.f) / CTM.d
@@ -158,6 +292,22 @@ function windowCoordinates(key: string) {
 <style scoped>
   .draggable {
     cursor: move;
+  }
+
+  .handle-n, .handle-s {
+    cursor: ns-resize;
+  }
+
+  .handle-e, .handle-w {
+    cursor: ew-resize;
+  }
+
+  .handle-nw, .handle-se {
+    cursor: nwse-resize;
+  }
+
+  .handle-ne, .handle-sw {
+    cursor: nesw-resize;
   }
 
   text, .non-draggable {
