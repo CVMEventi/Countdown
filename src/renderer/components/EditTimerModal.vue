@@ -17,9 +17,10 @@
                   </button>
                 </div>
                 <div class="flex flex-col gap-2">
-                  <div class="flex flex-row gap-2 items-start">
+                  <div class="flex flex-row gap-2 items-stretch">
                     <TimerOptionsCard v-model="window" />
                     <TimerUICard v-model="window" />
+                    <WindowPositionCard v-model="window" :screens="screens" />
                   </div>
                   <TimerColorsCard v-model="window" />
                 </div>
@@ -39,6 +40,11 @@ import { XMarkIcon } from '@heroicons/vue/24/outline'
 import TimerOptionsCard from './TimerOptionsCard.vue'
 import TimerUICard from './TimerUICard.vue'
 import TimerColorsCard from './TimerColorsCard.vue'
+import WindowPositionCard from './WindowPositionCard.vue'
+
+defineProps<{
+  screens: Electron.Display[]
+}>()
 
 const windowId = defineModel<string|null>('windowId')
 const window = defineModel<WindowSettings|null>('window')

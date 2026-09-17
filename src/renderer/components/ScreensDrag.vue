@@ -8,7 +8,13 @@
     @pointerup="endInteraction"
     @pointercancel="endInteraction"
   >
-    <g v-for="(window, key, index) in windows" :key="key" :class="{'hidden-window': window.bounds.hidden}">
+    <g
+      v-for="(window, key, index) in windows"
+      :key="key"
+      :class="{'hidden-window': window.bounds.hidden}"
+      @pointerenter="emit('hover', key as string)"
+      @pointerleave="emit('hover', null)"
+    >
       <rect
         :class="window.bounds.fullscreenOn ? 'fullscreen' : 'draggable'"
         @pointerdown="startInteraction($event, key as string, 'move')"
@@ -16,7 +22,7 @@
         :y="windowCoordinates(key as string).y"
         :width="windowCoordinates(key as string).width"
         :height="windowCoordinates(key as string).height"
-        stroke="#ffffff" stroke-width="10" fill="black"
+        :stroke="key === highlightedWindow ? '#3b82f6' : '#ffffff'" stroke-width="10" fill="black"
         :stroke-dasharray="window.bounds.hidden ? '40 30' : undefined"></rect>
       <text
         :x="windowCoordinates(key as string).x + windowCoordinates(key as string).width / 2"
@@ -101,9 +107,15 @@ const svgScale = ref(1);
 
 export interface Props {
   screens: Display[]
+  highlightedWindow?: string | null
 }
 
-const props = defineProps<Props>()
+const props = withDefaults(defineProps<Props>(), {
+  highlightedWindow: null,
+})
+const emit = defineEmits<{
+  hover: [key: string | null]
+}>()
 const windows = defineModel<Windows>('windows')
 
 const svgSize = computed(() => {
