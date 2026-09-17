@@ -8,7 +8,7 @@
     @pointerup="endInteraction"
     @pointercancel="endInteraction"
   >
-    <g v-for="(window, key, index) in windows" :key="key">
+    <g v-for="(window, key, index) in windows" :key="key" :class="{'hidden-window': window.bounds.hidden}">
       <rect
         :class="window.bounds.fullscreenOn ? 'fullscreen' : 'draggable'"
         @pointerdown="startInteraction($event, key as string, 'move')"
@@ -16,13 +16,19 @@
         :y="windowCoordinates(key as string).y"
         :width="windowCoordinates(key as string).width"
         :height="windowCoordinates(key as string).height"
-        stroke="#ffffff" stroke-width="10" fill="black"></rect>
+        stroke="#ffffff" stroke-width="10" fill="black"
+        :stroke-dasharray="window.bounds.hidden ? '40 30' : undefined"></rect>
       <text
         :x="windowCoordinates(key as string).x + windowCoordinates(key as string).width / 2"
         :y="windowCoordinates(key as string).y + windowCoordinates(key as string).height / 2"
         :width="windowCoordinates(key as string).width"
         :height="windowCoordinates(key as string).height"
         dominant-baseline="middle" text-anchor="middle" fill="white" font-size="150">{{ index + 1 }}</text>
+      <text
+        v-if="window.bounds.hidden"
+        :x="windowCoordinates(key as string).x + windowCoordinates(key as string).width / 2"
+        :y="windowCoordinates(key as string).y + windowCoordinates(key as string).height / 2 + 130"
+        dominant-baseline="middle" text-anchor="middle" fill="white" font-size="70">Hidden</text>
       <template v-if="!window.bounds.fullscreenOn">
         <rect
           v-for="handle in handleRects(key as string)"
@@ -308,6 +314,10 @@ function windowCoordinates(key: string) {
 
   .handle-ne, .handle-sw {
     cursor: nesw-resize;
+  }
+
+  .hidden-window {
+    opacity: 0.4;
   }
 
   text, .non-draggable {
