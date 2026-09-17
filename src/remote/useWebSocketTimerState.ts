@@ -40,6 +40,14 @@ export function useWebSocketTimerState() {
     }
   }
 
+  // The selected timer can disappear while we are connected (deleted in the app), which
+  // would otherwise leave the UI pointing at a timer that no longer exists
+  function selectTimer(newTimers: Timers) {
+    const ids = Object.keys(newTimers)
+    if (currentTimerId.value && ids.includes(currentTimerId.value)) return
+    currentTimerId.value = ids[0] ?? null
+  }
+
   function connect() {
     const protocol = location.protocol === 'https:' ? 'wss' : 'ws'
     ws = new WebSocket(`${protocol}://${location.host}/ws`)
@@ -78,7 +86,7 @@ export function useWebSocketTimerState() {
   onMounted(async () => {
     const res = await fetch('/timers')
     timers.value = await res.json()
-    currentTimerId.value = Object.keys(timers.value)[0] ?? null
+    selectTimer(timers.value)
     connect()
   })
 
