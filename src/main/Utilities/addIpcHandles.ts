@@ -39,10 +39,6 @@ export default function addIpcHandles(app: CountdownApp)
     app.timersOrchestrator.windowUpdated(timerId, windowId)
   })
 
-  ipcMain.handle('countdown-bounds', (event, timerId: string, windowId: string) => {
-    return app.timersOrchestrator.getWindowBounds(timerId, windowId)
-  })
-
   ipcMain.on('current-timer:set', (event, timerId: string) => {
     app.timersOrchestrator.currentTimer = timerId;
   })

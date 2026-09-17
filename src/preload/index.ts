@@ -21,7 +21,7 @@ contextBridge.exposeInMainWorld(
     getNetworkAddresses: async () => await ipcRenderer.invoke('network:addresses'),
     onScreensUpdated: (callback: (event: any) => void) => ipcRenderer.on('screens-updated', callback),
     selectAudioFile: async (): Promise<string> => await ipcRenderer.invoke('audio:select-file'),
-    getWindowBounds: async (timerId: string, windowId: string): Promise<any> => await ipcRenderer.invoke('countdown-bounds', timerId, windowId),
+    onWindowBoundsUpdated: (callback: (event: any, timerId: string, windowId: string, bounds: any) => void) => ipcRenderer.on('window-bounds:updated', callback),
   }
 )
 contextBridge.exposeInMainWorld("clipboard", clipboard)

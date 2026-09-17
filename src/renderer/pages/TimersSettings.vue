@@ -72,7 +72,6 @@
                 @input="window.bounds.height = $event.target.value !== '' ? parseInt($event.target.value) : 0"
                 v-no-wheel type="number" class="input w-20 px-2 sm:text-sm">
             </div>
-            <SButton title="Save current position and size of window" class="inline-flex" tiny type="info" @click="getWindowBounds(key as string)"><ArrowUturnLeftIcon class="w-5" /><WindowIcon class="w-5" /> </SButton>
             <div class="inline-flex ml-auto flex-row gap-2">
               <ShareTimerButton
                 :is-in-browser="false"
@@ -106,7 +105,7 @@ import { DEFAULT_TIMER_SETTINGS, DEFAULT_WINDOW_SETTINGS, Timers } from '@common
 import TimersNavigation from "@common/components/TimersNavigation.vue";
 import TimerTabButton from "@common/components/TimerTabButton.vue";
 import Card from "@common/components/Card.vue";
-import {PlusIcon, TrashIcon, WindowIcon, ArrowUturnLeftIcon, CogIcon, EyeIcon, EyeSlashIcon} from "@heroicons/vue/20/solid";
+import {PlusIcon, TrashIcon, CogIcon, EyeIcon, EyeSlashIcon} from "@heroicons/vue/20/solid";
 import TopBar from '../components/TopBar.vue'
 import BaseContainer from '../components/BaseContainer.vue'
 import {useSettingsStore} from '../stores/settings.ts'
@@ -166,10 +165,6 @@ const createTimer = (name: string) => {
 
 const createWindow = () => {
   timers.value[currentTimer.value].windows[ulid()] = structuredClone(DEFAULT_WINDOW_SETTINGS)
-}
-
-const getWindowBounds = async (windowId: string) => {
-  timers.value[currentTimer.value].windows[windowId].bounds = await api.getWindowBounds(currentTimer.value, windowId)
 }
 
 const editWindow = (windowId: string) => {

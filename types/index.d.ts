@@ -43,7 +43,7 @@ interface API {
   getNetworkAddresses(): Promise<{ interface: string; address: string }[]>
   onScreensUpdated(callback: (event: any) => void): any
   selectAudioFile(): Promise<string>
-  getWindowBounds(timerId: string, windowId: string): Promise<any>
+  onWindowBoundsUpdated(callback: (event: any, timerId: string, windowId: string, bounds: import('../src/common/config.ts').WindowBounds) => void): any
 }
 
 export declare global {

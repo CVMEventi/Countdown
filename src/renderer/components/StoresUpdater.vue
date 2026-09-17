@@ -44,7 +44,7 @@
     [key: string]: WindowsKV
   }
 
-  watch(() => {
+  const { ignoreUpdates: ignoreBoundsUpdates } = watchIgnorable(() => {
     let timers: TimersKV = {}
     Object.keys(settingsStore.settings.timers).forEach((timerId) => {
       const timer = settingsStore.settings.timers[timerId]
@@ -68,6 +68,18 @@
       })
     })
   }, {deep: true})
+
+  // Bounds changed by moving/resizing the window itself are already saved and applied by main:
+  // update the store without sending them back
+  api.onWindowBoundsUpdated((_event, timerId, windowId, bounds) => {
+    const window = settingsStore.settings.timers[timerId]?.windows[windowId]
+    if (!window) return
+    ignoreUpdates(() => {
+      ignoreBoundsUpdates(() => {
+        window.bounds = bounds
+      })
+    })
+  })
 
   watch(() => globalStore.currentTimer, () => {
     if (globalStore.currentTimer) {

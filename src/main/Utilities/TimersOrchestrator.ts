@@ -1,7 +1,6 @@
 import {
   ColorThreshold,
   TimerSettings,
-  WindowBounds,
   WindowSettings
 } from "../../common/config.ts";
 import {TimerEngine, TimerEngineConstructorOptions, TimerEngineOptions} from "../TimerEngine.ts";
@@ -41,10 +40,15 @@ interface TimersKV {
   [key: string]: SingleTimer
 }
 
+// Moving or resizing a window fires a burst of events: wait for it to settle before saving the bounds
+const WINDOW_BOUNDS_SYNC_DELAY_MS = 300
+
 export class TimersOrchestrator {
   app: CountdownApp
   timers: TimersKV = {}
   currentTimer: string|null = null
+  // Windows being placed from settings: their bounds change on purpose and must not be saved back
+  private _positioningWindows = new WeakSet<BrowserWinHandler>()
 
   constructor(app: CountdownApp) {
     this.app = app
@@ -152,6 +156,7 @@ export class TimersOrchestrator {
     });
 
     countdownWindowHandler.onCreated(async function (browserWindow: BrowserWindow) {
+      this._watchWindowBounds(timerId, windowId, countdownWindowHandler)
       await this._setCountdownWindowPosition(countdownWindowHandler, windowSettings);
     }.bind(this))
 
@@ -219,7 +224,52 @@ export class TimersOrchestrator {
     })
   }
 
+  // Keep settings in sync when the user moves or resizes a countdown window directly
+  private _watchWindowBounds(timerId: string, windowId: string, windowHandler: BrowserWinHandler) {
+    const browserWindow = windowHandler.browserWindow
+    let syncTimeout: NodeJS.Timeout = null
+
+    const scheduleSync = () => {
+      clearTimeout(syncTimeout)
+      syncTimeout = setTimeout(() => this._syncWindowBounds(timerId, windowId, windowHandler), WINDOW_BOUNDS_SYNC_DELAY_MS)
+    }
+
+    browserWindow.on('move', scheduleSync)
+    browserWindow.on('resize', scheduleSync)
+    browserWindow.on('closed', () => clearTimeout(syncTimeout))
+  }
+
+  private _syncWindowBounds(timerId: string, windowId: string, windowHandler: BrowserWinHandler) {
+    const browserWindow = windowHandler.browserWindow
+    if (!browserWindow || browserWindow.isDestroyed()) return
+    if (this._positioningWindows.has(windowHandler) || browserWindow.isFullScreen()) return
+
+    const windowSettings = this.app.config.settings.timers[timerId]?.windows[windowId]
+    if (!windowSettings || windowSettings.bounds.fullscreenOn !== null) return
+
+    const { x, y, width, height } = browserWindow.getBounds()
+    const bounds = windowSettings.bounds
+    if (bounds.x === x && bounds.y === y && bounds.width === width && bounds.height === height) return
+
+    const newBounds = { ...bounds, x, y, width, height }
+    this.app.config.set(`timers.${timerId}.windows.${windowId}.bounds`, newBounds)
+
+    const mainBrowserWindow = this.app.mainWindowHandler.browserWindow
+    if (mainBrowserWindow && !mainBrowserWindow.isDestroyed()) {
+      mainBrowserWindow.webContents.send('window-bounds:updated', timerId, windowId, newBounds)
+    }
+  }
+
   async _setCountdownWindowPosition(countdownWindowHandler: BrowserWinHandler, windowSettings: WindowSettings) {
+    this._positioningWindows.add(countdownWindowHandler)
+    try {
+      await this._applyCountdownWindowPosition(countdownWindowHandler, windowSettings)
+    } finally {
+      this._positioningWindows.delete(countdownWindowHandler)
+    }
+  }
+
+  private async _applyCountdownWindowPosition(countdownWindowHandler: BrowserWinHandler, windowSettings: WindowSettings) {
     const browserWindow = countdownWindowHandler.browserWindow
     const fullscreenOn = windowSettings.bounds.fullscreenOn
     const selectedScreen = screen.getAllDisplays().find((display) => display.id === fullscreenOn)
@@ -338,22 +388,6 @@ export class TimersOrchestrator {
     const windowSettings = this.timers[timerId].settings.windows[windowId];
 
     this._setCountdownWindowPosition(windowHandler, windowSettings)
-  }
-
-  getWindowBounds(timerId: string, windowId: string): WindowBounds {
-    const windowHandler = this.timers[timerId].windows[windowId]
-    const windowBounds = windowHandler.browserWindow.getBounds()
-    const windowSettings = this.timers[timerId].settings.windows[windowId]
-
-    return {
-      alwaysOnTop: windowSettings.bounds.alwaysOnTop,
-      hidden: windowSettings.bounds.hidden,
-      width: windowBounds.width,
-      height: windowBounds.height,
-      x: windowBounds.x,
-      y: windowBounds.y,
-      fullscreenOn: windowSettings.bounds.fullscreenOn
-    }
   }
 
   sendOMTFrames() {
