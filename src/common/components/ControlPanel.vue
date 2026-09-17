@@ -14,7 +14,7 @@
       <OpenTimerInBrowserButton :server-port="serverPort" :timer-id="currentTimerId" :window-id="firstWindowId" :is-in-browser="isInBrowser" />
     </div>
 
-    <div v-if="currentTimerId" class="flex gap-2 flex-wrap">
+    <div v-if="currentTimer" class="flex gap-2 flex-wrap">
       <Card class="flex flex-col min-w-fit max-sm:flex-1">
         <div class="uppercase text-white flex flex-row justify-between">
           <span>Set</span>
@@ -145,17 +145,20 @@ const currentUpdate = computed<TimerEngineUpdate>(() => {
   return props.currentTimerId ? (props.updates[props.currentTimerId] ?? emptyUpdate) : emptyUpdate
 })
 
-const followingTimerId = computed<string | null>(() => {
+const currentTimer = computed<TimerSettings | null>(() => {
   if (!props.currentTimerId) return null
-  const followTimer = (props.timers[props.currentTimerId] as TimerSettings)?.followTimer
+  return (props.timers[props.currentTimerId] as TimerSettings) ?? null
+})
+
+const followingTimerId = computed<string | null>(() => {
+  const followTimer = currentTimer.value?.followTimer
   if (!Object.keys(props.timers).find((timerId) => timerId === followTimer)) return null
   if (currentUpdate.value.isReset && followTimer) return followTimer
   return null
 })
 
 const firstWindowId = computed(() => {
-  if (Object.keys(props.timers).length === 0) return ""
-  return Object.keys(props.timers[props.currentTimerId].windows)[0]
+  return Object.keys(currentTimer.value?.windows ?? {})[0] ?? ""
 })
 
 const displayUpdate = computed<TimerEngineUpdate>(() => {

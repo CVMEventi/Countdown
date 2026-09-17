@@ -50,14 +50,14 @@ const settingsStore = useSettingsStore()
 const timersStore = useTimersStore()
 const globalStore = useGlobalStore()
 
-watch(() => settingsStore.settings.timers, (timers) => {
-  if (globalStore.currentTimer === undefined) {
-    globalStore.currentTimer = Object.keys(timers)[0]
-  }
-})
+// Keep the selection on a timer that still exists: it may have been deleted in the
+// settings, and it should survive navigating away from this page and back
+watch(() => Object.keys(settingsStore.settings.timers), (timerIds) => {
+  if (globalStore.currentTimer && timerIds.includes(globalStore.currentTimer)) return
+  globalStore.currentTimer = timerIds[0] ?? null
+}, { immediate: true })
 
 onMounted(async () => {
-  globalStore.currentTimer = Object.keys(settingsStore.settings.timers)[0]
   api.onAudioPlay((_, audioFile, mimeType) => {
     const sound = new Howl({ src: [`data:${mimeType};base64,${audioFile}`] })
     sound.play()

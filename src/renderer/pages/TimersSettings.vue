@@ -220,6 +220,10 @@ const deleteTimer = (timerId: string) => {
     }
   }
   delete timers.value[timerId]
+
+  if (currentTimer.value === timerId) {
+    currentTimer.value = Object.keys(timers.value)[0] ?? null
+  }
 }
 </script>
 
