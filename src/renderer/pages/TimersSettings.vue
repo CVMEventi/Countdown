@@ -69,7 +69,7 @@
                 :key="screen.id"
                 :value="screen.id"
               >
-                Screen {{ index }}
+                Screen {{ index + 1 }}
                 ({{ screen.size.width }}x{{ screen.size.height }}{{ screen.internal ? " Internal" : "" }})
               </option>
             </select>
