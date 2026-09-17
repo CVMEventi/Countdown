@@ -2,7 +2,7 @@
   <BaseContainer>
     <TopBar />
     <div class="flex flex-1 gap-2 p-1 min-h-0 text-white">
-      <card class="flex flex-col w-[300px]">
+      <card class="flex flex-col w-[300px] min-h-0 overflow-y-auto">
         <p class="text-2xl pb-2">HTTP Server</p>
         <check-box id="httpServerEnabled" v-model="settingsStore.settings.remote.webServerEnabled">Enable</check-box>
         <p>Port</p>
@@ -27,6 +27,29 @@
 
           {{ !isLoading ? httpToggleText : '' }}
         </SButton>
+
+        <div class="mt-3 pt-3 border-t border-zinc-700 flex flex-col gap-2">
+          <p class="uppercase text-sm text-zinc-400">Connect</p>
+
+          <p v-if="!isRunning" class="text-sm italic text-zinc-400">
+            Start the server to get a connection address.
+          </p>
+
+          <template v-else>
+            <ShareUrlPanel
+              compact
+              :path="remoteControlPath()"
+              :addresses="webServerStore.addresses"
+              :port="currentPort"
+            />
+            <p v-if="webServerStore.addresses.length === 0" class="text-sm italic text-zinc-400">
+              No network connection found. Only this computer can reach the server.
+            </p>
+            <p v-else class="text-xs text-zinc-400">
+              Scan with a device on the same network. Anyone on it can control the timers.
+            </p>
+          </template>
+        </div>
       </card>
       <card class="flex flex-col w-[300px]">
         <p class="text-2xl pb-2">NDI</p>
@@ -53,47 +76,39 @@
 </template>
 
 <script lang="ts" setup>
-import {computed, onMounted, ref} from "vue";
+import {computed, ref} from "vue";
 import Card from "@common/components/Card.vue";
 import CheckBox from "@common/components/CheckBox.vue";
 const { api } = window
 import SButton from "@common/components/SButton.vue";
+import ShareUrlPanel from "@common/components/ShareUrlPanel.vue";
+import {remoteControlPath} from "@common/network.ts";
 import TopBar from '../components/TopBar.vue'
 import BaseContainer from '../components/BaseContainer.vue'
 import {useSettingsStore} from '../stores/settings.ts'
+import {useWebServerStore} from '../stores/webServer.ts'
 
 defineOptions({
   'name': 'RemoteTab',
 });
 
 const settingsStore = useSettingsStore()
+// Status is kept in a store, populated once in StoresUpdater, so the share links elsewhere in the
+// app use the port the server actually bound rather than the one typed into the field
+const webServerStore = useWebServerStore()
 
-let currentPort = ref('');
-let isRunning = ref(false);
-let lastError = ref('');
+const currentPort = computed(() => webServerStore.port);
+const isRunning = computed(() => webServerStore.isRunning);
+const lastError = computed(() => webServerStore.lastError);
 let isLoading = ref(false);
-
-onMounted(async () => {
-  const update = await api.isServerRunning();
-  updateReceived(update)
-
-  api.onWebserverUpdate((_event, update) => {
-    updateReceived(update)
-  })
-});
-
-function updateReceived(update: any) {
-  isRunning.value = update.isRunning;
-  lastError.value = update.lastError;
-  currentPort.value = update.port;
-}
 
 async function restartHttpServer() {
   isLoading.value = true;
   if (isRunning.value) {
     await api.manageServer('stop')
   }
-  isRunning.value = await api.manageServer('start', settingsStore.settings.remote.webServerPort)
+  // The resulting webserver-update push is what settles the status in the store
+  await api.manageServer('start', settingsStore.settings.remote.webServerPort)
   isLoading.value = false;
 }
 

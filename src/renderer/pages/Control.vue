@@ -11,7 +11,13 @@
           {{ timer.name }}
         </TimerTabButton>
       </TimersNavigation>
-      <OpenTimerInBrowserButton :server-port="settingsStore.settings.remote.webServerPort" :timer-id="globalStore.currentTimer" :is-in-browser="false" />
+      <ShareTimerButton
+        :timer-id="globalStore.currentTimer"
+        :addresses="webServerStore.addresses"
+        :port="webServerStore.port"
+        :server-running="webServerStore.isRunning"
+        :is-in-browser="false"
+      />
     </TopBar>
     <div class="p-1">
       <ControlPanel
@@ -41,7 +47,8 @@ import { TimerControl } from '../TimerControl'
 import { useTimersStore } from '../stores/timers.ts'
 import { useSettingsStore } from '../stores/settings.ts'
 import { useGlobalStore } from '../stores/global.ts'
-import OpenTimerInBrowserButton from '@common/components/OpenTimerInBrowserButton.vue'
+import ShareTimerButton from '@common/components/ShareTimerButton.vue'
+import {useWebServerStore} from '../stores/webServer.ts'
 
 defineOptions({ name: 'index' })
 
@@ -49,6 +56,7 @@ const timerControl = new TimerControl()
 const settingsStore = useSettingsStore()
 const timersStore = useTimersStore()
 const globalStore = useGlobalStore()
+const webServerStore = useWebServerStore()
 
 // Keep the selection on a timer that still exists: it may have been deleted in the
 // settings, and it should survive navigating away from this page and back

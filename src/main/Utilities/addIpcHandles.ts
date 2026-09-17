@@ -3,6 +3,7 @@ import {CountdownApp} from "../App.ts";
 import {IpcGetWindowSettingsArgs} from "../../common/IpcInterfaces.ts";
 import {DEFAULT_WEBSERVER_ENABLED, DEFAULT_WEBSERVER_PORT, RemoteSettings} from "../../common/config.ts";
 import {promises as fs} from "node:fs";
+import {listLocalIPv4Addresses} from "./network.ts";
 
 // The web server toggle has to behave like the NDI/OMT/OSC ones: enabling it starts the
 // server right away and disabling it stops it, without a second manual action. Only the
@@ -28,6 +29,10 @@ export default function addIpcHandles(app: CountdownApp)
 {
   ipcMain.handle('screens:get', () => {
     return screen.getAllDisplays()
+  })
+
+  ipcMain.handle('network:addresses', () => {
+    return listLocalIPv4Addresses()
   })
 
   ipcMain.on('window-updated', async (event, timerId, windowId) => {

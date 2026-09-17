@@ -104,7 +104,14 @@
           </div>
           <SButton title="Save current position and size of window" class="inline-flex" tiny type="info" @click="getWindowBounds(key as string)"><ArrowUturnLeftIcon class="w-5" /><WindowIcon class="w-5" /> </SButton>
           <div class="inline-flex ml-auto flex-row gap-2">
-            <OpenTimerInBrowserButton :is-in-browser="false" :server-port="settingsStore.settings.remote.webServerPort" :timer-id="currentTimer" :window-id="key as string" />
+            <ShareTimerButton
+              :is-in-browser="false"
+              :addresses="webServerStore.addresses"
+              :port="webServerStore.port"
+              :server-running="webServerStore.isRunning"
+              :timer-id="currentTimer"
+              :window-id="key as string"
+            />
             <SButton title="Hide/Show" tiny type="warning" @click="window.bounds.hidden = !window.bounds.hidden">
               <EyeIcon v-if="window.bounds.hidden" class="w-5" />
               <EyeSlashIcon v-if="!window.bounds.hidden" class="w-5" />
@@ -145,10 +152,12 @@ import SButton from '@common/components/SButton.vue'
 import EditTimerModal from '../components/EditTimerModal.vue'
 import {ulid} from 'ulid'
 import DeleteTimerModal from '../components/DeleteTimerModal.vue'
-import OpenTimerInBrowserButton from '@common/components/OpenTimerInBrowserButton.vue'
+import ShareTimerButton from '@common/components/ShareTimerButton.vue'
+import {useWebServerStore} from '../stores/webServer.ts'
 
 const screens = ref<Electron.Display[]>([])
 const settingsStore = useSettingsStore()
+const webServerStore = useWebServerStore()
 const timers = computed<Timers>(() => settingsStore.settings.timers)
 const currentTimer = ref<string|null>(null)
 const createModalOpen = ref<boolean>(false)

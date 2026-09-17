@@ -11,7 +11,7 @@
           {{ timer.name }}
         </TimerTabButton>
       </TimersNavigation>
-      <OpenTimerInBrowserButton :server-port="serverPort" :timer-id="currentTimerId" :window-id="firstWindowId" :is-in-browser="isInBrowser" />
+      <ShareTimerButton :port="serverPort" :timer-id="currentTimerId" :window-id="firstWindowId" :is-in-browser="isInBrowser" />
     </div>
 
     <div v-if="currentTimer" class="flex gap-2 flex-wrap">
@@ -107,7 +107,7 @@ import Jog from './Jog.vue'
 import InputWithButton from './InputWithButton.vue'
 import TimerTabButton from './TimerTabButton.vue'
 import TimersNavigation from './TimersNavigation.vue'
-import OpenTimerInBrowserButton from '@common/components/OpenTimerInBrowserButton.vue'
+import ShareTimerButton from '@common/components/ShareTimerButton.vue'
 
 const props = defineProps<{
   timers: Timers

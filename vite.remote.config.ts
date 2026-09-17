@@ -7,6 +7,10 @@ import tailwindcss from '@tailwindcss/vite';
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 
 export default defineConfig({
+  cacheDir: path.resolve(__dirname, 'node_modules/.vite/remote'),
+  optimizeDeps: {
+    include: ['qrcode'],
+  },
   plugins: [
     vue(),
     tailwindcss(),

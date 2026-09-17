@@ -18,6 +18,7 @@ contextBridge.exposeInMainWorld(
     isServerRunning: async () => await ipcRenderer.invoke('server-running'),
     manageServer: async (command: string, port?: number) => await ipcRenderer.invoke('webserver-manager', command, port),
     getScreens: async (): Promise<Electron.Screen[]> => await ipcRenderer.invoke('screens:get'),
+    getNetworkAddresses: async () => await ipcRenderer.invoke('network:addresses'),
     onScreensUpdated: (callback: (event: any) => void) => ipcRenderer.on('screens-updated', callback),
     selectAudioFile: async (): Promise<string> => await ipcRenderer.invoke('audio:select-file'),
     getWindowBounds: async (timerId: string, windowId: string): Promise<any> => await ipcRenderer.invoke('countdown-bounds', timerId, windowId),

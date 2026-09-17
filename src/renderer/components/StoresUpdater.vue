@@ -7,13 +7,15 @@
   const {api} = window;
   import {useSettingsStore} from '../stores/settings.ts'
   import {onBeforeMount, onUnmounted, toRaw, watch} from 'vue'
-  import {useDebounceFn, watchIgnorable} from '@vueuse/core'
+  import {useDebounceFn, useWindowFocus, watchIgnorable} from '@vueuse/core'
   import {WindowBounds} from '../../common/config.ts'
   import {useGlobalStore} from '../stores/global.ts'
+  import {useWebServerStore} from '../stores/webServer.ts'
 
   const timersStore = useTimersStore()
   const settingsStore = useSettingsStore()
   const globalStore = useGlobalStore()
+  const webServerStore = useWebServerStore()
 
   const emit = defineEmits<{
     (e: 'mounted'): void
@@ -78,11 +80,35 @@
     api.settingsUpdated()
   }, 200)
 
+  // Network interfaces change without any event we can listen for (joining Wi-Fi, a VPN coming
+  // up), so refresh them at the moments the user could notice a stale list instead of polling
+  const refreshNetworkAddresses = async () => {
+    webServerStore.addresses = await api.getNetworkAddresses()
+  }
+
+  const webServerStatusReceived = (status: { isRunning: boolean, port: number|string|null, lastError: string|null }) => {
+    webServerStore.isRunning = status.isRunning
+    webServerStore.port = status.port
+    webServerStore.lastError = status.lastError
+  }
+
+  api.onWebserverUpdate(async (_event, status) => {
+    webServerStatusReceived(status)
+    await refreshNetworkAddresses()
+  })
+
+  watch(useWindowFocus(), async (focused) => {
+    if (focused) await refreshNetworkAddresses()
+  })
+
   onBeforeMount(async () => {
     const newSettings = await api.getSettings()
     ignoreUpdates(() => {
       settingsStore.settings = newSettings
     })
+
+    webServerStatusReceived(await api.isServerRunning())
+    await refreshNetworkAddresses()
   })
 </script>
 

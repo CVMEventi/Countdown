@@ -18,6 +18,12 @@ interface MessageUpdate {
   message: string|null
 }
 
+interface WebServerStatus {
+  port: number|string|null
+  isRunning: boolean
+  lastError: string|null
+}
+
 interface API {
   getSettings(key?: string): Promise<any>
   setSettings(key: string, value: any): Promise<any>
@@ -31,9 +37,10 @@ interface API {
   settingsUpdated(): void
   onAudioPlay(callback: (event: any, audioFile: string, mimeType: string) => void): any
   getWindowSettings(args: IpcGetWindowSettingsArgs): Promise<any>
-  isServerRunning(): Promise<boolean>
+  isServerRunning(): Promise<WebServerStatus>
   manageServer(command: string, port?: number): Promise<any>
   getScreens(): Promise<Electron.Display[]>
+  getNetworkAddresses(): Promise<{ interface: string; address: string }[]>
   onScreensUpdated(callback: (event: any) => void): any
   selectAudioFile(): Promise<string>
   getWindowBounds(timerId: string, windowId: string): Promise<any>
