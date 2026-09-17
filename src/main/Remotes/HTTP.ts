@@ -96,10 +96,11 @@ export default class HTTP {
         res.header('content-type', 'text/html').send(await r.text());
       });
       this.fastifyServer.get('/*', async (req, res) => {
-        const asset = (req.params as { '*': string })['*'];
-        const r = await fetch(`${REMOTE_VITE_DEV_SERVER_URL}/${asset}`);
+        // req.raw.url keeps the query string, which Vite needs to tell a SFC's style block from its script
+        const target = new URL(req.raw.url ?? '/', REMOTE_VITE_DEV_SERVER_URL);
+        const r = await fetch(target);
         const contentType = r.headers.get('content-type') || 'application/octet-stream';
-        res.header('content-type', contentType).send(Buffer.from(await r.arrayBuffer()));
+        res.code(r.status).header('content-type', contentType).send(Buffer.from(await r.arrayBuffer()));
       });
     }
 
