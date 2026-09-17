@@ -1,7 +1,28 @@
 import {dialog, ipcMain, screen} from "electron";
 import {CountdownApp} from "../App.ts";
 import {IpcGetWindowSettingsArgs} from "../../common/IpcInterfaces.ts";
+import {DEFAULT_WEBSERVER_ENABLED, DEFAULT_WEBSERVER_PORT, RemoteSettings} from "../../common/config.ts";
 import {promises as fs} from "node:fs";
+
+// The web server toggle has to behave like the NDI/OMT/OSC ones: enabling it starts the
+// server right away and disabling it stops it, without a second manual action. Only the
+// transition acts, so an unrelated settings save never retries a start that failed:
+// restarting after a failure is what the button in the remote settings is for.
+async function applyWebServerState(app: CountdownApp, remote: RemoteSettings, wasEnabled: boolean) {
+  if (!app.webServer) return
+
+  const enabled = remote.webServerEnabled ?? DEFAULT_WEBSERVER_ENABLED
+
+  if (!enabled) {
+    if (app.webServer.isRunning) await app.webServer.stop()
+    return
+  }
+
+  if (wasEnabled || app.webServer.isRunning) return
+
+  app.webServer.port = Number(remote.webServerPort) || DEFAULT_WEBSERVER_PORT
+  await app.webServer.start()
+}
 
 export default function addIpcHandles(app: CountdownApp)
 {
@@ -25,12 +46,14 @@ export default function addIpcHandles(app: CountdownApp)
     return app.config.get(key)
   })
 
-  ipcMain.handle('settings:set', (event, key: string, value) => {
+  ipcMain.handle('settings:set', async (event, key: string, value) => {
+    const wasWebServerEnabled = app.config.settings.remote?.webServerEnabled ?? DEFAULT_WEBSERVER_ENABLED
     const newSettings = app.config.set(key, value)
 
     app.timersOrchestrator.configUpdated()
 
     if (key === 'remote' || key === null) {
+      await applyWebServerState(app, newSettings.remote, wasWebServerEnabled)
       if (newSettings.remote.ndiEnabled) {
         app.timersOrchestrator.startNdi();
         app.startNdiTimer();

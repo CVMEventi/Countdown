@@ -10,15 +10,16 @@
           @click="($event.target as HTMLInputElement).select()"
           @focus="($event.target as HTMLInputElement).select()"
           v-model="settingsStore.settings.remote.webServerPort"
-          :disabled="settingsStore.settings.remote.webServerEnabled"
+          :disabled="isRunning"
           class="input w-full disabled:opacity-40 disabled:cursor-not-allowed">
+        <p v-if="isRunning" class="text-xs italic text-zinc-400">Disable the server to change the port</p>
         <p :class="[isRunning ? 'text-emerald-300' : 'text-red-300']">{{ isRunning ? `Server running on port ${currentPort}` : "Server not running" }}</p>
-        <p class="text-sm italic">Last error: {{ lastError }}</p>
+        <p v-if="lastError" class="text-sm italic">Last error: {{ lastError }}</p>
         <SButton
           :disabled="!settingsStore.settings.remote.webServerEnabled"
           class="uppercase mt-3"
           type="warning"
-          @click="toggleHttpServer">
+          @click="restartHttpServer">
           <svg v-if="isLoading" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -87,17 +88,16 @@ function updateReceived(update: any) {
   currentPort.value = update.port;
 }
 
-async function toggleHttpServer() {
+async function restartHttpServer() {
   isLoading.value = true;
   if (isRunning.value) {
-    isRunning.value = await api.manageServer('stop')
-  } else {
-    isRunning.value = await api.manageServer('start', settingsStore.settings.remote.webServerPort)
+    await api.manageServer('stop')
   }
+  isRunning.value = await api.manageServer('start', settingsStore.settings.remote.webServerPort)
   isLoading.value = false;
 }
 
-let httpToggleText = computed(() => isRunning.value ? "Stop" : "Start");
+let httpToggleText = computed(() => isRunning.value ? "Restart" : "Start");
 </script>
 
 <style scoped>
