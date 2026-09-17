@@ -8,6 +8,7 @@ import {createPinia} from "pinia";
 import TimersSettings from './pages/TimersSettings.vue'
 import RemoteSettings from './pages/RemoteSettings.vue'
 import GeneralSettings from './pages/GeneralSettings.vue'
+import { vNoWheel } from '../common/directives/noWheel.ts';
 
 const routes = [
   { path: '/countdown', component: Countdown },
@@ -25,5 +26,6 @@ const router = createRouter({
 const pinia = createPinia()
 const app = createApp(App)
 app.use(pinia)
+app.directive('no-wheel', vNoWheel);
 app.use(router)
 app.mount('#app')

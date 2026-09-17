@@ -2,6 +2,7 @@
   <div class="flex flex-row items-center gap-1">
     <span class="text-xs text-zinc-400">≤</span>
     <input
+      v-no-wheel
       type="number"
       min="0"
       v-model.number="threshold.value"

@@ -6,6 +6,7 @@
     <div class="-mr-px -ml-px relative flex items-stretch grow focus-within:z-10">
       <input :value="modelValue"
              @input="input"
+             v-no-wheel
              type="number"
              max="1440"
              min="0"

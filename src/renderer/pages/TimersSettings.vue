@@ -22,7 +22,7 @@
           <CheckBox id="setTimeLive" v-model="timers[currentTimer].setTimeLive">Set time live</CheckBox>
           <div class="inline-flex flex-row gap-2 items-center">
             <p class="text-sm">Ms per second</p>
-            <input class="input rounded-lg text-center px-2 sm:text-sm border-gray-300 w-24" type="number" @input="(event) => timers[currentTimer].timerDuration = parseInt(event.target.value)" :value="timers[currentTimer].timerDuration">
+            <input v-no-wheel class="input rounded-lg text-center px-2 sm:text-sm border-gray-300 w-24" type="number" @input="(event) => timers[currentTimer].timerDuration = parseInt(event.target.value)" :value="timers[currentTimer].timerDuration">
           </div>
         </div>
         <div>
@@ -79,28 +79,28 @@
             <input
               :value="window.bounds.x"
               @input="window.bounds.x = $event.target.value !== '' ? parseInt($event.target.value) : 0"
-              type="number" class="input w-20 rounded-lg px-2 sm:text-sm">
+              v-no-wheel type="number" class="input w-20 rounded-lg px-2 sm:text-sm">
           </div>
           <div class="inline-flex flex-col">
             <p class="text-base">Y</p>
             <input
               :value="window.bounds.y"
               @input="window.bounds.y = $event.target.value !== '' ? parseInt($event.target.value) : 0"
-              type="number" class="input w-20 rounded-lg px-2 sm:text-sm">
+              v-no-wheel type="number" class="input w-20 rounded-lg px-2 sm:text-sm">
           </div>
           <div class="inline-flex flex-col">
             <p class="text-base">Width</p>
             <input
               :value="window.bounds.width"
               @input="window.bounds.width = $event.target.value !== '' ? parseInt($event.target.value) : 0"
-              type="number" class="input w-20 rounded-lg px-2 sm:text-sm">
+              v-no-wheel type="number" class="input w-20 rounded-lg px-2 sm:text-sm">
           </div>
           <div class="inline-flex flex-col">
             <p class="text-base">Height</p>
             <input
               :value="window.bounds.height"
               @input="window.bounds.height = $event.target.value !== '' ? parseInt($event.target.value) : 0"
-              type="number" class="input w-20 px-2 sm:text-sm">
+              v-no-wheel type="number" class="input w-20 px-2 sm:text-sm">
           </div>
           <SButton title="Save current position and size of window" class="inline-flex" tiny type="info" @click="getWindowBounds(key as string)"><ArrowUturnLeftIcon class="w-5" /><WindowIcon class="w-5" /> </SButton>
           <div class="inline-flex ml-auto flex-row gap-2">

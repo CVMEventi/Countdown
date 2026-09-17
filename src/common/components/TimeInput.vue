@@ -3,6 +3,7 @@
     <input
       :value="formattedHours"
       @input="updateTime('hours', $event.target.value)"
+      v-no-wheel
       min="0"
       max="23"
       type="number"
@@ -16,6 +17,7 @@
     <input
       :value="formattedMinutes"
       @input="updateTime('minutes', $event.target.value)"
+      v-no-wheel
       min="0"
       max="60"
       type="number"
@@ -29,6 +31,7 @@
     <input
       :value="formattedSeconds"
       @input="updateTime('seconds', $event.target.value)"
+      v-no-wheel
       min="0"
       max="60"
       type="number"
