@@ -108,10 +108,12 @@ const svgScale = ref(1);
 export interface Props {
   screens: Display[]
   highlightedWindow?: string | null
+  lockRatio?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
   highlightedWindow: null,
+  lockRatio: false,
 })
 const emit = defineEmits<{
   hover: [key: string | null]
@@ -215,7 +217,7 @@ function onPointerMove(event: PointerEvent) {
   const dx = mouse.x - current.start.x;
   const dy = mouse.y - current.start.y;
 
-  const newRect = computeBounds(current.handle, current.startBounds, dx, dy, event.shiftKey);
+  const newRect = computeBounds(current.handle, current.startBounds, dx, dy, props.lockRatio !== event.shiftKey);
 
   const newWindow: WindowBounds = {
     ...windows.value[current.key].bounds,
@@ -247,10 +249,18 @@ function computeBounds(handle: Handle, start: Rect, dx: number, dy: number, keep
   width = Math.max(MIN_WIDTH, width);
   height = Math.max(MIN_HEIGHT, height);
 
-  // Shift on a corner keeps the original aspect ratio
-  if (keepRatio && handle.length === 2 && start.height > 0) {
+  const ratioKept = keepRatio && start.width > 0 && start.height > 0;
+
+  if (ratioKept) {
     const ratio = start.width / start.height;
-    if (width / ratio > height) {
+    if (handle.length === 2) {
+      // Corners follow whichever axis the pointer pushed further
+      if (width / ratio > height) {
+        height = width / ratio;
+      } else {
+        width = height * ratio;
+      }
+    } else if (handle === 'e' || handle === 'w') {
       height = width / ratio;
     } else {
       width = height * ratio;
@@ -266,8 +276,17 @@ function computeBounds(handle: Handle, start: Rect, dx: number, dy: number, keep
   }
 
   // Keep the opposite edge fixed when dragging west/north edges
-  const x = handle.includes('w') ? right - width : start.x;
-  const y = handle.includes('n') ? bottom - height : start.y;
+  let x = handle.includes('w') ? right - width : start.x;
+  let y = handle.includes('n') ? bottom - height : start.y;
+
+  // An edge drag with a locked ratio also changes the other axis: grow it around the center
+  if (ratioKept && handle.length === 1) {
+    if (handle === 'e' || handle === 'w') {
+      y = start.y + (start.height - height) / 2;
+    } else {
+      x = start.x + (start.width - width) / 2;
+    }
+  }
 
   return {x, y, width, height};
 }

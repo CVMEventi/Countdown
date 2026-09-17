@@ -22,10 +22,25 @@
       <div class="flex flex-1 flex-col gap-2 min-w-0 min-h-0">
         <div class="flex flex-row items-center justify-between">
           <p class="text-lg uppercase">Windows</p>
-          <button title="Add window" @click="createWindow" class="relative min-w-0 overflow-hidden font-normal text-white bg-green-500 py-0.5 px-1 text-sm text-center hover:bg-green-600 focus:z-10 rounded-lg"><PlusIcon class="h-6" /></button>
+          <div class="flex flex-row items-center gap-2">
+            <button
+              type="button"
+              :title="lockRatio ? 'Aspect ratio locked while resizing (hold Shift to free it)' : 'Lock aspect ratio while resizing (hold Shift to lock temporarily)'"
+              class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs uppercase cursor-pointer"
+              :class="lockRatio
+                ? 'bg-blue-500/20 text-blue-400 hover:bg-blue-500/30'
+                : 'bg-zinc-700 text-zinc-400 hover:bg-zinc-600'"
+              @click="lockRatio = !lockRatio"
+            >
+              <LockClosedIcon v-if="lockRatio" class="w-4" />
+              <LockOpenIcon v-else class="w-4" />
+              Ratio
+            </button>
+            <button title="Add window" @click="createWindow" class="relative min-w-0 overflow-hidden font-normal text-white bg-green-500 py-0.5 px-1 text-sm text-center hover:bg-green-600 focus:z-10 rounded-lg"><PlusIcon class="h-6" /></button>
+          </div>
         </div>
         <div class="h-[40vh] shrink-0">
-          <ScreensDrag :screens="screens" v-model:windows="timers[currentTimer].windows" :highlighted-window="hoveredWindow" @hover="hoveredWindow = $event" />
+          <ScreensDrag :screens="screens" v-model:windows="timers[currentTimer].windows" :highlighted-window="hoveredWindow" :lock-ratio="lockRatio" @hover="hoveredWindow = $event" />
         </div>
         <div class="flex flex-1 flex-col gap-2 min-h-0 overflow-y-auto">
           <WindowRow
@@ -55,7 +70,7 @@ import {computed, onBeforeMount, ref} from 'vue'
 import { DEFAULT_TIMER_SETTINGS, DEFAULT_WINDOW_SETTINGS, Timers } from '@common/config.ts'
 import TimersNavigation from "@common/components/TimersNavigation.vue";
 import TimerTabButton from "@common/components/TimerTabButton.vue";
-import {PlusIcon, TrashIcon} from "@heroicons/vue/20/solid";
+import {LockClosedIcon, LockOpenIcon, PlusIcon, TrashIcon} from "@heroicons/vue/20/solid";
 import TopBar from '../components/TopBar.vue'
 import BaseContainer from '../components/BaseContainer.vue'
 import {useSettingsStore} from '../stores/settings.ts'
@@ -86,6 +101,7 @@ const editingWindow = computed(() => {
 })
 const deleteOpen = ref(false)
 const hoveredWindow = ref<string|null>(null)
+const lockRatio = ref(false)
 
 onBeforeMount(async () => {
   screens.value = await api.getScreens()
