@@ -15,84 +15,84 @@
         <SButton :disabled="Object.keys(timers).length < 2" tiny type="danger" @click="deleteOpen = true"><TrashIcon class="w-5"/></SButton>
       </template>
     </TopBar>
-    <div v-if="currentTimer && timers[currentTimer]" class="mt-1 flex flex-1 flex-col gap-2 p-1 min-h-0 text-white overflow-y-scroll">
-      <TimerGeneralCard v-model="timers[currentTimer]" :timers="timers" :timer-id="currentTimer" />
-      <div class="h-[40vh]">
-        <ScreensDrag :screens="screens" v-model:windows="timers[currentTimer].windows" />
+    <div v-if="currentTimer && timers[currentTimer]" class="mt-1 flex flex-1 flex-row gap-2 p-1 min-h-0 text-white">
+      <div class="w-72 shrink-0 min-h-0 overflow-y-auto">
+        <TimerGeneralCard v-model="timers[currentTimer]" :timers="timers" :timer-id="currentTimer" />
       </div>
-      <div class="flex flex-row justify-end">
-        <button title="Add window" @click="createWindow" class="relative min-w-0 overflow-hidden font-normal text-white bg-green-500 py-0.5 px-1 text-sm text-center hover:bg-green-600 focus:z-10 rounded-lg"><PlusIcon class="h-6" /></button>
-      </div>
-      <div class="flex flex-col gap-2">
-        <Card class="inline-flex gap-2 items-end" v-for="(window, key, index) in timers[currentTimer].windows">
-          <span class="self-center text-2xl text-center min-w-8 rounded-lg bg-blue-500">{{ index + 1 }}</span>
-          <div class="inline-flex flex-col">
-            <p class="text-base">Fullscreen on screen</p>
-            <select v-model="window.bounds.fullscreenOn" class="input p-2">
-              <option :value="null">-</option>
-              <option
-                v-for="(screen, index) in screens"
-                :key="screen.id"
-                :value="screen.id"
-              >
-                Screen {{ index + 1 }}
-                ({{ screen.size.width }}x{{ screen.size.height }}{{ screen.internal ? " Internal" : "" }})
-              </option>
-            </select>
-          </div>
-          <div class="inline-flex flex-col">
-            <p class="text-base">X</p>
-            <input
-              :value="window.bounds.x"
-              @input="window.bounds.x = $event.target.value !== '' ? parseInt($event.target.value) : 0"
-              v-no-wheel type="number" class="input w-20 rounded-lg px-2 sm:text-sm">
-          </div>
-          <div class="inline-flex flex-col">
-            <p class="text-base">Y</p>
-            <input
-              :value="window.bounds.y"
-              @input="window.bounds.y = $event.target.value !== '' ? parseInt($event.target.value) : 0"
-              v-no-wheel type="number" class="input w-20 rounded-lg px-2 sm:text-sm">
-          </div>
-          <div class="inline-flex flex-col">
-            <p class="text-base">Width</p>
-            <input
-              :value="window.bounds.width"
-              @input="window.bounds.width = $event.target.value !== '' ? parseInt($event.target.value) : 0"
-              v-no-wheel type="number" class="input w-20 rounded-lg px-2 sm:text-sm">
-          </div>
-          <div class="inline-flex flex-col">
-            <p class="text-base">Height</p>
-            <input
-              :value="window.bounds.height"
-              @input="window.bounds.height = $event.target.value !== '' ? parseInt($event.target.value) : 0"
-              v-no-wheel type="number" class="input w-20 px-2 sm:text-sm">
-          </div>
-          <SButton title="Save current position and size of window" class="inline-flex" tiny type="info" @click="getWindowBounds(key as string)"><ArrowUturnLeftIcon class="w-5" /><WindowIcon class="w-5" /> </SButton>
-          <div class="inline-flex ml-auto flex-row gap-2">
-            <ShareTimerButton
-              :is-in-browser="false"
-              :addresses="webServerStore.addresses"
-              :port="webServerStore.port"
-              :server-running="webServerStore.isRunning"
-              :timer-id="currentTimer"
-              :window-id="key as string"
-            />
-            <SButton title="Hide/Show" tiny type="warning" @click="window.bounds.hidden = !window.bounds.hidden">
-              <EyeIcon v-if="window.bounds.hidden" class="w-5" />
-              <EyeSlashIcon v-if="!window.bounds.hidden" class="w-5" />
-            </SButton>
-            <SButton title="Settings" tiny type="info" @click="editWindow(key as string)"><CogIcon class="w-5" /></SButton>
-            <SButton title="Delete" tiny type="danger"
-                     @click="removeWindow(key as string)"
-                     :disabled="Object.keys(timers[currentTimer].windows).length < 2"><TrashIcon class="w-5" /></SButton>
-          </div>
-        </Card>
-      </div>
-    </div>
-    <div class="flex flex-row justify-end text-white bg-zinc-800 px-1 py-1 -mb-1 -mx-2 gap-2">
-      <div>
-        <input :value="currentTimer" readonly type="text" @click="clipboard.writeText(currentTimer!);" class="input text-center w-74" />
+      <div class="flex flex-1 flex-col gap-2 min-w-0 min-h-0 overflow-y-auto">
+        <div class="flex flex-row items-center justify-between">
+          <p class="text-lg uppercase">Windows</p>
+          <button title="Add window" @click="createWindow" class="relative min-w-0 overflow-hidden font-normal text-white bg-green-500 py-0.5 px-1 text-sm text-center hover:bg-green-600 focus:z-10 rounded-lg"><PlusIcon class="h-6" /></button>
+        </div>
+        <div class="h-[40vh] shrink-0">
+          <ScreensDrag :screens="screens" v-model:windows="timers[currentTimer].windows" />
+        </div>
+        <div class="flex flex-col gap-2">
+          <Card class="flex flex-wrap gap-2 items-end" v-for="(window, key, index) in timers[currentTimer].windows">
+            <span class="self-center text-2xl text-center min-w-8 rounded-lg bg-blue-500">{{ index + 1 }}</span>
+            <div class="inline-flex flex-col">
+              <p class="text-base">Fullscreen on screen</p>
+              <select v-model="window.bounds.fullscreenOn" class="input p-2">
+                <option :value="null">-</option>
+                <option
+                  v-for="(screen, index) in screens"
+                  :key="screen.id"
+                  :value="screen.id"
+                >
+                  Screen {{ index + 1 }}
+                  ({{ screen.size.width }}x{{ screen.size.height }}{{ screen.internal ? " Internal" : "" }})
+                </option>
+              </select>
+            </div>
+            <div class="inline-flex flex-col">
+              <p class="text-base">X</p>
+              <input
+                :value="window.bounds.x"
+                @input="window.bounds.x = $event.target.value !== '' ? parseInt($event.target.value) : 0"
+                v-no-wheel type="number" class="input w-20 rounded-lg px-2 sm:text-sm">
+            </div>
+            <div class="inline-flex flex-col">
+              <p class="text-base">Y</p>
+              <input
+                :value="window.bounds.y"
+                @input="window.bounds.y = $event.target.value !== '' ? parseInt($event.target.value) : 0"
+                v-no-wheel type="number" class="input w-20 rounded-lg px-2 sm:text-sm">
+            </div>
+            <div class="inline-flex flex-col">
+              <p class="text-base">Width</p>
+              <input
+                :value="window.bounds.width"
+                @input="window.bounds.width = $event.target.value !== '' ? parseInt($event.target.value) : 0"
+                v-no-wheel type="number" class="input w-20 rounded-lg px-2 sm:text-sm">
+            </div>
+            <div class="inline-flex flex-col">
+              <p class="text-base">Height</p>
+              <input
+                :value="window.bounds.height"
+                @input="window.bounds.height = $event.target.value !== '' ? parseInt($event.target.value) : 0"
+                v-no-wheel type="number" class="input w-20 px-2 sm:text-sm">
+            </div>
+            <SButton title="Save current position and size of window" class="inline-flex" tiny type="info" @click="getWindowBounds(key as string)"><ArrowUturnLeftIcon class="w-5" /><WindowIcon class="w-5" /> </SButton>
+            <div class="inline-flex ml-auto flex-row gap-2">
+              <ShareTimerButton
+                :is-in-browser="false"
+                :addresses="webServerStore.addresses"
+                :port="webServerStore.port"
+                :server-running="webServerStore.isRunning"
+                :timer-id="currentTimer"
+                :window-id="key as string"
+              />
+              <SButton title="Hide/Show" tiny type="warning" @click="window.bounds.hidden = !window.bounds.hidden">
+                <EyeIcon v-if="window.bounds.hidden" class="w-5" />
+                <EyeSlashIcon v-if="!window.bounds.hidden" class="w-5" />
+              </SButton>
+              <SButton title="Settings" tiny type="info" @click="editWindow(key as string)"><CogIcon class="w-5" /></SButton>
+              <SButton title="Delete" tiny type="danger"
+                       @click="removeWindow(key as string)"
+                       :disabled="Object.keys(timers[currentTimer].windows).length < 2"><TrashIcon class="w-5" /></SButton>
+            </div>
+          </Card>
+        </div>
       </div>
     </div>
     <EditTimerModal v-model:window="editingWindow" v-model:window-id="editingWindowId" />
@@ -112,7 +112,7 @@ import BaseContainer from '../components/BaseContainer.vue'
 import {useSettingsStore} from '../stores/settings.ts'
 import CreateTimerModal from '../components/CreateTimerModal.vue'
 import ScreensDrag from '../components/ScreensDrag.vue'
-const { api, clipboard } = window
+const { api } = window
 import SButton from '@common/components/SButton.vue'
 import EditTimerModal from '../components/EditTimerModal.vue'
 import {ulid} from 'ulid'
