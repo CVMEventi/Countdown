@@ -16,41 +16,7 @@
       </template>
     </TopBar>
     <div v-if="currentTimer && timers[currentTimer]" class="mt-1 flex flex-1 flex-col gap-2 p-1 min-h-0 text-white overflow-y-scroll">
-      <Card class="inline-flex flex-col gap-2">
-        <div class="inline-flex flex-row items-center gap-10 justify-between">
-          <CheckBox id="stopTimerAtZero" v-model="timers[currentTimer].stopTimerAtZero">Stop timer at 0</CheckBox>
-          <CheckBox id="setTimeLive" v-model="timers[currentTimer].setTimeLive">Set time live</CheckBox>
-          <div class="inline-flex flex-row gap-2 items-center">
-            <p class="text-sm">Ms per second</p>
-            <input v-no-wheel class="input rounded-lg text-center px-2 sm:text-sm border-gray-300 w-24" type="number" @input="(event) => timers[currentTimer].timerDuration = parseInt(event.target.value)" :value="timers[currentTimer].timerDuration">
-          </div>
-        </div>
-        <div>
-          <div class="inline-flex flex-row gap-2 items-center">
-            <p class="text-sm">Follow timer</p>
-            <select v-model="timers[currentTimer].followTimer" class="input p-2 min-w-32">
-              <option :value="null">-</option>
-              <option
-                v-for="(id) in otherTimers"
-                :key="id"
-                :value="id"
-              >
-                {{ timers[id].name }}
-              </option>
-            </select>
-          </div>
-        </div>
-        <div>
-          <div class="text-sm flex gap-3 items-center flex-row mt-3 mb-1">
-            <div class="flex items-center gap-1">
-              Audio:
-              <SButton :disabled="!timers[currentTimer].audioFile" tiny type="danger" @click="timers[currentTimer].audioFile = null"><TrashIcon class="w-5"/></SButton>
-              <SButton tiny @click="selectFile">Select file</SButton>
-            </div>
-            <div class="flex-1 wrap-break-word">Current: {{ timers[currentTimer].audioFile }}</div>
-          </div>
-        </div>
-      </Card>
+      <TimerGeneralCard v-model="timers[currentTimer]" :timers="timers" :timer-id="currentTimer" />
       <div class="h-[40vh]">
         <ScreensDrag :screens="screens" v-model:windows="timers[currentTimer].windows" />
       </div>
@@ -141,7 +107,6 @@ import TimersNavigation from "@common/components/TimersNavigation.vue";
 import TimerTabButton from "@common/components/TimerTabButton.vue";
 import Card from "@common/components/Card.vue";
 import {PlusIcon, TrashIcon, WindowIcon, ArrowUturnLeftIcon, CogIcon, EyeIcon, EyeSlashIcon} from "@heroicons/vue/20/solid";
-import CheckBox from "@common/components/CheckBox.vue";
 import TopBar from '../components/TopBar.vue'
 import BaseContainer from '../components/BaseContainer.vue'
 import {useSettingsStore} from '../stores/settings.ts'
@@ -153,6 +118,7 @@ import EditTimerModal from '../components/EditTimerModal.vue'
 import {ulid} from 'ulid'
 import DeleteTimerModal from '../components/DeleteTimerModal.vue'
 import ShareTimerButton from '@common/components/ShareTimerButton.vue'
+import TimerGeneralCard from '../components/TimerGeneralCard.vue'
 import {useWebServerStore} from '../stores/webServer.ts'
 
 const screens = ref<Electron.Display[]>([])
@@ -172,9 +138,6 @@ const editingWindow = computed(() => {
   return timers.value[currentTimer.value].windows[editingWindowId.value]
 })
 const deleteOpen = ref(false)
-const otherTimers = computed(() => {
-  return Object.keys(timers.value).filter((id) => id !== currentTimer.value)
-})
 
 onBeforeMount(async () => {
   screens.value = await api.getScreens()
@@ -199,13 +162,6 @@ const createTimer = (name: string) => {
     }
   }
   currentTimer.value = timerId
-}
-
-const selectFile = async () => {
-  const file = await api.selectAudioFile()
-  if (file) {
-    timers.value[currentTimer.value].audioFile = file
-  }
 }
 
 const createWindow = () => {
