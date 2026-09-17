@@ -7,7 +7,7 @@ import {
 import {TimerEngine, TimerEngineConstructorOptions, TimerEngineOptions} from "../TimerEngine.ts";
 import BrowserWinHandler from "./BrowserWinHandler.ts";
 import createCountdownWindow from "../countdownWindow.ts";
-import {BrowserWindow, screen} from "electron";
+import {BrowserWindow, powerMonitor, screen} from "electron";
 import {MessageUpdate, TimerEngineUpdate, TimerEngineWebSocketUpdate} from "../../common/TimerInterfaces.ts";
 import {CountdownApp} from "../App.ts";
 import {sleep} from "./utilities.ts";
@@ -50,6 +50,24 @@ export class TimersOrchestrator {
     this.app = app
     Object.keys(app.config.settings.timers).forEach(timerId => {
       this.createTimer(timerId, app.config.settings.timers[timerId]);
+    })
+    this._compensateSystemSleep()
+  }
+
+  // performance.now() may not advance while the system sleeps: add the missing wall-clock time on resume
+  private _compensateSystemSleep() {
+    let suspendedAt: { wall: number, mono: number } | null = null
+
+    powerMonitor.on('suspend', () => {
+      suspendedAt = { wall: Date.now(), mono: performance.now() }
+    })
+
+    powerMonitor.on('resume', () => {
+      if (!suspendedAt) return
+      const missedMs = (Date.now() - suspendedAt.wall) - (performance.now() - suspendedAt.mono)
+      suspendedAt = null
+      if (missedMs <= 0) return
+      Object.values(this.timers).forEach(timer => timer.engine.advanceClock(missedMs))
     })
   }
 

@@ -79,10 +79,8 @@ describe('Timer', () => {
     it('stops at zero when stopsAtZero is true', () => {
       timer.start(2, true);
       vi.advanceTimersByTime(3000);
-      // seconds is clamped to 0 and pause() is called inside the tick callback,
-      // but AdjustingInterval reschedules *after* returning from the callback so
-      // isRunning() may still return true — verify the observable state instead.
       expect(timer.seconds).toBe(0);
+      expect(timer.isRunning()).toBe(false);
       expect(statusCallback).toHaveBeenCalledWith('stopped');
     });
 
@@ -136,6 +134,18 @@ describe('Timer', () => {
       const secondsAfterPause = timer.seconds;
       vi.advanceTimersByTime(5000);
       expect(timer.seconds).toBe(secondsAfterPause);
+    });
+
+    it('keeps the partial second across pause and resume', () => {
+      timer.start(10, false);
+      vi.advanceTimersByTime(1400);
+      timer.pause();
+      vi.advanceTimersByTime(5000);
+      timer.resume();
+      vi.advanceTimersByTime(599);
+      expect(timer.seconds).toBe(9);
+      vi.advanceTimersByTime(1);
+      expect(tickCallback).toHaveBeenLastCalledWith(8);
     });
   });
 
@@ -200,10 +210,10 @@ describe('Timer', () => {
   });
 
   describe('setInterval', () => {
-    it('updates the interval on the timer and underlying AdjustingInterval', () => {
+    it('updates the interval on the timer and underlying clock', () => {
       timer.setInterval(500);
       expect(timer.interval).toBe(500);
-      expect(timer.adjustingTimer._interval).toBe(500);
+      expect(timer.clock.interval).toBe(500);
     });
   });
 });

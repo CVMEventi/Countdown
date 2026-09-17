@@ -104,6 +104,11 @@ export class TimerEngine {
     this._timer.setInterval(interval);
   }
 
+  // Adds time the monotonic clock did not see (e.g. system sleep)
+  advanceClock(ms: number) {
+    this._timer.advance(ms);
+  }
+
   start() {
     this._secondsSetOnCurrentTimer = this.totalSeconds;
     this._audioRun = false;
