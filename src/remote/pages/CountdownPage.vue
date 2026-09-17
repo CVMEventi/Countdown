@@ -5,6 +5,7 @@
       :update="resolvedUpdate"
       :settings="windowSettings"
       :timer-duration="timerDuration"
+      :message="message"
     />
     <div v-else class="flex items-center justify-center h-full bg-black text-white text-xl">
       No timer configured {{ timerId }}
@@ -27,7 +28,7 @@ const props = defineProps<{
   windowId?: string
 }>()
 
-const { timers, updates } = useWebSocketTimerState()
+const { timers, updates, messages } = useWebSocketTimerState()
 
 const defaultUpdate: TimerEngineUpdate = {
   setSeconds: 0,
@@ -53,6 +54,10 @@ const windowSettings = computed(() => {
 })
 
 const timerDuration = computed(() => currentTimerSettings.value.timerDuration ?? 1000)
+
+// Messages belong to the window's own timer, even while it is displaying a followed one,
+// which is how the countdown windows in the app behave
+const message = computed(() => messages[props.timerId] ?? null)
 
 const resolvedUpdate = computed<TimerEngineUpdate>(() => {
   const update = updates[props.timerId]

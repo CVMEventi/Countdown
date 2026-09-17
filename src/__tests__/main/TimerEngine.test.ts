@@ -446,5 +446,19 @@ describe('TimerEngine', () => {
       engine.setMessage('hello');
       expect(onMessageUpdate).toHaveBeenCalledWith({ timerId: '', message: 'hello' });
     });
+
+    it('keeps the current message so late joiners can be given it', () => {
+      const { engine } = makeEngine();
+      expect(engine.message).toBeNull();
+      engine.setMessage('hello');
+      expect(engine.message).toBe('hello');
+    });
+
+    it('clears the current message when set to an empty message', () => {
+      const { engine } = makeEngine();
+      engine.setMessage('hello');
+      engine.setMessage('');
+      expect(engine.message).toBeNull();
+    });
   });
 });

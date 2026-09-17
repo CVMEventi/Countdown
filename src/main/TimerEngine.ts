@@ -31,6 +31,7 @@ export class TimerEngine {
   private _audioRun = false;
   private _timer: Timer;
   private _currentInterval = 1000;
+  private _message: string | null = null;
 
   options: TimerEngineOptions = {
     stopTimerAtZero: DEFAULT_STOP_TIMER_AT_ZERO,
@@ -199,7 +200,12 @@ export class TimerEngine {
     this._sendUpdate();
   }
 
+  get message(): string | null {
+    return this._message;
+  }
+
   setMessage(message?: string) {
+    this._message = message || null;
     this.messageUpdate?.({
       timerId: '',
       message,

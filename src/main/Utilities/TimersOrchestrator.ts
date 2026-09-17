@@ -207,6 +207,11 @@ export class TimersOrchestrator {
   }
 
   _timerEngineMessageUpdate(timerId: string, update: MessageUpdate) {
+    this.app.webServer.sendToWebSocket({
+      type: 'message',
+      update
+    })
+
     Object.keys(this.timers[timerId].windows).forEach(windowId => {
       const browserWinHandler = this.timers[timerId].windows[windowId];
       if (!browserWinHandler.browserWindow || browserWinHandler.browserWindow.isDestroyed()) return;

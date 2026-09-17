@@ -22,6 +22,8 @@ export interface MessageUpdate {
   message?: string
 }
 
+export type MessageWebSocketUpdate = MessageUpdate
+
 export interface WebSocketUpdate<PayloadType> {
   type: string
   update: PayloadType
@@ -52,6 +54,11 @@ export interface TimerEngineWebSocketUpdate {
   timeSetOnCurrentTimerS?: string
   timerEndsAt?: string
 }
+
+export type AnyWebSocketUpdate =
+  | WebSocketUpdate<TimerEngineWebSocketUpdate>
+  | WebSocketUpdate<ConfigWebSocketUpdate>
+  | WebSocketUpdate<MessageWebSocketUpdate>
 
 export type UpdateCallback = (update: TimerEngineUpdate) => void;
 export type WebSocketUpdateCallback = (update: TimerEngineWebSocketUpdate) => void;

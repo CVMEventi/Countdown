@@ -1,10 +1,22 @@
 import { ref, reactive, onMounted, onUnmounted } from 'vue'
-import type { ConfigWebSocketUpdate, TimerEngineUpdate, TimerEngineUpdates, TimerEngineWebSocketUpdate, WebSocketUpdate } from '../common/TimerInterfaces.ts'
+import type {
+  AnyWebSocketUpdate,
+  ConfigWebSocketUpdate,
+  MessageWebSocketUpdate,
+  TimerEngineUpdate,
+  TimerEngineUpdates,
+  TimerEngineWebSocketUpdate,
+} from '../common/TimerInterfaces.ts'
 import type { Timers } from '../common/config.ts'
+
+export interface Messages {
+  [key: string]: string | null
+}
 
 export function useWebSocketTimerState() {
   const timers = ref<Timers>({})
   const updates = reactive<TimerEngineUpdates>({})
+  const messages = reactive<Messages>({})
   const currentTimerId = ref<string | null>(null)
   const connected = ref(false)
 
@@ -37,7 +49,7 @@ export function useWebSocketTimerState() {
     }
     ws.onmessage = (event) => {
       try {
-        const data: WebSocketUpdate<TimerEngineWebSocketUpdate> | WebSocketUpdate<ConfigWebSocketUpdate> = JSON.parse(event.data)
+        const data: AnyWebSocketUpdate = JSON.parse(event.data)
         if (data.type === 'timerEngine') {
           const update = data.update as TimerEngineWebSocketUpdate
           if (update.timerId) {
@@ -45,6 +57,12 @@ export function useWebSocketTimerState() {
           }
         } else if (data.type === 'config') {
           timers.value = data.update as ConfigWebSocketUpdate
+          selectTimer(timers.value)
+        } else if (data.type === 'message') {
+          const update = data.update as MessageWebSocketUpdate
+          if (update.timerId) {
+            messages[update.timerId] = update.message || null
+          }
         }
       } catch {}
     }
@@ -64,5 +82,5 @@ export function useWebSocketTimerState() {
 
   onUnmounted(disconnect)
 
-  return { timers, updates, currentTimerId, connected }
+  return { timers, updates, messages, currentTimerId, connected }
 }

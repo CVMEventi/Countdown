@@ -174,4 +174,22 @@ describe('HTTP routes', () => {
       expect(res.headers['content-type']).toContain('application/json');
     });
   });
+
+  describe('websocket connections', () => {
+    it('sends the messages that are already on screen to a new client', () => {
+      const { orchestrator } = makeOrchestrator(['timer1', 'timer2']);
+      orchestrator.timers.timer1.engine = { ...makeEngine(), message: 'on screen' };
+      orchestrator.timers.timer2.engine = { ...makeEngine(), message: null };
+      const messageHttp = new HTTP(orchestrator, null as any);
+      const socket = { send: vi.fn() };
+
+      messageHttp['sendCurrentMessages'](socket as any);
+
+      expect(socket.send).toHaveBeenCalledOnce();
+      expect(JSON.parse(socket.send.mock.calls[0][0])).toEqual({
+        type: 'message',
+        update: { timerId: 'timer1', message: 'on screen' },
+      });
+    });
+  });
 });

@@ -3,7 +3,7 @@ import FastifyWebSocket from '@fastify/websocket';
 import FastifyStatic from '@fastify/static';
 import {BrowserWindow, ipcMain, app} from "electron";
 import path from 'path';
-import {ConfigWebSocketUpdate, TimerEngineWebSocketUpdate, WebSocketUpdate} from '@common/TimerInterfaces.ts'
+import {AnyWebSocketUpdate} from '@common/TimerInterfaces.ts'
 import {TimersOrchestrator} from "../Utilities/TimersOrchestrator.ts";
 import {TimerEngine} from "../TimerEngine.ts";
 // @ts-ignore
@@ -236,12 +236,14 @@ export default class HTTP {
       res.code(200).send()
     })
 
-    this.fastifyServer.register(async function (fastify) {
-      fastify.get('/ws', { websocket: true }, () => {});
+    this.fastifyServer.register(async (fastify) => {
+      fastify.get('/ws', { websocket: true }, (socket: WebSocket) => {
+        this.sendCurrentMessages(socket)
+      });
     })
   }
 
-  sendToWebSocket(update: WebSocketUpdate<TimerEngineWebSocketUpdate> | WebSocketUpdate<ConfigWebSocketUpdate>): void {
+  sendToWebSocket(update: AnyWebSocketUpdate): void {
     if (!this.fastifyServer.websocketServer) {
       return;
     }
@@ -249,6 +251,18 @@ export default class HTTP {
       if (client.readyState === 1) {
         client.send(JSON.stringify(update))
       }
+    })
+  }
+
+  // A client connecting mid-show has missed every message already sent, so give it the current ones
+  private sendCurrentMessages(socket: WebSocket): void {
+    Object.keys(this.timersOrchestrator.timers).forEach(timerId => {
+      const message = this.timersOrchestrator.timers[timerId].engine.message
+      if (!message) return
+      socket.send(JSON.stringify({
+        type: 'message',
+        update: { timerId, message },
+      }))
     })
   }
 
