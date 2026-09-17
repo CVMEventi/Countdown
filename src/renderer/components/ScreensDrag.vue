@@ -117,13 +117,10 @@ function drag(event: MouseEvent, key: string) {
   event.preventDefault();
   const mouseCoordinates = getMousePosition(event);
 
-  let newWindow: WindowBounds = {
-    alwaysOnTop: windows.value[key].bounds.alwaysOnTop,
+  const newWindow: WindowBounds = {
+    ...windows.value[key].bounds,
     x: Math.round(mouseCoordinates.x - offset.value.x),
     y: Math.round(mouseCoordinates.y - offset.value.y),
-    width: windows.value[key].bounds.width,
-    height: windows.value[key].bounds.height,
-    fullscreenOn: windows.value[key].bounds.fullscreenOn,
   }
 
   windows.value[key].bounds = newWindow;
