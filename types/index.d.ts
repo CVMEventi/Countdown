@@ -48,11 +48,27 @@ interface API {
   onScreensUpdated(callback: (event: any) => void): any
   selectAudioFile(): Promise<string>
   onWindowBoundsUpdated(callback: (event: any, timerId: string, windowId: string, bounds: import('../src/common/config.ts').WindowBounds) => void): any
+  webrtcStatus(): Promise<import('../src/common/webrtcStatus.ts').WebRtcStatus | null>
+  webrtcRotateCode(): Promise<import('../src/common/webrtcStatus.ts').WebRtcStatus | null>
+  webrtcRevoke(clientId: string): Promise<void>
+  onWebrtcUpdate(callback: (event: any, status: import('../src/common/webrtcStatus.ts').WebRtcStatus) => void): any
+}
+
+interface WebRtcHostAPI {
+  onSession(callback: (event: any, session: import('../src/common/webrtcStatus.ts').WebRtcSession) => void): any
+  onBroadcast(callback: (event: any, update: any) => void): any
+  onRevoke(callback: (event: any, clientId: string) => void): any
+  reportStatus(state: string, lastError: string | null): void
+  reportClients(clients: unknown[]): void
+  sendCommand(command: unknown): Promise<{ok: boolean, error?: string}>
+  getSnapshot(): Promise<any>
+  getSession(): Promise<import('../src/common/webrtcStatus.ts').WebRtcSession | null>
 }
 
 export declare global {
   interface Window {
     api: API,
+    webrtcHost: WebRtcHostAPI,
     clipboard: typeof import('electron').clipboard;
   }
 }

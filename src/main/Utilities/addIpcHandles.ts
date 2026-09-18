@@ -2,6 +2,8 @@ import {dialog, ipcMain, screen} from "electron";
 import {CountdownApp} from "../App.ts";
 import {IpcGetWindowSettingsArgs} from "../../common/IpcInterfaces.ts";
 import {DEFAULT_WEBSERVER_ENABLED, DEFAULT_WEBSERVER_PORT, RemoteSettings} from "../../common/config.ts";
+import {validateCommand} from "../../common/protocol.ts";
+import type {WebRtcClient, WebRtcConnectionState} from "../Remotes/WebRtcRemote.ts";
 import {promises as fs} from "node:fs";
 import {listLocalIPv4Addresses} from "./network.ts";
 
@@ -80,6 +82,7 @@ export default function addIpcHandles(app: CountdownApp)
         app.oscServer.stop();
       }
       app.timersOrchestrator.setNdiAlpha(newSettings.remote.ndiAlpha);
+      await app.webRtcRemote?.applyState(newSettings.remote);
     }
 
     return newSettings
@@ -87,6 +90,65 @@ export default function addIpcHandles(app: CountdownApp)
 
   ipcMain.handle('settings:get-window', (event, args: IpcGetWindowSettingsArgs) => {
     return app.config.settings.timers[args.timerId].windows[args.windowId]
+  })
+
+  ipcMain.handle('webrtc:status', () => app.webRtcRemote?.status() ?? null)
+
+  ipcMain.handle('webrtc:rotate-code', () => {
+    app.webRtcRemote?.rotateCode()
+    return app.webRtcRemote?.status() ?? null
+  })
+
+  ipcMain.handle('webrtc:revoke', (event, clientId: string) => {
+    app.webRtcRemote?.revoke(clientId)
+  })
+
+  // Every window shares the preload, so the host channels only answer the host window
+  function fromHost(event: Electron.IpcMainEvent | Electron.IpcMainInvokeEvent) {
+    const hostId = app.webRtcRemote?.hostWebContentsId
+    return hostId !== null && hostId !== undefined && event.sender.id === hostId
+  }
+
+  ipcMain.on('webrtc-host:status', (event, state: WebRtcConnectionState, lastError: string | null) => {
+    if (!fromHost(event)) return
+    app.webRtcRemote?.hostReportedStatus(state, lastError)
+  })
+
+  ipcMain.on('webrtc-host:clients', (event, clients: WebRtcClient[]) => {
+    if (!fromHost(event)) return
+    app.webRtcRemote?.hostReportedClients(clients)
+  })
+
+  ipcMain.handle('webrtc-host:session-get', (event) => {
+    if (!fromHost(event)) return null
+    return app.webRtcRemote?.session ?? null
+  })
+
+  ipcMain.handle('webrtc-host:snapshot', (event) => {
+    if (!fromHost(event)) return null
+    return app.timersOrchestrator.buildSnapshot()
+  })
+
+  ipcMain.handle('webrtc-host:command', (event, command: unknown) => {
+    if (!fromHost(event)) return {ok: false, error: 'not-host'}
+
+    const timers = app.timersOrchestrator.timers
+    const result = validateCommand(command, (timerId: string) => timerId in timers)
+    if (!result.ok || !result.command) return {ok: false, error: result.message}
+
+    const engine = timers[result.command.timerId].engine
+    switch (result.command.verb) {
+      case 'set': engine.set(result.command.seconds); break
+      case 'start': engine.start(); break
+      case 'reset': engine.reset(); break
+      case 'toggle': engine.toggleTimer(); break
+      case 'jogSet': engine.jogSet(result.command.seconds); break
+      case 'jogCurrent': engine.jogCurrent(result.command.seconds); break
+      case 'sendMessage': engine.setMessage(result.command.message); break
+      case 'stopSound': app.timersOrchestrator.stopSound(result.command.timerId); break
+    }
+
+    return {ok: true}
   })
 
   ipcMain.handle('audio:select-file', async () => {

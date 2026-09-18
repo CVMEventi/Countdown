@@ -8,6 +8,7 @@ import {createPinia} from "pinia";
 import TimersSettings from './pages/TimersSettings.vue'
 import RemoteSettings from './pages/RemoteSettings.vue'
 import GeneralSettings from './pages/GeneralSettings.vue'
+import WebRtcHost from './pages/WebRtcHost.vue';
 import { vNoWheel } from '../common/directives/noWheel.ts';
 
 const routes = [
@@ -16,6 +17,7 @@ const routes = [
   { path: '/settings/timers', component: TimersSettings },
   { path: '/settings/remote', component: RemoteSettings },
   { path: '/settings/general', component: GeneralSettings },
+  { path: '/webrtc-host', component: WebRtcHost },
 ]
 
 const router = createRouter({

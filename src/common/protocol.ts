@@ -163,6 +163,33 @@ export function roomCodeToPeerId(code: string): string {
   return PEER_ID_PREFIX + normalizeRoomCode(code).toLowerCase()
 }
 
+export interface PairingCode {
+  sessionId: string
+  key: string
+}
+
+// The session id addresses the peer and the key authorises a role, so the key must not be the
+// thing a viewer needs in order to connect at all
+export function formatPairingCode({sessionId, key}: PairingCode): string {
+  return `${formatRoomCode(sessionId)}.${formatRoomCode(key)}`
+}
+
+export function parsePairingCode(input: string): PairingCode | null {
+  if (typeof input !== 'string') return null
+
+  const fragment = input.includes('#') ? input.slice(input.lastIndexOf('#') + 1) : input
+  const tail = fragment.includes('/') ? fragment.slice(fragment.lastIndexOf('/') + 1) : fragment
+
+  const [rawSession, rawKey] = tail.split('.')
+  if (rawKey === undefined) return null
+
+  const sessionId = normalizeRoomCode(rawSession)
+  const key = normalizeRoomCode(rawKey)
+  if (sessionId.length !== ROOM_CODE_LENGTH || key.length !== ROOM_CODE_LENGTH) return null
+
+  return {sessionId, key}
+}
+
 export interface CommandValidationResult {
   ok: boolean
   code?: RtcErrorCode

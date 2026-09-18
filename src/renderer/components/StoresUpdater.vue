@@ -11,11 +11,13 @@
   import {WindowBounds} from '../../common/config.ts'
   import {useGlobalStore} from '../stores/global.ts'
   import {useWebServerStore} from '../stores/webServer.ts'
+  import {useWebRtcStore} from '../stores/webRtc.ts'
 
   const timersStore = useTimersStore()
   const settingsStore = useSettingsStore()
   const globalStore = useGlobalStore()
   const webServerStore = useWebServerStore()
+  const webRtcStore = useWebRtcStore()
 
   const emit = defineEmits<{
     (e: 'mounted'): void
@@ -109,6 +111,10 @@
     await refreshNetworkAddresses()
   })
 
+  api.onWebrtcUpdate((_event, status) => {
+    webRtcStore.apply(status)
+  })
+
   watch(useWindowFocus(), async (focused) => {
     if (focused) await refreshNetworkAddresses()
   })
@@ -120,6 +126,7 @@
     })
 
     webServerStatusReceived(await api.isServerRunning())
+    webRtcStore.apply(await api.webrtcStatus())
     await refreshNetworkAddresses()
   })
 </script>

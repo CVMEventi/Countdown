@@ -11,7 +11,9 @@ import {
   formatRoomCode,
   isRtcFrame,
   isValidRoomCode,
+  formatPairingCode,
   normalizeRoomCode,
+  parsePairingCode,
   roomCodeToPeerId,
   validateCommand,
 } from '../../common/protocol.ts';
@@ -121,6 +123,46 @@ describe('roomCodeToPeerId', () => {
   // PeerJS only accepts alphanumerics separated by single spaces, underscores or dashes
   it('produces an id PeerJS accepts', () => {
     expect(roomCodeToPeerId('XKTP9QM2')).toMatch(/^[A-Za-z0-9]+(?:[ _-][A-Za-z0-9]+)*$/);
+  });
+});
+
+describe('pairing codes', () => {
+  const pair = {sessionId: 'XKTP9QM2', key: '4FHB2WRD'};
+
+  it('formats both halves grouped', () => {
+    expect(formatPairingCode(pair)).toBe('XKTP-9QM2.4FHB-2WRD');
+  });
+
+  it('round-trips', () => {
+    expect(parsePairingCode(formatPairingCode(pair))).toEqual(pair);
+  });
+
+  it('parses an ungrouped code', () => {
+    expect(parsePairingCode('XKTP9QM2.4FHB2WRD')).toEqual(pair);
+  });
+
+  it('parses a lower-case code', () => {
+    expect(parsePairingCode('xktp9qm2.4fhb2wrd')).toEqual(pair);
+  });
+
+  it('parses a full pairing URL', () => {
+    expect(parsePairingCode('https://example.com/remote#/r/XKTP9QM2.4FHB2WRD')).toEqual(pair);
+  });
+
+  it.each([
+    ['no separator', 'XKTP9QM24FHB2WRD'],
+    ['a short session', 'XKTP.4FHB2WRD'],
+    ['a short key', 'XKTP9QM2.4FHB'],
+    ['a missing key', 'XKTP9QM2.'],
+    ['empty input', ''],
+  ])('rejects %s', (_label, input) => {
+    expect(parsePairingCode(input)).toBeNull();
+  });
+
+  // The session id addresses the peer, so it must not reveal the key that grants control
+  it('keeps the two halves independent', () => {
+    const parsed = parsePairingCode('AAAAAAAA.BBBBBBBB');
+    expect(parsed).toEqual({sessionId: 'AAAAAAAA', key: 'BBBBBBBB'});
   });
 });
 

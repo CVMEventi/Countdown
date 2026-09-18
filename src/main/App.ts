@@ -18,6 +18,8 @@ import {
 import HTTP from "./Remotes/HTTP.ts";
 import {OSC} from "./Remotes/OSC.ts";
 import {IpcTimerController} from "./Remotes/IpcTimerController.ts";
+import {WebRtcRemote} from "./Remotes/WebRtcRemote.ts";
+import createWebRtcHostWindow from "./webRtcHostWindow.ts";
 import macosTrayIcon from "../icons/tray/TrayTemplate.png?no-inline"
 import macOsTrayIcon2x from "../icons/tray/TrayTemplate@2x.png?no-inline"
 import otherOsTrayIcon from "../icons/icon.ico?no-inline"
@@ -41,6 +43,7 @@ export class CountdownApp {
   omtTimer: NodeJS.Timeout = null;
   webServer: HTTP = null;
   oscServer: OSC = null;
+  webRtcRemote: WebRtcRemote = null;
 
   constructor() {
     addDefaultEvents();
@@ -102,6 +105,7 @@ export class CountdownApp {
       screen.on('display-metrics-changed', () => screensUpdated(browserWindow))
 
       app.on('before-quit', () => {
+        this.webRtcRemote?.stop()
         this.timersOrchestrator.cleanUp()
         browserWindow.destroy()
       })
@@ -154,6 +158,13 @@ export class CountdownApp {
       this.webServer = new HTTP(this.timersOrchestrator, browserWindow);
       this.webServer.port = port;
       this.timersOrchestrator.addTransport(this.webServer);
+
+      this.webRtcRemote = new WebRtcRemote(createWebRtcHostWindow, (status) => {
+        if (browserWindow.isDestroyed()) return;
+        browserWindow.webContents.send('webrtc-update', status);
+      });
+      this.timersOrchestrator.addTransport(this.webRtcRemote);
+      this.webRtcRemote.applyState(this.config.settings.remote);
 
       if (webServerEnabled) {
         this.webServer.start();

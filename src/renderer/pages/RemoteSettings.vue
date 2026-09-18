@@ -63,7 +63,19 @@
             the timers.
           </p>
 
-          <p class="text-amber-300 text-sm mt-2">Not connected yet — coming in a later update</p>
+          <p class="text-sm mt-2" :class="webRtcStateClass">{{ webRtcStateText }}</p>
+          <p v-if="webRtcStore.lastError" class="text-xs italic text-zinc-400">{{ webRtcStore.lastError }}</p>
+
+          <div class="mt-3 pt-3 border-t border-zinc-700">
+            <PairingPanel
+              :control-code="webRtcStore.controlCode"
+              :view-code="webRtcStore.viewCode"
+              :spa-url="remote.webrtcSpaUrl"
+              :clients="webRtcStore.clients"
+              @rotate="rotateCode"
+              @revoke="revokeClient"
+            />
+          </div>
 
           <p class="mt-3">Remote page address</p>
           <input
@@ -157,11 +169,13 @@ import CheckBox from "@common/components/CheckBox.vue";
 const { api } = window
 import SButton from "@common/components/SButton.vue";
 import ShareUrlPanel from "@common/components/ShareUrlPanel.vue";
+import PairingPanel from "@common/components/PairingPanel.vue";
 import {remoteControlPath} from "@common/network.ts";
 import TopBar from '../components/TopBar.vue'
 import BaseContainer from '../components/BaseContainer.vue'
 import {useSettingsStore} from '../stores/settings.ts'
 import {useWebServerStore} from '../stores/webServer.ts'
+import {useWebRtcStore} from '../stores/webRtc.ts'
 
 defineOptions({
   'name': 'RemoteTab',
@@ -190,6 +204,33 @@ async function restartHttpServer() {
 let httpToggleText = computed(() => isRunning.value ? "Restart" : "Start");
 
 const remote = computed(() => settingsStore.settings.remote);
+
+const webRtcStore = useWebRtcStore();
+
+const webRtcStateText = computed(() => {
+  if (!webRtcStore.enabled) return 'Disabled';
+  switch (webRtcStore.state) {
+    case 'online': return 'Online — ready for connections';
+    case 'signaling': return 'Contacting signaling server…';
+    case 'failed': return 'Could not start';
+    default: return 'Starting…';
+  }
+});
+
+const webRtcStateClass = computed(() => {
+  if (!webRtcStore.enabled) return 'text-zinc-400';
+  if (webRtcStore.state === 'online') return 'text-emerald-300';
+  if (webRtcStore.state === 'failed') return 'text-red-300';
+  return 'text-amber-300';
+});
+
+async function rotateCode() {
+  webRtcStore.apply(await api.webrtcRotateCode());
+}
+
+async function revokeClient(clientId: string) {
+  await api.webrtcRevoke(clientId);
+}
 
 // The config keeps port null for "use the scheme default", which an empty input should mean too
 const signalingPort = computed({

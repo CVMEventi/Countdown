@@ -80,6 +80,7 @@
     "mime": "^4.0.6",
     "node-osc": "^11.7.1",
     "openmediatransport": "^0.0.10",
+    "peerjs": "1.5.5",
     "pinia": "^3.0.4",
     "qrcode": "^1.5.4",
     "ulid": "^3.0.2",

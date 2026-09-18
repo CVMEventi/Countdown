@@ -25,6 +25,26 @@ contextBridge.exposeInMainWorld(
     onScreensUpdated: (callback: (event: any) => void) => ipcRenderer.on('screens-updated', callback),
     selectAudioFile: async (): Promise<string> => await ipcRenderer.invoke('audio:select-file'),
     onWindowBoundsUpdated: (callback: (event: any, timerId: string, windowId: string, bounds: any) => void) => ipcRenderer.on('window-bounds:updated', callback),
+    webrtcStatus: async () => await ipcRenderer.invoke('webrtc:status'),
+    webrtcRotateCode: async () => await ipcRenderer.invoke('webrtc:rotate-code'),
+    webrtcRevoke: async (clientId: string) => await ipcRenderer.invoke('webrtc:revoke', clientId),
+    onWebrtcUpdate: (callback: (event: any, status: any) => void) => ipcRenderer.on('webrtc-update', callback),
+  }
+)
+
+// Kept apart from `api` because every window gets this preload: the host channels are gated on
+// the sender in main, and nothing else needs them
+contextBridge.exposeInMainWorld(
+  'webrtcHost',
+  {
+    onSession: (callback: (event: any, session: any) => void) => ipcRenderer.on('webrtc-host:session', callback),
+    onBroadcast: (callback: (event: any, update: any) => void) => ipcRenderer.on('webrtc-host:broadcast', callback),
+    onRevoke: (callback: (event: any, clientId: string) => void) => ipcRenderer.on('webrtc-host:revoke', callback),
+    reportStatus: (state: string, lastError: string | null) => ipcRenderer.send('webrtc-host:status', state, lastError),
+    reportClients: (clients: unknown[]) => ipcRenderer.send('webrtc-host:clients', clients),
+    sendCommand: async (command: unknown) => await ipcRenderer.invoke('webrtc-host:command', command),
+    getSnapshot: async () => await ipcRenderer.invoke('webrtc-host:snapshot'),
+    getSession: async () => await ipcRenderer.invoke('webrtc-host:session-get'),
   }
 )
 contextBridge.exposeInMainWorld("clipboard", clipboard)
