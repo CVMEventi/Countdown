@@ -11,7 +11,7 @@
     </select>
 
     <div class="flex justify-center">
-      <QrCode :text="url" :class="compact ? 'max-w-[200px]' : 'max-w-[260px]'" />
+      <QrCode :text="url" :class="compact ? 'max-w-[140px]' : 'max-w-[260px]'" />
     </div>
 
     <div class="flex gap-2">

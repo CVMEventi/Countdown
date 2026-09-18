@@ -5,6 +5,7 @@ import { MoveBlackAtResetToContentAtReset } from '../../main/Migrations/MoveBlac
 import { RemoveFont } from '../../main/Migrations/RemoveFont.ts';
 import { MoveSettingsToWindow } from '../../main/Migrations/MoveSettingsToWindow.ts';
 import { MigrateToColorThresholds } from '../../main/Migrations/MigrateToColorThresholds.ts';
+import { AddWebRtcRemoteSettings } from '../../main/Migrations/AddWebRtcRemoteSettings.ts';
 import { ContentAtReset } from '../../common/config.ts';
 
 // ─────────────────────────────────────────────────────────────
@@ -304,6 +305,94 @@ describe('MigrateToColorThresholds', () => {
 // ─────────────────────────────────────────────────────────────
 // applyMigrations — integration
 // ─────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────
+// AddWebRtcRemoteSettings
+// ─────────────────────────────────────────────────────────────
+describe('AddWebRtcRemoteSettings', () => {
+  const migration = new AddWebRtcRemoteSettings();
+
+  function migrateRemote(remote: Record<string, unknown>, version = 3) {
+    const result = migration.migrate({version, settings: {remote, timers: {}}}) as Record<string, unknown>;
+    return (result.settings as Record<string, unknown>).remote as Record<string, unknown>;
+  }
+
+  it('returns config unchanged when already at version 4', () => {
+    const config = {version: 4, settings: {remote: {}}};
+    expect(migration.migrate(config)).toBe(config);
+  });
+
+  it('bumps the version to 4', () => {
+    const result = migration.migrate({version: 3, settings: {remote: {}}}) as Record<string, unknown>;
+    expect(result.version).toBe(4);
+  });
+
+  it('adds every webrtc key', () => {
+    const remote = migrateRemote({});
+
+    expect(remote.webrtcEnabled).toBe(false);
+    expect(remote.webrtcIceTransportPolicy).toBe('all');
+    expect(remote.webrtcCodeRotation).toBe('session');
+    expect(remote.webrtcRoomCode).toBeNull();
+    expect(remote.webrtcRequireApproval).toBe(false);
+    expect(remote.webrtcSpaUrl).toBe('');
+    expect(remote.webrtcSignaling).toBeDefined();
+    expect(Array.isArray(remote.webrtcIceServers)).toBe(true);
+  });
+
+  it('defaults to off, since the remote is internet reachable', () => {
+    expect(migrateRemote({}).webrtcEnabled).toBe(false);
+  });
+
+  it('ships a usable STUN server so ICE works out of the box', () => {
+    const iceServers = migrateRemote({}).webrtcIceServers as {urls: string[]}[];
+    expect(iceServers.length).toBeGreaterThan(0);
+    expect(iceServers[0].urls.some(url => url.startsWith('stun:'))).toBe(true);
+  });
+
+  it('keeps the existing remote settings', () => {
+    const remote = migrateRemote({webServerEnabled: false, webServerPort: 7000, oscPort: 9000});
+
+    expect(remote.webServerEnabled).toBe(false);
+    expect(remote.webServerPort).toBe(7000);
+    expect(remote.oscPort).toBe(9000);
+  });
+
+  it('does not clobber a webrtc value the user already set', () => {
+    const remote = migrateRemote({webrtcEnabled: true, webrtcSpaUrl: 'https://example.com/remote'});
+
+    expect(remote.webrtcEnabled).toBe(true);
+    expect(remote.webrtcSpaUrl).toBe('https://example.com/remote');
+  });
+
+  it('copes with a config that has no remote section', () => {
+    const result = migration.migrate({version: 3, settings: {}}) as Record<string, unknown>;
+    const remote = (result.settings as Record<string, unknown>).remote as Record<string, unknown>;
+    expect(remote.webrtcEnabled).toBe(false);
+  });
+
+  it('copes with a config that has no settings at all', () => {
+    const result = migration.migrate({version: 3}) as Record<string, unknown>;
+    expect(result.version).toBe(4);
+  });
+
+  // Each install must get its own object, not a shared reference into the defaults
+  it('gives each config a fresh copy of the nested defaults', () => {
+    const first = migrateRemote({});
+    const second = migrateRemote({});
+
+    expect(first.webrtcSignaling).not.toBe(second.webrtcSignaling);
+    expect(first.webrtcIceServers).not.toBe(second.webrtcIceServers);
+  });
+
+  it('leaves the rest of the config alone', () => {
+    const config = {version: 3, window: {x: 1}, settings: {remote: {}, presets: [5]}};
+    const result = migration.migrate(config) as Record<string, unknown>;
+
+    expect(result.window).toEqual({x: 1});
+    expect((result.settings as Record<string, unknown>).presets).toEqual([5]);
+  });
+});
+
 describe('applyMigrations', () => {
   it('runs all migrations in order on a fully unversioned config', () => {
     const oldConfig = {
@@ -343,8 +432,8 @@ describe('applyMigrations', () => {
 
     const result = applyMigrations(oldConfig) as Record<string, unknown>;
 
-    // Version should be bumped to 3 by MigrateToColorThresholds
-    expect(result.version).toBe(3);
+    // Version should be bumped to 4 by AddWebRtcRemoteSettings
+    expect(result.version).toBe(4);
 
     const settings = result.settings as Record<string, unknown>;
 
@@ -365,9 +454,9 @@ describe('applyMigrations', () => {
     expect(Array.isArray(colors.thresholds)).toBe(true);
   });
 
-  it('is idempotent on a fully migrated config (version 3)', () => {
+  it('is idempotent on a fully migrated config (version 4)', () => {
     const migrated = {
-      version: 3,
+      version: 4,
       settings: {
         timers: {},
         presets: [] as number[],
@@ -379,5 +468,26 @@ describe('applyMigrations', () => {
     };
     const result = applyMigrations(migrated);
     expect(result).toEqual(migrated);
+  });
+
+  it('carries a version 3 config forward to 4 with the webrtc keys', () => {
+    const migrated = {
+      version: 3,
+      settings: {
+        timers: {},
+        presets: [],
+        remote: {webServerPort: 7000},
+        setWindowAlwaysOnTop: false,
+        closeAction: 'ASK',
+        startHidden: false,
+      },
+    };
+
+    const result = applyMigrations(migrated) as Record<string, unknown>;
+    const remote = (result.settings as Record<string, unknown>).remote as Record<string, unknown>;
+
+    expect(result.version).toBe(4);
+    expect(remote.webrtcEnabled).toBe(false);
+    expect(remote.webServerPort).toBe(7000);
   });
 });

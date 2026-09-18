@@ -33,7 +33,7 @@ export function getActiveThreshold(
   })
 }
 
-export const CURRENT_CONFIG_VERSION: number = 3
+export const CURRENT_CONFIG_VERSION: number = 4
 
 export const DEFAULT_TIMER_NAME = 'Timer'
 
@@ -79,6 +79,25 @@ export const DEFAULT_OMT_ENABLED = false;
 
 export const DEFAULT_OSC_ENABLED = false;
 export const DEFAULT_OSC_PORT = 6566;
+
+export const DEFAULT_WEBRTC_ENABLED = false;
+export const DEFAULT_WEBRTC_CODE_ROTATION: WebRtcCodeRotation = 'session';
+export const DEFAULT_WEBRTC_REQUIRE_APPROVAL = false;
+export const DEFAULT_WEBRTC_SPA_URL = '';
+export const DEFAULT_WEBRTC_ICE_TRANSPORT_POLICY: WebRtcIceTransportPolicy = 'all';
+
+// Blank host means the PeerJS public broker
+export const DEFAULT_WEBRTC_SIGNALING: SignalingConfig = {
+  host: '',
+  port: null,
+  path: '/',
+  key: 'peerjs',
+  secure: true,
+};
+
+export const DEFAULT_WEBRTC_ICE_SERVERS: IceServerConfig[] = [
+  {urls: ['stun:stun.l.google.com:19302', 'stun:stun.cloudflare.com:3478']},
+];
 
 export const DEFAULT_STOP_TIMER_AT_ZERO = false;
 export const DEFAULT_SHOW_HOURS = false;
@@ -178,6 +197,14 @@ export const DEFAULT_REMOTE_SETTINGS: RemoteSettings = {
   omtEnabled: DEFAULT_OMT_ENABLED,
   oscEnabled: DEFAULT_OSC_ENABLED,
   oscPort: DEFAULT_OSC_PORT,
+  webrtcEnabled: DEFAULT_WEBRTC_ENABLED,
+  webrtcSignaling: DEFAULT_WEBRTC_SIGNALING,
+  webrtcIceServers: DEFAULT_WEBRTC_ICE_SERVERS,
+  webrtcIceTransportPolicy: DEFAULT_WEBRTC_ICE_TRANSPORT_POLICY,
+  webrtcCodeRotation: DEFAULT_WEBRTC_CODE_ROTATION,
+  webrtcRoomCode: null,
+  webrtcRequireApproval: DEFAULT_WEBRTC_REQUIRE_APPROVAL,
+  webrtcSpaUrl: DEFAULT_WEBRTC_SPA_URL,
 }
 
 export const DEFAULT_STORE: CountdownConfiguration = {
@@ -258,6 +285,24 @@ export interface TimerSettings {
   windows: Windows
 }
 
+// Shaped like the DOM RTCIceServer so it can be handed to RTCPeerConnection untransformed
+export interface IceServerConfig {
+  urls: string | string[]
+  username?: string
+  credential?: string
+}
+
+export interface SignalingConfig {
+  host: string
+  port: number | null
+  path: string
+  key: string
+  secure: boolean
+}
+
+export type WebRtcCodeRotation = 'session' | 'manual'
+export type WebRtcIceTransportPolicy = 'all' | 'relay'
+
 export interface RemoteSettings {
   webServerEnabled: boolean
   webServerPort: number
@@ -266,6 +311,14 @@ export interface RemoteSettings {
   omtEnabled: boolean
   oscEnabled: boolean
   oscPort: number
+  webrtcEnabled: boolean
+  webrtcSignaling: SignalingConfig
+  webrtcIceServers: IceServerConfig[]
+  webrtcIceTransportPolicy: WebRtcIceTransportPolicy
+  webrtcCodeRotation: WebRtcCodeRotation
+  webrtcRoomCode: string | null
+  webrtcRequireApproval: boolean
+  webrtcSpaUrl: string
 }
 
 export interface Timers {
