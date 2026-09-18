@@ -64,6 +64,7 @@ interface WebRtcHostAPI {
   getSnapshot(): Promise<any>
   getSession(): Promise<import('../src/common/webrtcStatus.ts').WebRtcSession | null>
   requestApproval(clientId: string, name: string): Promise<boolean>
+  getAudio(timerId: string, haveRevision: string | null): Promise<{revision: string, mimeType: string, size: number, data: string} | {reason: string} | null>
 }
 
 export declare global {

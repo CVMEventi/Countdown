@@ -5,6 +5,7 @@ import {DEFAULT_WEBSERVER_ENABLED, DEFAULT_WEBSERVER_PORT, RemoteSettings} from 
 import {validateCommand} from "../../common/protocol.ts";
 import type {WebRtcClient, WebRtcConnectionState} from "../Remotes/WebRtcRemote.ts";
 import {promises as fs} from "node:fs";
+import mime from "mime/lite";
 import {listLocalIPv4Addresses} from "./network.ts";
 
 // The web server toggle has to behave like the NDI/OMT/OSC ones: enabling it starts the
@@ -127,6 +128,30 @@ export default function addIpcHandles(app: CountdownApp)
   ipcMain.handle('webrtc-host:request-approval', async (event, clientId: string, name: string) => {
     if (!fromHost(event)) return false
     return await app.webRtcRemote?.requestApproval(clientId, name) ?? false
+  })
+
+  // The remote gets the bytes over the data channel, so it never needs the path
+  ipcMain.handle('webrtc-host:audio', async (event, timerId: string, haveRevision: string | null) => {
+    if (!fromHost(event)) return null
+
+    const audioFile = app.timersOrchestrator.timers[timerId]?.settings.audioFile
+    if (!audioFile) return {reason: 'none'}
+
+    try {
+      const stat = await fs.stat(audioFile)
+      const revision = `${stat.mtimeMs}-${stat.size}`
+      if (haveRevision && haveRevision === revision) return {reason: 'unchanged'}
+
+      const data = await fs.readFile(audioFile, {encoding: 'base64'})
+      return {
+        revision,
+        mimeType: mime.getType(audioFile) ?? 'application/octet-stream',
+        size: stat.size,
+        data,
+      }
+    } catch {
+      return {reason: 'unreadable'}
+    }
   })
 
   ipcMain.handle('webrtc-host:snapshot', (event) => {

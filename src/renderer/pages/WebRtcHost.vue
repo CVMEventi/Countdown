@@ -43,6 +43,7 @@ onMounted(async () => {
     getSnapshot: () => webrtcHost.getSnapshot(),
     requireApproval: remote.webrtcRequireApproval ?? false,
     onApprovalRequest: (clientId, name) => webrtcHost.requestApproval(clientId, name),
+    getAudio: (timerId, haveRevision) => webrtcHost.getAudio(timerId, haveRevision),
   })
 
   webrtcHost.onSession((_event: unknown, session: PeerHostSession) => host?.setSession(session))

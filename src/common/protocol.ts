@@ -78,6 +78,35 @@ export interface PingUpdate {
   t: number
 }
 
+// 16 KiB is the safe cross-browser ceiling before SCTP fragmentation gets unreliable
+export const AUDIO_CHUNK_BYTES = 16 * 1024
+
+export interface AudioRequestUpdate {
+  timerId: string
+  // What the client already has cached, so an unchanged file is not resent
+  haveRevision?: string | null
+}
+
+export interface AudioMetaUpdate {
+  timerId: string
+  revision: string
+  mimeType: string
+  size: number
+  totalChunks: number
+}
+
+export interface AudioChunkUpdate {
+  timerId: string
+  revision: string
+  seq: number
+  data: string
+}
+
+export interface AudioUnavailableUpdate {
+  timerId: string
+  reason: 'none' | 'unchanged' | 'unreadable'
+}
+
 export type RtcErrorCode =
   | 'unsupported-version'
   | 'unauthorised'
@@ -106,6 +135,10 @@ export type RtcFrame =
   | WebSocketUpdate<AudioWebSocketUpdate> & { type: 'audio' }
   | WebSocketUpdate<AudioWebSocketUpdate> & { type: 'audioStop' }
   | WebSocketUpdate<AudioStateWebSocketUpdate> & { type: 'audioState' }
+  | WebSocketUpdate<AudioRequestUpdate> & { type: 'audioRequest' }
+  | WebSocketUpdate<AudioMetaUpdate> & { type: 'audioMeta' }
+  | WebSocketUpdate<AudioChunkUpdate> & { type: 'audioChunk' }
+  | WebSocketUpdate<AudioUnavailableUpdate> & { type: 'audioUnavailable' }
 
 export function isRtcFrame(value: unknown): value is RtcFrame {
   if (typeof value !== 'object' || value === null) return false
@@ -265,7 +298,7 @@ export function sanitizeTimersForWire(timers: Timers): Timers {
 
     const sanitizedWindows: {[windowId: string]: WindowSettings} = {}
     Object.entries(windows ?? {}).forEach(([windowId, window]) => {
-      const {bounds: _bounds, ...windowRest} = (window ?? {}) as WindowSettings
+      const {bounds: _bounds, ...windowRest} = (window ?? {}) as WindowSettings & {bounds?: unknown}
       sanitizedWindows[windowId] = windowRest as WindowSettings
     })
 

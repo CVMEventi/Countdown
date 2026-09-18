@@ -6,7 +6,8 @@ import {
   isRtcFrame,
   roomCodeToPeerId,
 } from '../../common/protocol.ts'
-import type {HelloUpdate, RtcErrorCode, RtcRole} from '../../common/protocol.ts'
+import {AUDIO_CHUNK_BYTES} from '../../common/protocol.ts'
+import type {AudioRequestUpdate, HelloUpdate, RtcErrorCode, RtcRole} from '../../common/protocol.ts'
 import type {IceServerConfig, SignalingConfig} from '../../common/config.ts'
 import {APP_VERSION} from '../../version.ts'
 
@@ -34,7 +35,12 @@ export interface PeerHostOptions {
   getSnapshot: () => Promise<unknown>
   requireApproval: boolean
   onApprovalRequest: (clientId: string, name: string) => Promise<boolean>
+  getAudio: (timerId: string, haveRevision: string | null) => Promise<AudioPayload | null>
 }
+
+export type AudioPayload =
+  | {revision: string, mimeType: string, size: number, data: string}
+  | {reason: 'none' | 'unchanged' | 'unreadable'}
 
 export interface ClientReport {
   clientId: string
@@ -53,6 +59,7 @@ interface Client {
   rttMs: number | null
   tokens: number
   lastRefill: number
+  audioInFlight: boolean
   helloTimer: ReturnType<typeof setTimeout> | null
 }
 
@@ -161,6 +168,53 @@ export class PeerHost {
     })
   }
 
+  // Paced rather than dumped: a multi-megabyte file queued in one go would sit in front of the
+  // per-second ticks on the same ordered channel
+  private async _sendAudio(connection: DataConnection, client: Client, request: AudioRequestUpdate) {
+    const timerId = request?.timerId
+    if (typeof timerId !== 'string' || !timerId) return
+    if (client.audioInFlight) return
+
+    client.audioInFlight = true
+    try {
+      const payload = await this._options.getAudio(timerId, request.haveRevision ?? null)
+
+      if (!payload || 'reason' in payload) {
+        if (connection.open) {
+          const reason = payload && 'reason' in payload ? payload.reason : 'none'
+          connection.send({type: 'audioUnavailable', update: {timerId, reason}})
+        }
+        return
+      }
+
+      const {revision, mimeType, size, data} = payload
+      const totalChunks = Math.ceil(data.length / AUDIO_CHUNK_BYTES)
+
+      if (!connection.open) return
+      connection.send({type: 'audioMeta', update: {timerId, revision, mimeType, size, totalChunks}})
+
+      for (let seq = 0; seq < totalChunks; seq++) {
+        if (!connection.open) return
+        await this._waitForDrain(connection)
+        if (!connection.open) return
+        connection.send({
+          type: 'audioChunk',
+          update: {timerId, revision, seq, data: data.slice(seq * AUDIO_CHUNK_BYTES, (seq + 1) * AUDIO_CHUNK_BYTES)},
+        })
+      }
+    } finally {
+      client.audioInFlight = false
+    }
+  }
+
+  private async _waitForDrain(connection: DataConnection) {
+    let waited = 0
+    while (this._isBackedUp(connection) && connection.open && waited < 10000) {
+      await new Promise(resolve => setTimeout(resolve, 20))
+      waited += 20
+    }
+  }
+
   private _isBackedUp(connection: DataConnection): boolean {
     const amount = (connection as unknown as {dataChannel?: RTCDataChannel}).dataChannel?.bufferedAmount
     return typeof amount === 'number' && amount > BACKPRESSURE_BYTES
@@ -176,6 +230,7 @@ export class PeerHost {
       rttMs: null,
       tokens: COMMAND_BUCKET_SIZE,
       lastRefill: Date.now(),
+      audioInFlight: false,
       helloTimer: null,
     }
 
@@ -204,6 +259,11 @@ export class PeerHost {
       const sent = (data.update as {t: number}).t
       client.rttMs = Date.now() - sent
       this._report()
+      return
+    }
+
+    if (data.type === 'audioRequest') {
+      await this._sendAudio(connection, client, data.update as AudioRequestUpdate)
       return
     }
 
