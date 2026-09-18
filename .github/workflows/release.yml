@@ -18,6 +18,9 @@ jobs:
       - name: Check out Git repository
         uses: actions/checkout@v1
 
+      - name: Enable Corepack
+        run: corepack enable
+
       - name: Install Node.js, NPM and Yarn
         uses: actions/setup-node@v6
         with:
@@ -33,7 +36,7 @@ jobs:
           pip install setuptools
 
       - name: Install dependencies
-        run: yarn
+        run: yarn install --immutable
 
       - name: Add macOS certs
         if: runner.os == 'macOS'
