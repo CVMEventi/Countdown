@@ -400,6 +400,81 @@ describe('TimerEngine', () => {
     });
   });
 
+  describe('webSocketState()', () => {
+    it('reports Not Running when reset', () => {
+      const { engine } = makeEngine();
+      expect(engine.webSocketState().state).toBe('Not Running');
+    });
+
+    it('reports Running once started', () => {
+      const { engine } = makeEngine();
+      engine.set(60);
+      engine.start();
+      expect(engine.webSocketState().state).toBe('Running');
+    });
+
+    it('reports Paused when stopped mid-count', () => {
+      const { engine } = makeEngine();
+      engine.set(60);
+      engine.start();
+      vi.advanceTimersByTime(1000);
+      engine.pause();
+      expect(engine.webSocketState().state).toBe('Paused');
+    });
+
+    it('reports Expired past zero', () => {
+      const { engine } = makeEngine();
+      engine.set(1);
+      engine.start();
+      vi.advanceTimersByTime(2000);
+      expect(engine.webSocketState().state).toBe('Expired');
+    });
+
+    it('returns the same payload the tick callback sends', () => {
+      const { engine, onWebSocketUpdate } = makeEngine();
+      engine.set(90);
+      engine.start();
+      vi.advanceTimersByTime(1000);
+
+      const sent = onWebSocketUpdate.mock.lastCall?.[0];
+      expect(engine.webSocketState()).toEqual(sent);
+    });
+
+    it('formats the set time', () => {
+      const { engine } = makeEngine();
+      engine.set(3661);
+      const state = engine.webSocketState();
+      expect(state.setTime).toBe(3661);
+      expect(state.setTimeHms).toBe('01:01:01');
+    });
+
+    // The expiry sound is armed by reaching zero on a tick. Building a snapshot for a client
+    // that connects after expiry must not re-fire it
+    it('does not play the expiry sound', () => {
+      const { engine, onPlaySound } = makeEngine({
+        audioFile: 'test.wav'
+      });
+      engine.set(1);
+      engine.start();
+      vi.advanceTimersByTime(2000);
+      expect(onPlaySound).toHaveBeenCalledTimes(1);
+
+      engine.webSocketState();
+      engine.webSocketState();
+
+      expect(onPlaySound).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not arm the expiry sound when called before any tick', () => {
+      const { engine, onPlaySound } = makeEngine({
+        audioFile: 'test.wav'
+      });
+      engine.set(0);
+      expect(engine.webSocketState().state).toBe('Not Running');
+      expect(onPlaySound).not.toHaveBeenCalled();
+    });
+  });
+
   describe('sound playback', () => {
     it('plays sound once when timer expires', () => {
       const { engine, onPlaySound } = makeEngine({

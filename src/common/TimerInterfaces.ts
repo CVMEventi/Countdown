@@ -63,12 +63,24 @@ export interface TimerEngineWebSocketUpdate {
   timerEndsAt?: string
 }
 
+/**
+ * The whole of the state a client needs on connect, in one frame. Sent before any tick update so
+ * a client never has to render a half known timer.
+ */
+export interface TimerSnapshot {
+  timers: Timers
+  timerEngine: { [timerId: string]: TimerEngineWebSocketUpdate }
+  messages: { [timerId: string]: string | null }
+  playingTimerIds: string[]
+}
+
 export type AnyWebSocketUpdate =
   | WebSocketUpdate<TimerEngineWebSocketUpdate>
   | WebSocketUpdate<ConfigWebSocketUpdate>
   | WebSocketUpdate<MessageWebSocketUpdate>
   | WebSocketUpdate<AudioWebSocketUpdate>
   | WebSocketUpdate<AudioStateWebSocketUpdate>
+  | WebSocketUpdate<TimerSnapshot>
 
 export type UpdateCallback = (update: TimerEngineUpdate) => void;
 export type WebSocketUpdateCallback = (update: TimerEngineWebSocketUpdate) => void;

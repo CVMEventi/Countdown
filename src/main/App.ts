@@ -153,6 +153,7 @@ export class CountdownApp {
     this.mainWindowHandler.onCreated((browserWindow) => {
       this.webServer = new HTTP(this.timersOrchestrator, browserWindow);
       this.webServer.port = port;
+      this.timersOrchestrator.addTransport(this.webServer);
 
       if (webServerEnabled) {
         this.webServer.start();

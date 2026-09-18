@@ -9,6 +9,7 @@ import mime from 'mime/lite';
 import {AnyWebSocketUpdate} from '@common/TimerInterfaces.ts'
 import {TimersOrchestrator} from "../Utilities/TimersOrchestrator.ts";
 import {TimerEngine} from "../TimerEngine.ts";
+import type {TimerTransport} from "./TimerTransport.ts";
 // @ts-ignore
 import {WebSocket} from "ws";
 
@@ -40,7 +41,7 @@ interface GenericRequest extends RequestGenericInterface {
   }
 }
 
-export default class HTTP {
+export default class HTTP implements TimerTransport {
   fastifyServer: FastifyInstance = null;
   timersOrchestrator: TimersOrchestrator = null;
   browserWindow: BrowserWindow = null;
@@ -261,10 +262,24 @@ export default class HTTP {
 
     this.fastifyServer.register(async (fastify) => {
       fastify.get('/ws', { websocket: true }, (socket: WebSocket) => {
+        this.sendSnapshot(socket)
+        // Kept for clients built before the snapshot frame existed
         this.sendCurrentMessages(socket)
         this.sendPlayingSounds(socket)
       });
     })
+  }
+
+  sendToClients(update: AnyWebSocketUpdate): void {
+    this.sendToWebSocket(update)
+  }
+
+  // Without this a client waits for the next tick before it knows any timer's state
+  private sendSnapshot(socket: WebSocket): void {
+    socket.send(JSON.stringify({
+      type: 'snapshot',
+      update: this.timersOrchestrator.buildSnapshot(),
+    }))
   }
 
   sendToWebSocket(update: AnyWebSocketUpdate): void {

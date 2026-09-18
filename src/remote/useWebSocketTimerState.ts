@@ -5,11 +5,12 @@ import type {
   AudioWebSocketUpdate,
   ConfigWebSocketUpdate,
   MessageWebSocketUpdate,
-  TimerEngineUpdate,
   TimerEngineUpdates,
   TimerEngineWebSocketUpdate,
+  TimerSnapshot,
 } from '../common/TimerInterfaces.ts'
 import type { Timers } from '../common/config.ts'
+import { mapUpdate } from '../common/mapUpdate.ts'
 
 export interface Messages {
   [key: string]: string | null
@@ -38,23 +39,6 @@ export function useWebSocketTimerState() {
   let ws: WebSocket | null = null
   let retryTimer: ReturnType<typeof setTimeout> | null = null
 
-  function mapUpdate(u: TimerEngineWebSocketUpdate): TimerEngineUpdate {
-    const currentSeconds = u.currentTime ?? 0
-
-    return {
-      setSeconds: u.setTime,
-      countSeconds: currentSeconds > 0 ? currentSeconds : 0,
-      currentSeconds,
-      extraSeconds: currentSeconds < 0 ? Math.abs(currentSeconds) : 0,
-      secondsSetOnCurrentTimer: u.timeSetOnCurrentTimer ?? u.setTime,
-      isReset: u.state === 'Not Running',
-      isRunning: u.state === 'Running' || u.state === 'Expiring' || u.state === 'Expired',
-      isExpiring: u.state === 'Expiring',
-      isCountingUp: u.state === 'Expired',
-      timerEndsAt: u.timerEndsAt ?? null,
-    }
-  }
-
   // The selected timer can disappear while we are connected (deleted in the app), which
   // would otherwise leave the UI pointing at a timer that no longer exists
   function selectTimer(newTimers: Timers) {
@@ -62,6 +46,10 @@ export function useWebSocketTimerState() {
     if (currentTimerId.value && ids.includes(currentTimerId.value)) return
     currentTimerId.value = ids[0] ?? null
   }
+
+  // A desktop new enough to send a snapshot makes the /timers fetch redundant, and lets us
+  // ignore a fetch that resolves after the socket has already delivered fresher state
+  let snapshotReceived = false
 
   function connect() {
     const protocol = location.protocol === 'https:' ? 'wss' : 'ws'
@@ -75,7 +63,19 @@ export function useWebSocketTimerState() {
     ws.onmessage = (event) => {
       try {
         const data: AnyWebSocketUpdate = JSON.parse(event.data)
-        if (data.type === 'timerEngine') {
+        if (data.type === 'snapshot') {
+          const update = data.update as TimerSnapshot
+          snapshotReceived = true
+          timers.value = update.timers
+          Object.entries(update.timerEngine).forEach(([timerId, engineUpdate]) => {
+            updates[timerId] = mapUpdate(engineUpdate)
+          })
+          Object.entries(update.messages).forEach(([timerId, message]) => {
+            messages[timerId] = message
+          })
+          playingSounds.value = update.playingTimerIds
+          selectTimer(timers.value)
+        } else if (data.type === 'timerEngine') {
           const update = data.update as TimerEngineWebSocketUpdate
           if (update.timerId) {
             updates[update.timerId] = mapUpdate(update)
@@ -107,10 +107,19 @@ export function useWebSocketTimerState() {
   }
 
   onMounted(async () => {
-    const res = await fetch('/timers')
-    timers.value = await res.json()
-    selectTimer(timers.value)
+    // Connect first so the snapshot is on its way while the fallback fetch is in flight
     connect()
+
+    // Fallback for a desktop that predates the snapshot frame
+    try {
+      const res = await fetch('/timers')
+      const fetched = await res.json()
+      if (snapshotReceived) return
+      timers.value = fetched
+      selectTimer(timers.value)
+    } catch {
+      // The socket is the real source of state; a failed fallback fetch is not worth surfacing
+    }
   })
 
   onUnmounted(disconnect)

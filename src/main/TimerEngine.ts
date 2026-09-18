@@ -3,6 +3,7 @@ import dayjs from "dayjs";
 import duration from "dayjs/plugin/duration.js";
 import {
   MessageUpdateCallback, PlaySoundCallback,
+  TimerEngineWebSocketUpdate,
   UpdateCallback,
   WebSocketUpdateCallback
 } from "../common/TimerInterfaces.ts";
@@ -239,29 +240,31 @@ export class TimerEngine {
     })
   }
 
-  private _sendWebSocketUpdate() {
-    const isExpired = this._currentSeconds <= 0;
+  private _state(): string {
+    if (this.isReset()) return 'Not Running';
+    if (!this.timerIsRunning) return 'Paused';
+    if (this._currentSeconds <= 0) return 'Expired';
+    if (this.isExpiring()) return 'Expiring';
+    return 'Running';
+  }
 
-    let state = 'Running';
-    if (this.isReset()) {
-      state = 'Not Running';
-    } else if (!this.timerIsRunning) {
-      state = 'Paused';
-    } else if (isExpired) {
-      if (this.audioEnabled && !this._audioRun && this.options.audioFile) {
-        this.playSound?.(this.options.audioFile)
-        this._audioRun = true;
-      }
-      state = 'Expired';
-    } else if (this.isExpiring()) {
-      state = 'Expiring';
+  private _sendWebSocketUpdate() {
+    if (this._state() === 'Expired' && this.audioEnabled && !this._audioRun && this.options.audioFile) {
+      this.playSound?.(this.options.audioFile)
+      this._audioRun = true;
     }
+
+    this.webSocketUpdate?.(this.webSocketState())
+  }
+
+  webSocketState(): TimerEngineWebSocketUpdate {
+    const state = this._state();
 
     const setTimeDuration = dayjs.duration(Math.abs(this.totalSeconds), 'seconds');
     const currentTimeDuration = dayjs.duration(Math.abs(this._currentSeconds), 'seconds');
     const timeSetOnCurrentTimerDuration = dayjs.duration(this._timer.secondsSet, 'seconds');
 
-    this.webSocketUpdate?.({
+    return {
       state: state,
       setTime: this.totalSeconds,
       setTimeHms: setTimeDuration.format('HH:mm:ss'),
@@ -282,7 +285,7 @@ export class TimerEngine {
       timeSetOnCurrentTimerM: timeSetOnCurrentTimerDuration.format('mm'),
       timeSetOnCurrentTimerS: timeSetOnCurrentTimerDuration.format('ss'),
       timerEndsAt: this.endsAt() ?? "",
-    })
+    }
   }
 
   _timerStatusChanged() {

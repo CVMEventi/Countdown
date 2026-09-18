@@ -7,7 +7,13 @@ import {TimerEngine, TimerEngineConstructorOptions, TimerEngineOptions} from "..
 import BrowserWinHandler from "./BrowserWinHandler.ts";
 import createCountdownWindow from "../countdownWindow.ts";
 import {BrowserWindow, powerMonitor, screen} from "electron";
-import {MessageUpdate, TimerEngineUpdate, TimerEngineWebSocketUpdate} from "../../common/TimerInterfaces.ts";
+import {
+  AnyWebSocketUpdate,
+  MessageUpdate,
+  TimerEngineUpdate,
+  TimerEngineWebSocketUpdate,
+  TimerSnapshot
+} from "../../common/TimerInterfaces.ts";
 import {CountdownApp} from "../App.ts";
 import {sleep} from "./utilities.ts";
 import {promises as fs} from "node:fs";
@@ -15,6 +21,8 @@ import {promises as fs} from "node:fs";
 import mime from "mime/lite";
 import NDIManager from "../Remotes/NDI.ts";
 import OMTManager from "../Remotes/OMT.ts";
+import {TransportRegistry} from "../Remotes/TransportRegistry.ts";
+import type {TimerTransport} from "../Remotes/TimerTransport.ts";
 
 interface WindowsKV {
   [key: string]: BrowserWinHandler;
@@ -51,6 +59,9 @@ export class TimersOrchestrator {
   playingSounds = new Set<string>()
   // Windows being placed from settings: their bounds change on purpose and must not be saved back
   private _positioningWindows = new WeakSet<BrowserWinHandler>()
+  // Remotes that broadcast state to clients. Empty until App builds them once the main window
+  // exists, so broadcasts before that are harmlessly dropped rather than throwing
+  private _transports = new TransportRegistry()
 
   constructor(app: CountdownApp) {
     this.app = app
@@ -165,8 +176,38 @@ export class TimersOrchestrator {
     return countdownWindowHandler
   }
 
+  addTransport(transport: TimerTransport) {
+    this._transports.add(transport)
+  }
+
+  removeTransport(transport: TimerTransport) {
+    this._transports.remove(transport)
+  }
+
+  broadcast(update: AnyWebSocketUpdate) {
+    this._transports.broadcast(update)
+  }
+
+  buildSnapshot(): TimerSnapshot {
+    const timerEngine: { [timerId: string]: TimerEngineWebSocketUpdate } = {}
+    const messages: { [timerId: string]: string | null } = {}
+
+    Object.keys(this.timers).forEach((timerId) => {
+      const engine = this.timers[timerId].engine
+      timerEngine[timerId] = { timerId, ...engine.webSocketState() }
+      messages[timerId] = engine.message ?? null
+    })
+
+    return {
+      timers: this.app.config.settings.timers,
+      timerEngine,
+      messages,
+      playingTimerIds: [...this.playingSounds],
+    }
+  }
+
   async _playSound(timerId: string, audioFilePath: string) {
-    this.app.webServer.sendToWebSocket({
+    this.broadcast({
       type: 'audio',
       update: { timerId }
     })
@@ -187,7 +228,7 @@ export class TimersOrchestrator {
   }
 
   stopSound(timerId: string) {
-    this.app.webServer.sendToWebSocket({
+    this.broadcast({
       type: 'audioStop',
       update: { timerId }
     })
@@ -208,7 +249,7 @@ export class TimersOrchestrator {
     }
 
     const playingTimerIds = [...this.playingSounds]
-    this.app.webServer.sendToWebSocket({
+    this.broadcast({
       type: 'audioState',
       update: { playingTimerIds }
     })
@@ -239,21 +280,21 @@ export class TimersOrchestrator {
   }
 
   _timerEngineWebSocketUpdate(timerId: string, update: TimerEngineWebSocketUpdate) {
-    this.app.webServer.sendToWebSocket({
+    this.broadcast({
       type: 'timerEngine',
       update
     })
   }
 
   _configWebSocketUpdate() {
-    this.app.webServer.sendToWebSocket({
+    this.broadcast({
       type: 'config',
       update: this.app.config.settings.timers
     })
   }
 
   _timerEngineMessageUpdate(timerId: string, update: MessageUpdate) {
-    this.app.webServer.sendToWebSocket({
+    this.broadcast({
       type: 'message',
       update
     })
