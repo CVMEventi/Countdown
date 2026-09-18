@@ -17,14 +17,26 @@ jobs:
       - name: Check out Git repository
         uses: actions/checkout@v1
 
-      - name: Enable Corepack
-        run: corepack enable
-
       - name: Install Node.js, NPM and Yarn
         uses: actions/setup-node@v5
         with:
-          cache: 'yarn'
           node-version: 24
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Locate Yarn cache
+        id: yarn-cache
+        shell: bash
+        run: echo "dir=$(corepack yarn config get cacheFolder)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Yarn downloads
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.yarn-cache.outputs.dir }}
+          key: ${{ runner.os }}-${{ runner.arch }}-yarn-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ runner.arch }}-yarn-
 
       - uses: actions/setup-python@v6
         with:
@@ -35,7 +47,7 @@ jobs:
           pip install setuptools
 
       - name: Install dependencies
-        run: yarn install --immutable
+        run: corepack yarn install --immutable
 
       - name: Install flatpak-builder and eu-strip
         if: ${{ runner.os == 'Linux' }}
@@ -57,7 +69,7 @@ jobs:
       - name: Build x64
         if: ${{ runner.arch == 'X64' || runner.os == 'macOS' }}
         run: |
-          yarn make --arch x64
+          corepack yarn make --arch x64
         env:
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
@@ -65,7 +77,7 @@ jobs:
       - name: Build arm64
         if: ${{ runner.arch == 'ARM64' || runner.os == 'macOS' }}
         run: |
-          yarn make --arch arm64
+          corepack yarn make --arch arm64
         env:
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
