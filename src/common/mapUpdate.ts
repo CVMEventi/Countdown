@@ -14,5 +14,6 @@ export function mapUpdate(u: TimerEngineWebSocketUpdate): TimerEngineUpdate {
     isExpiring: u.state === 'Expiring',
     isCountingUp: u.state === 'Expired',
     timerEndsAt: u.timerEndsAt ?? null,
+    timerEndsAtEpochMs: u.timerEndsAtEpochMs ?? null,
   }
 }

@@ -159,10 +159,24 @@ export class CountdownApp {
       this.webServer.port = port;
       this.timersOrchestrator.addTransport(this.webServer);
 
-      this.webRtcRemote = new WebRtcRemote(createWebRtcHostWindow, (status) => {
-        if (browserWindow.isDestroyed()) return;
-        browserWindow.webContents.send('webrtc-update', status);
-      });
+      this.webRtcRemote = new WebRtcRemote(
+        createWebRtcHostWindow,
+        (status) => {
+          if (browserWindow.isDestroyed()) return;
+          browserWindow.webContents.send('webrtc-update', status);
+        },
+        async (name) => {
+          const result = await dialog.showMessageBox({
+            type: 'question',
+            message: `"${name}" wants to control your timers`,
+            detail: 'Allow this device only if you are expecting it.',
+            buttons: ['Deny', 'Allow'],
+            defaultId: 0,
+            cancelId: 0,
+          });
+          return result.response === 1;
+        },
+      );
       this.timersOrchestrator.addTransport(this.webRtcRemote);
       this.webRtcRemote.applyState(this.config.settings.remote);
 

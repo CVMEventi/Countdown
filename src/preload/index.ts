@@ -45,6 +45,7 @@ contextBridge.exposeInMainWorld(
     sendCommand: async (command: unknown) => await ipcRenderer.invoke('webrtc-host:command', command),
     getSnapshot: async () => await ipcRenderer.invoke('webrtc-host:snapshot'),
     getSession: async () => await ipcRenderer.invoke('webrtc-host:session-get'),
+    requestApproval: async (clientId: string, name: string) => await ipcRenderer.invoke('webrtc-host:request-approval', clientId, name),
   }
 )
 contextBridge.exposeInMainWorld("clipboard", clipboard)

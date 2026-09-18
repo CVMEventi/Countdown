@@ -63,6 +63,7 @@ interface WebRtcHostAPI {
   sendCommand(command: unknown): Promise<{ok: boolean, error?: string}>
   getSnapshot(): Promise<any>
   getSession(): Promise<import('../src/common/webrtcStatus.ts').WebRtcSession | null>
+  requestApproval(clientId: string, name: string): Promise<boolean>
 }
 
 export declare global {

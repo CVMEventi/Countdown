@@ -1,3 +1,4 @@
+import type {Timers, TimerSettings, WindowSettings} from './config.ts'
 import type {
   AudioStateWebSocketUpdate,
   AudioWebSocketUpdate,
@@ -249,4 +250,31 @@ export function validateCommand(value: unknown, timerExists: (timerId: string) =
   }
 
   return {ok: true, command: candidate as unknown as RtcCommand}
+}
+
+export function fileBaseName(filePath: string): string {
+  const parts = filePath.split(/[\\/]/)
+  return parts[parts.length - 1] ?? ''
+}
+
+export function sanitizeTimersForWire(timers: Timers): Timers {
+  const sanitized: Timers = {}
+
+  Object.entries(timers ?? {}).forEach(([timerId, timer]) => {
+    const {audioFile, audioOutputDeviceId: _device, windows, ...rest} = timer as TimerSettings
+
+    const sanitizedWindows: {[windowId: string]: WindowSettings} = {}
+    Object.entries(windows ?? {}).forEach(([windowId, window]) => {
+      const {bounds: _bounds, ...windowRest} = (window ?? {}) as WindowSettings
+      sanitizedWindows[windowId] = windowRest as WindowSettings
+    })
+
+    sanitized[timerId] = {
+      ...rest,
+      audioFile: audioFile ? fileBaseName(audioFile) : null,
+      windows: sanitizedWindows,
+    } as TimerSettings
+  })
+
+  return sanitized
 }

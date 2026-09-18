@@ -197,6 +197,65 @@ describe('WebRtcRemote', () => {
     });
   });
 
+  describe('device approval', () => {
+    it('allows without asking when approval is off', async () => {
+      const ask = vi.fn(async () => true);
+      const fresh = new WebRtcRemote(() => makeHost().host as never, vi.fn(), ask);
+      await fresh.applyState(settings());
+
+      // requestApproval is only called by the host when the setting is on, but when it is
+      // called it must consult the prompt
+      expect(await fresh.requestApproval('a', 'iPhone')).toBe(true);
+      expect(ask).toHaveBeenCalledWith('iPhone');
+    });
+
+    it('remembers an approved device so it is asked once', async () => {
+      const ask = vi.fn(async () => true);
+      const fresh = new WebRtcRemote(() => makeHost().host as never, vi.fn(), ask);
+      await fresh.applyState(settings());
+
+      await fresh.requestApproval('a', 'iPhone');
+      await fresh.requestApproval('a', 'iPhone');
+
+      expect(ask).toHaveBeenCalledTimes(1);
+      expect(fresh.isApproved('a')).toBe(true);
+    });
+
+    it('blocks a denied device so it cannot keep prompting', async () => {
+      const ask = vi.fn(async () => false);
+      const fresh = new WebRtcRemote(() => makeHost().host as never, vi.fn(), ask);
+      await fresh.applyState(settings());
+
+      expect(await fresh.requestApproval('a', 'iPhone')).toBe(false);
+      expect(await fresh.requestApproval('a', 'iPhone')).toBe(false);
+
+      expect(ask).toHaveBeenCalledTimes(1);
+      expect(fresh.isBlocked('a')).toBe(true);
+    });
+
+    it('never prompts for a revoked device', async () => {
+      const ask = vi.fn(async () => true);
+      const fresh = new WebRtcRemote(() => makeHost().host as never, vi.fn(), ask);
+      await fresh.applyState(settings());
+      fresh.revoke('a');
+
+      expect(await fresh.requestApproval('a', 'iPhone')).toBe(false);
+      expect(ask).not.toHaveBeenCalled();
+    });
+
+    it('forgets approvals on a fresh start', async () => {
+      const ask = vi.fn(async () => true);
+      const fresh = new WebRtcRemote(() => makeHost().host as never, vi.fn(), ask);
+      await fresh.applyState(settings());
+      await fresh.requestApproval('a', 'iPhone');
+
+      await fresh.applyState(settings({webrtcEnabled: false}));
+      await fresh.applyState(settings());
+
+      expect(fresh.isApproved('a')).toBe(false);
+    });
+  });
+
   describe('transport', () => {
     it('forwards broadcasts to the host', async () => {
       await remote.applyState(settings());

@@ -14,6 +14,8 @@ const HEARTBEAT_MS = 5000
 const HELLO_TIMEOUT_MS = 10000
 const COMMAND_BUCKET_SIZE = 40
 const COMMAND_REFILL_PER_SECOND = 20
+// Above this the channel is not draining, so only last-write-wins frames get dropped
+const BACKPRESSURE_BYTES = 256 * 1024
 
 export interface PeerHostSession {
   sessionId: string
@@ -30,6 +32,8 @@ export interface PeerHostOptions {
   onClients: (clients: ClientReport[]) => void
   onCommand: (command: unknown) => Promise<{ok: boolean, error?: string}>
   getSnapshot: () => Promise<unknown>
+  requireApproval: boolean
+  onApprovalRequest: (clientId: string, name: string) => Promise<boolean>
 }
 
 export interface ClientReport {
@@ -58,6 +62,8 @@ export class PeerHost {
   private _clients = new Map<DataConnection, Client>()
   private _blocked = new Set<string>()
   private _heartbeat: ReturnType<typeof setInterval> | null = null
+  private _pending = new Map<string, unknown>()
+  private _flushScheduled = false
 
   constructor(options: PeerHostOptions) {
     this._options = options
@@ -121,10 +127,43 @@ export class PeerHost {
   }
 
   broadcast(update: unknown) {
+    const frame = update as {type?: string, update?: {timerId?: string}}
+
+    // timerEngine and config are last-write-wins, so a newer one makes a queued one pointless.
+    // set() fires on every keystroke in the time input, and config carries every timer's settings.
+    if (frame.type === 'timerEngine' || frame.type === 'config') {
+      const key = frame.type === 'config' ? 'config' : `timerEngine:${frame.update?.timerId ?? ''}`
+      this._pending.set(key, update)
+      this._scheduleFlush()
+      return
+    }
+
+    this._sendNow(update)
+  }
+
+  private _scheduleFlush() {
+    if (this._flushScheduled) return
+    this._flushScheduled = true
+    queueMicrotask(() => {
+      this._flushScheduled = false
+      const pending = [...this._pending.values()]
+      this._pending.clear()
+      pending.forEach(update => this._sendNow(update, true))
+    })
+  }
+
+  private _sendNow(update: unknown, coalescable = false) {
     this._clients.forEach((client, connection) => {
       if (!connection.open) return
+      // Dropping a stale tick is always safe; messages and audio cues are not replaceable
+      if (coalescable && this._isBackedUp(connection)) return
       connection.send(update)
     })
+  }
+
+  private _isBackedUp(connection: DataConnection): boolean {
+    const amount = (connection as unknown as {dataChannel?: RTCDataChannel}).dataChannel?.bufferedAmount
+    return typeof amount === 'number' && amount > BACKPRESSURE_BYTES
   }
 
   private _accept(connection: DataConnection) {
@@ -212,6 +251,17 @@ export class PeerHost {
     pending.clientId = clientId
     pending.role = role
     pending.name = typeof hello.clientName === 'string' && hello.clientName ? hello.clientName.slice(0, 40) : 'Browser'
+
+    if (this._options.requireApproval) {
+      const allowed = await this._options.onApprovalRequest(clientId, pending.name)
+      // The operator may have taken a while, and the peer can be long gone by now
+      if (!connection.open) return
+      if (!allowed) {
+        this._deny(connection, 'unauthorised', 'Not approved on the host')
+        return
+      }
+    }
+
     this._clients.set(connection, pending)
 
     connection.send({

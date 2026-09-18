@@ -11,6 +11,7 @@ export interface TimerEngineUpdate {
   isReset: boolean
   isCountingUp: boolean
   timerEndsAt: string | null
+  timerEndsAtEpochMs?: number | null
 }
 
 export interface TimerEngineUpdates {
@@ -61,6 +62,7 @@ export interface TimerEngineWebSocketUpdate {
   timeSetOnCurrentTimerM?: string
   timeSetOnCurrentTimerS?: string
   timerEndsAt?: string
+  timerEndsAtEpochMs?: number | null
 }
 
 /**

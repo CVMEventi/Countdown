@@ -10,6 +10,7 @@ import {AnyWebSocketUpdate} from '@common/TimerInterfaces.ts'
 import {TimersOrchestrator} from "../Utilities/TimersOrchestrator.ts";
 import {TimerEngine} from "../TimerEngine.ts";
 import type {TimerTransport} from "./TimerTransport.ts";
+import {sanitizeTimersForWire} from "@common/protocol.ts";
 // @ts-ignore
 import {WebSocket} from "ws";
 
@@ -113,7 +114,7 @@ export default class HTTP implements TimerTransport {
       res
         .code(200)
         .header('Content-Type', 'application/json; charset=utf-8')
-        .send(this.timersOrchestrator.app.config.settings.timers);
+        .send(sanitizeTimersForWire(this.timersOrchestrator.app.config.settings.timers));
     })
 
     this.fastifyServer.register(async (timerRoutes) => {

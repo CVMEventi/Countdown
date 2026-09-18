@@ -41,6 +41,8 @@ onMounted(async () => {
     onClients: clients => webrtcHost.reportClients(clients),
     onCommand: command => webrtcHost.sendCommand(command),
     getSnapshot: () => webrtcHost.getSnapshot(),
+    requireApproval: remote.webrtcRequireApproval ?? false,
+    onApprovalRequest: (clientId, name) => webrtcHost.requestApproval(clientId, name),
   })
 
   webrtcHost.onSession((_event: unknown, session: PeerHostSession) => host?.setSession(session))

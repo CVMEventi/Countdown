@@ -76,7 +76,25 @@ describe('TimersOrchestrator.buildSnapshot', () => {
 
   it('includes the timer config', () => {
     const stub = makeStub({timer1: {engine: makeEngine('Running', null)}});
-    expect(buildSnapshot.call(stub).timers).toEqual({timer1: {name: 'Timer timer1'}});
+    expect(buildSnapshot.call(stub).timers.timer1.name).toBe('Timer timer1');
+  });
+
+  // The snapshot is a wire frame, so it goes through the same redaction as the config frame
+  it('sanitises the config it sends', () => {
+    const stub = makeStub({timer1: {engine: makeEngine('Running', null)}});
+    stub.app.config.settings.timers.timer1 = {
+      name: 'Timer timer1',
+      audioFile: '/Users/someone/Music/airhorn.mp3',
+      audioOutputDeviceId: 'device-abc',
+      windows: {win1: {bounds: {x: 1, y: 2}, contentAtReset: 'FULL'}},
+    } as never;
+
+    const timers = buildSnapshot.call(stub).timers;
+
+    expect(timers.timer1.audioFile).toBe('airhorn.mp3');
+    expect(timers.timer1).not.toHaveProperty('audioOutputDeviceId');
+    expect(timers.timer1.windows.win1).not.toHaveProperty('bounds');
+    expect(timers.timer1.windows.win1.contentAtReset).toBe('FULL');
   });
 
   it('is empty but well formed with no timers', () => {

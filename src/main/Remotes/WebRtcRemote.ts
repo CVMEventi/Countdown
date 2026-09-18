@@ -28,13 +28,38 @@ export class WebRtcRemote implements TimerTransport {
   private _host: ReturnType<HostWindowFactory> | null = null;
   private _createHost: HostWindowFactory;
   private _onStatusChange: (status: WebRtcStatus) => void;
+  private _askApproval: (name: string) => Promise<boolean>;
+  private _approved = new Set<string>();
 
   // Keys are rotated rather than remembered, so a revoked client cannot come straight back
   private _blocked = new Set<string>();
 
-  constructor(createHost: HostWindowFactory, onStatusChange: (status: WebRtcStatus) => void) {
+  constructor(
+    createHost: HostWindowFactory,
+    onStatusChange: (status: WebRtcStatus) => void,
+    askApproval: (name: string) => Promise<boolean> = async () => true,
+  ) {
     this._createHost = createHost;
     this._onStatusChange = onStatusChange;
+    this._askApproval = askApproval;
+  }
+
+  // A leaked code alone gets an attacker nothing when this is on
+  async requestApproval(clientId: string, name: string): Promise<boolean> {
+    if (this._blocked.has(clientId)) return false;
+    if (this._approved.has(clientId)) return true;
+
+    const allowed = await this._askApproval(name);
+    if (allowed) {
+      this._approved.add(clientId);
+    } else {
+      this._blocked.add(clientId);
+    }
+    return allowed;
+  }
+
+  isApproved(clientId: string) {
+    return this._approved.has(clientId);
   }
 
   get isRunning() {
@@ -81,6 +106,7 @@ export class WebRtcRemote implements TimerTransport {
     this._lastError = null;
     this._clients.clear();
     this._blocked.clear();
+    this._approved.clear();
 
     this._host = this._createHost();
     await this._host.loadPage('/webrtc-host');

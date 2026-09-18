@@ -101,6 +101,11 @@ export class TimerEngine {
     return dayjs().add(this._currentSeconds / 1000 * this._currentInterval, 's').format('HH:mm');
   }
 
+  endsAtEpochMs(): number | null {
+    if (this.countSeconds() <= 0) return null;
+    return dayjs().add(this._currentSeconds / 1000 * this._currentInterval, 's').valueOf();
+  }
+
   setTimerInterval(interval: number) {
     this._currentInterval = interval;
     this._timer.setInterval(interval);
@@ -285,6 +290,7 @@ export class TimerEngine {
       timeSetOnCurrentTimerM: timeSetOnCurrentTimerDuration.format('mm'),
       timeSetOnCurrentTimerS: timeSetOnCurrentTimerDuration.format('ss'),
       timerEndsAt: this.endsAt() ?? "",
+      timerEndsAtEpochMs: this.endsAtEpochMs(),
     }
   }
 

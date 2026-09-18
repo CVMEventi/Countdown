@@ -22,6 +22,7 @@ import mime from "mime/lite";
 import NDIManager from "../Remotes/NDI.ts";
 import OMTManager from "../Remotes/OMT.ts";
 import {TransportRegistry} from "../Remotes/TransportRegistry.ts";
+import {sanitizeTimersForWire} from "../../common/protocol.ts";
 import type {TimerTransport} from "../Remotes/TimerTransport.ts";
 
 interface WindowsKV {
@@ -199,7 +200,7 @@ export class TimersOrchestrator {
     })
 
     return {
-      timers: this.app.config.settings.timers,
+      timers: sanitizeTimersForWire(this.app.config.settings.timers),
       timerEngine,
       messages,
       playingTimerIds: [...this.playingSounds],
@@ -289,7 +290,7 @@ export class TimersOrchestrator {
   _configWebSocketUpdate() {
     this.broadcast({
       type: 'config',
-      update: this.app.config.settings.timers
+      update: sanitizeTimersForWire(this.app.config.settings.timers)
     })
   }
 

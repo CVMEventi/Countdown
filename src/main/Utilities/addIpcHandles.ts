@@ -124,6 +124,11 @@ export default function addIpcHandles(app: CountdownApp)
     return app.webRtcRemote?.session ?? null
   })
 
+  ipcMain.handle('webrtc-host:request-approval', async (event, clientId: string, name: string) => {
+    if (!fromHost(event)) return false
+    return await app.webRtcRemote?.requestApproval(clientId, name) ?? false
+  })
+
   ipcMain.handle('webrtc-host:snapshot', (event) => {
     if (!fromHost(event)) return null
     return app.timersOrchestrator.buildSnapshot()
