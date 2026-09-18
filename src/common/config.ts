@@ -33,7 +33,7 @@ export function getActiveThreshold(
   })
 }
 
-export const CURRENT_CONFIG_VERSION: number = 4
+export const CURRENT_CONFIG_VERSION: number = 5
 
 export const DEFAULT_TIMER_NAME = 'Timer'
 
@@ -83,7 +83,7 @@ export const DEFAULT_OSC_PORT = 6566;
 export const DEFAULT_WEBRTC_ENABLED = false;
 export const DEFAULT_WEBRTC_CODE_ROTATION: WebRtcCodeRotation = 'session';
 export const DEFAULT_WEBRTC_REQUIRE_APPROVAL = false;
-export const DEFAULT_WEBRTC_SPA_URL = '';
+export const DEFAULT_WEBRTC_SPA_URL = 'https://countdown.cvm.it';
 export const DEFAULT_WEBRTC_ICE_TRANSPORT_POLICY: WebRtcIceTransportPolicy = 'all';
 
 // Blank host means the PeerJS public broker

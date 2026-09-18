@@ -5,6 +5,7 @@ import {RemoveFont} from "./RemoveFont.ts";
 import {MoveSettingsToWindow} from "./MoveSettingsToWindow.ts";
 import {MigrateToColorThresholds} from "./MigrateToColorThresholds.ts";
 import {AddWebRtcRemoteSettings} from "./AddWebRtcRemoteSettings.ts";
+import {SetDefaultWebRtcSpaUrl} from "./SetDefaultWebRtcSpaUrl.ts";
 
 const migrations: BaseMigration[] = [
   new MergeOpacityToBackgroundColor,
@@ -13,6 +14,7 @@ const migrations: BaseMigration[] = [
   new MoveSettingsToWindow,
   new MigrateToColorThresholds,
   new AddWebRtcRemoteSettings,
+  new SetDefaultWebRtcSpaUrl,
 ];
 
 export function applyMigrations(oldConfig: {[key: string]: unknown}): {[key: string]: unknown} {

@@ -10,6 +10,7 @@
     :port="port"
     :is-in-browser="isInBrowser"
     :server-running="serverRunning"
+    :remote="remote"
   />
 </template>
 
@@ -17,6 +18,7 @@
 import { ref } from 'vue'
 import { QrCodeIcon } from '@heroicons/vue/20/solid'
 import { NetworkAddress } from '../network.ts'
+import type { RemoteShareTarget } from '../webrtcStatus.ts'
 import SButton from './SButton.vue'
 import ShareTimerModal from './ShareTimerModal.vue'
 
@@ -27,6 +29,7 @@ defineProps<{
   port?: number | string | null
   isInBrowser: boolean
   serverRunning?: boolean
+  remote?: RemoteShareTarget[]
 }>()
 
 const open = ref(false)

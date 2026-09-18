@@ -6,6 +6,8 @@ import { RemoveFont } from '../../main/Migrations/RemoveFont.ts';
 import { MoveSettingsToWindow } from '../../main/Migrations/MoveSettingsToWindow.ts';
 import { MigrateToColorThresholds } from '../../main/Migrations/MigrateToColorThresholds.ts';
 import { AddWebRtcRemoteSettings } from '../../main/Migrations/AddWebRtcRemoteSettings.ts';
+import { SetDefaultWebRtcSpaUrl } from '../../main/Migrations/SetDefaultWebRtcSpaUrl.ts';
+import { DEFAULT_WEBRTC_SPA_URL } from '../../common/config.ts';
 import { ContentAtReset } from '../../common/config.ts';
 
 // ─────────────────────────────────────────────────────────────
@@ -334,7 +336,7 @@ describe('AddWebRtcRemoteSettings', () => {
     expect(remote.webrtcCodeRotation).toBe('session');
     expect(remote.webrtcRoomCode).toBeNull();
     expect(remote.webrtcRequireApproval).toBe(false);
-    expect(remote.webrtcSpaUrl).toBe('');
+    expect(remote.webrtcSpaUrl).toBe(DEFAULT_WEBRTC_SPA_URL);
     expect(remote.webrtcSignaling).toBeDefined();
     expect(Array.isArray(remote.webrtcIceServers)).toBe(true);
   });
@@ -393,6 +395,58 @@ describe('AddWebRtcRemoteSettings', () => {
   });
 });
 
+// ─────────────────────────────────────────────────────────────
+// SetDefaultWebRtcSpaUrl
+// ─────────────────────────────────────────────────────────────
+describe('SetDefaultWebRtcSpaUrl', () => {
+  const migration = new SetDefaultWebRtcSpaUrl();
+
+  function migrateRemote(remote: Record<string, unknown>, version = 4) {
+    const result = migration.migrate({version, settings: {remote, timers: {}}}) as Record<string, unknown>;
+    return (result.settings as Record<string, unknown>).remote as Record<string, unknown>;
+  }
+
+  it('returns config unchanged when already at version 5', () => {
+    const config = {version: 5, settings: {remote: {webrtcSpaUrl: ''}}};
+    expect(migration.migrate(config)).toBe(config);
+  });
+
+  it('bumps the version to 5', () => {
+    const result = migration.migrate({version: 4, settings: {remote: {}}}) as Record<string, unknown>;
+    expect(result.version).toBe(5);
+  });
+
+  // The empty value is already persisted, so the new default only lands by being written in
+  it('fills in the hosted address when the setting is empty', () => {
+    expect(migrateRemote({webrtcSpaUrl: ''}).webrtcSpaUrl).toBe(DEFAULT_WEBRTC_SPA_URL);
+  });
+
+  it('fills it in when the setting is missing entirely', () => {
+    expect(migrateRemote({}).webrtcSpaUrl).toBe(DEFAULT_WEBRTC_SPA_URL);
+  });
+
+  it('treats a whitespace-only address as empty', () => {
+    expect(migrateRemote({webrtcSpaUrl: '   '}).webrtcSpaUrl).toBe(DEFAULT_WEBRTC_SPA_URL);
+  });
+
+  it('never clobbers an address the user chose', () => {
+    const remote = migrateRemote({webrtcSpaUrl: 'https://timers.example.com'});
+    expect(remote.webrtcSpaUrl).toBe('https://timers.example.com');
+  });
+
+  it('keeps the rest of the remote settings', () => {
+    const remote = migrateRemote({webrtcSpaUrl: '', webServerPort: 7000, webrtcEnabled: true});
+    expect(remote.webServerPort).toBe(7000);
+    expect(remote.webrtcEnabled).toBe(true);
+  });
+
+  it('copes with a config that has no remote section', () => {
+    const result = migration.migrate({version: 4, settings: {}}) as Record<string, unknown>;
+    const remote = (result.settings as Record<string, unknown>).remote as Record<string, unknown>;
+    expect(remote.webrtcSpaUrl).toBe(DEFAULT_WEBRTC_SPA_URL);
+  });
+});
+
 describe('applyMigrations', () => {
   it('runs all migrations in order on a fully unversioned config', () => {
     const oldConfig = {
@@ -432,8 +486,8 @@ describe('applyMigrations', () => {
 
     const result = applyMigrations(oldConfig) as Record<string, unknown>;
 
-    // Version should be bumped to 4 by AddWebRtcRemoteSettings
-    expect(result.version).toBe(4);
+    // Version should be bumped to 5 by SetDefaultWebRtcSpaUrl
+    expect(result.version).toBe(5);
 
     const settings = result.settings as Record<string, unknown>;
 
@@ -454,9 +508,9 @@ describe('applyMigrations', () => {
     expect(Array.isArray(colors.thresholds)).toBe(true);
   });
 
-  it('is idempotent on a fully migrated config (version 4)', () => {
+  it('is idempotent on a fully migrated config (version 5)', () => {
     const migrated = {
-      version: 4,
+      version: 5,
       settings: {
         timers: {},
         presets: [] as number[],
@@ -470,7 +524,7 @@ describe('applyMigrations', () => {
     expect(result).toEqual(migrated);
   });
 
-  it('carries a version 3 config forward to 4 with the webrtc keys', () => {
+  it('carries a version 3 config forward with the webrtc keys', () => {
     const migrated = {
       version: 3,
       settings: {
@@ -486,7 +540,7 @@ describe('applyMigrations', () => {
     const result = applyMigrations(migrated) as Record<string, unknown>;
     const remote = (result.settings as Record<string, unknown>).remote as Record<string, unknown>;
 
-    expect(result.version).toBe(4);
+    expect(result.version).toBe(5);
     expect(remote.webrtcEnabled).toBe(false);
     expect(remote.webServerPort).toBe(7000);
   });

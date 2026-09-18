@@ -36,20 +36,18 @@
               Start the server to get a connection address.
             </p>
 
-            <template v-else>
-              <ShareUrlPanel
-                compact
-                :path="remoteControlPath()"
-                :addresses="webServerStore.addresses"
-                :port="currentPort"
-              />
-              <p v-if="webServerStore.addresses.length === 0" class="text-sm italic text-zinc-400">
-                No network connection found. Only this computer can reach the server.
-              </p>
-              <p v-else class="text-xs text-zinc-400">
-                Scan with a device on the same network. Anyone on it can control the timers.
-              </p>
-            </template>
+            <ShareLinkPanel
+              compact
+              :path="remoteControlPath()"
+              :addresses="webServerStore.addresses"
+              :port="currentPort"
+              :server-running="isRunning"
+              :is-in-browser="false"
+              :remote="connectTargets"
+            />
+            <p v-if="isRunning && webServerStore.addresses.length === 0" class="text-sm italic text-zinc-400">
+              No network connection found. Only this computer can reach the server.
+            </p>
           </div>
         </card>
       </div>
@@ -66,30 +64,29 @@
           <p class="text-sm mt-2" :class="webRtcStateClass">{{ webRtcStateText }}</p>
           <p v-if="webRtcStore.lastError" class="text-xs italic text-zinc-400">{{ webRtcStore.lastError }}</p>
 
-          <div class="mt-3 pt-3 border-t border-zinc-700">
-            <PairingPanel
-              :control-code="webRtcStore.controlCode"
-              :view-code="webRtcStore.viewCode"
-              :spa-url="remote.webrtcSpaUrl"
+          <div class="mt-3 pt-3 border-t border-zinc-700 flex flex-col gap-3">
+            <ShareLinkPanel compact :remote="codeTargets" />
+
+            <WebRtcSessionPanel
               :clients="webRtcStore.clients"
               @rotate="rotateCode"
               @revoke="revokeClient"
             />
           </div>
 
-          <p class="mt-3">Remote page address</p>
-          <input
-            @click="($event.target as HTMLInputElement).select()"
-            @focus="($event.target as HTMLInputElement).select()"
-            v-model="remote.webrtcSpaUrl"
-            placeholder="https://example.com/remote"
-            class="input w-full">
-
           <details class="mt-3 pt-3 border-t border-zinc-700">
             <summary class="uppercase text-sm text-zinc-400 cursor-pointer select-none">Advanced</summary>
 
             <div class="flex flex-col gap-2 mt-2">
-              <p class="uppercase text-xs text-zinc-400">Signaling</p>
+              <p class="uppercase text-xs text-zinc-400">Remote page address</p>
+              <input
+                @click="($event.target as HTMLInputElement).select()"
+                @focus="($event.target as HTMLInputElement).select()"
+                v-model="remote.webrtcSpaUrl"
+                :placeholder="DEFAULT_WEBRTC_SPA_URL"
+                class="input w-full">
+
+              <p class="uppercase text-xs text-zinc-400 mt-2">Signaling</p>
               <input
                 v-model="remote.webrtcSignaling.host"
                 placeholder="Host (blank for the public broker)"
@@ -168,14 +165,16 @@ import Card from "@common/components/Card.vue";
 import CheckBox from "@common/components/CheckBox.vue";
 const { api } = window
 import SButton from "@common/components/SButton.vue";
-import ShareUrlPanel from "@common/components/ShareUrlPanel.vue";
-import PairingPanel from "@common/components/PairingPanel.vue";
+import ShareLinkPanel from "@common/components/ShareLinkPanel.vue";
+import WebRtcSessionPanel from "@common/components/WebRtcSessionPanel.vue";
 import {remoteControlPath} from "@common/network.ts";
+import {DEFAULT_WEBRTC_SPA_URL} from "@common/config.ts";
 import TopBar from '../components/TopBar.vue'
 import BaseContainer from '../components/BaseContainer.vue'
 import {useSettingsStore} from '../stores/settings.ts'
 import {useWebServerStore} from '../stores/webServer.ts'
 import {useWebRtcStore} from '../stores/webRtc.ts'
+import {useRemoteShare} from '../remoteShare.ts'
 
 defineOptions({
   'name': 'RemoteTab',
@@ -206,6 +205,18 @@ let httpToggleText = computed(() => isRunning.value ? "Restart" : "Start");
 const remote = computed(() => settingsStore.settings.remote);
 
 const webRtcStore = useWebRtcStore();
+
+const remoteShare = useRemoteShare();
+
+// The Connect panel offers the operator link; both codes live in the Web Remote card below
+const connectTargets = computed(() => [
+  remoteShare.target({id: 'control', label: 'Remote', role: 'control'}),
+]);
+
+const codeTargets = computed(() => [
+  remoteShare.target({id: 'control', label: 'Control', role: 'control'}),
+  remoteShare.target({id: 'view', label: 'View only', role: 'view'}),
+]);
 
 const webRtcStateText = computed(() => {
   if (!webRtcStore.enabled) return 'Disabled';

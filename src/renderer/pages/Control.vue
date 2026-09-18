@@ -17,6 +17,7 @@
         :port="webServerStore.port"
         :server-running="webServerStore.isRunning"
         :is-in-browser="false"
+        :remote="remoteTargets"
       />
     </TopBar>
     <div class="p-1">
@@ -35,7 +36,7 @@
 </template>
 
 <script lang="ts" setup>
-import { onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 const { api } = window;
 import ControlPanel from '@common/components/ControlPanel.vue'
 import TimersNavigation from '@common/components/TimersNavigation.vue'
@@ -48,6 +49,7 @@ import { useSettingsStore } from '../stores/settings.ts'
 import { useGlobalStore } from '../stores/global.ts'
 import ShareTimerButton from '@common/components/ShareTimerButton.vue'
 import {useWebServerStore} from '../stores/webServer.ts'
+import {useRemoteShare} from '../remoteShare.ts'
 
 defineOptions({ name: 'index' })
 
@@ -56,6 +58,14 @@ const settingsStore = useSettingsStore()
 const timersStore = useTimersStore()
 const globalStore = useGlobalStore()
 const webServerStore = useWebServerStore()
+
+const remoteShare = useRemoteShare()
+// This button shares the current timer's countdown, so it is a view link rather than control
+const remoteTargets = computed(() => {
+  const timerId = globalStore.currentTimer
+  if (!timerId) return []
+  return [remoteShare.target({id: 'view', label: 'Remote', role: 'view', timerId})]
+})
 
 const playingSounds = new Map<string, HTMLAudioElement>()
 const playingTimerIds = ref<string[]>([])

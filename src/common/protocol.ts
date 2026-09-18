@@ -212,16 +212,42 @@ export function parsePairingCode(input: string): PairingCode | null {
   if (typeof input !== 'string') return null
 
   const fragment = input.includes('#') ? input.slice(input.lastIndexOf('#') + 1) : input
-  const tail = fragment.includes('/') ? fragment.slice(fragment.lastIndexOf('/') + 1) : fragment
 
-  const [rawSession, rawKey] = tail.split('.')
-  if (rawKey === undefined) return null
+  // Scanned rather than taking the last segment: a display link is #/d/<code>/<timerId>/<windowId>,
+  // so the code is in the middle
+  for (const segment of fragment.split('/')) {
+    const [rawSession, rawKey] = segment.split('.')
+    if (rawKey === undefined) continue
 
-  const sessionId = normalizeRoomCode(rawSession)
-  const key = normalizeRoomCode(rawKey)
-  if (sessionId.length !== ROOM_CODE_LENGTH || key.length !== ROOM_CODE_LENGTH) return null
+    const sessionId = normalizeRoomCode(rawSession)
+    const key = normalizeRoomCode(rawKey)
+    if (sessionId.length === ROOM_CODE_LENGTH && key.length === ROOM_CODE_LENGTH) {
+      return {sessionId, key}
+    }
+  }
 
-  return {sessionId, key}
+  return null
+}
+
+export interface WebRemoteLink {
+  spaUrl: string
+  code: string
+  timerId?: string
+  windowId?: string
+}
+
+// Dashes are stripped so the QR stays sparse; the SPA normalises either form
+export function buildWebRemoteUrl({spaUrl, code, timerId, windowId}: WebRemoteLink): string {
+  if (!spaUrl) return ''
+
+  const pairing = parsePairingCode(code)
+  if (!pairing) return ''
+
+  const base = spaUrl.replace(/#.*$/, '').replace(/\/$/, '')
+  const pair = `${pairing.sessionId}.${pairing.key}`
+
+  if (!timerId) return `${base}#/r/${pair}`
+  return `${base}#/d/${pair}/${timerId}${windowId ? `/${windowId}` : ''}`
 }
 
 export interface CommandValidationResult {

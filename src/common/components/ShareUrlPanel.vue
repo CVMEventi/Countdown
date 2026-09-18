@@ -10,36 +10,14 @@
       </option>
     </select>
 
-    <div class="flex justify-center">
-      <QrCode :text="url" :class="compact ? 'max-w-[140px]' : 'max-w-[260px]'" />
-    </div>
-
-    <div class="flex gap-2">
-      <input
-        ref="urlInput"
-        :value="url"
-        readonly
-        type="text"
-        class="input flex-1 min-w-0 text-xs"
-        @click="selectUrl"
-        @focus="selectUrl"
-      />
-      <SButton tiny type="info" :title="copyLabel" @click="copy">
-        <ClipboardDocumentIcon class="w-5 h-5" />
-      </SButton>
-    </div>
-
-    <p v-if="copyState" class="text-xs italic text-zinc-400">{{ copyState }}</p>
+    <QrUrlPanel :url="url" :compact="compact" />
   </div>
 </template>
 
 <script lang="ts" setup>
-import { computed, ref, useTemplateRef, watch } from 'vue'
-import { ClipboardDocumentIcon } from '@heroicons/vue/24/outline'
+import { computed, ref, watch } from 'vue'
 import { NetworkAddress, buildOrigin, buildUrl } from '../network.ts'
-import { copyText } from '../clipboard.ts'
-import QrCode from './QrCode.vue'
-import SButton from './SButton.vue'
+import QrUrlPanel from './QrUrlPanel.vue'
 
 const props = defineProps<{
   path: string
@@ -48,10 +26,6 @@ const props = defineProps<{
   isInBrowser?: boolean
   compact?: boolean
 }>()
-
-const copyLabel = 'Copy link'
-const copyState = ref('')
-const urlInput = useTemplateRef<HTMLInputElement>('urlInput')
 
 // In the browser the page was served from an address the device demonstrably reached, so that is
 // the only one worth offering. In the app, loopback is kept as a last resort so the link always works
@@ -77,20 +51,4 @@ const origin = computed(() => {
 const url = computed(() => buildUrl(origin.value, props.path))
 
 defineExpose({ url })
-
-function selectUrl(event: Event) {
-  (event.target as HTMLInputElement).select()
-}
-
-async function copy() {
-  if (await copyText(url.value)) {
-    copyState.value = 'Copied'
-    setTimeout(() => { copyState.value = '' }, 2000)
-    return
-  }
-
-  // No clipboard access (a phone on plain http), so hand the user a selection to copy themselves
-  urlInput.value?.select()
-  copyState.value = 'Press Ctrl/Cmd+C to copy'
-}
 </script>

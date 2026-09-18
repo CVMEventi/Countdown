@@ -16,20 +16,15 @@
                 </button>
               </div>
 
-              <p v-if="!canShare" class="text-sm italic text-zinc-400">
-                Start the web server in Remote settings to share this link.
-              </p>
-
-              <template v-else>
-                <ShareUrlPanel
-                  ref="panel"
-                  :path="path"
-                  :addresses="addresses"
-                  :port="port"
-                  :is-in-browser="isInBrowser"
-                />
-                <p class="text-xs text-zinc-400 mt-2">Scan with a device on the same network.</p>
-              </template>
+              <ShareLinkPanel
+                ref="panel"
+                :path="path"
+                :addresses="addresses"
+                :port="port"
+                :is-in-browser="isInBrowser"
+                :server-running="serverRunning"
+                :remote="remote"
+              />
 
               <div class="mt-4 flex gap-2 justify-end">
                 <SButton v-if="canShare" type="info" @click="openInBrowser">Open in browser</SButton>
@@ -48,7 +43,8 @@ import { computed, useTemplateRef } from 'vue'
 import { Dialog, DialogPanel, TransitionChild, TransitionRoot } from '@headlessui/vue'
 import { XMarkIcon } from '@heroicons/vue/24/outline'
 import { NetworkAddress, countdownPath, remoteControlPath } from '../network.ts'
-import ShareUrlPanel from './ShareUrlPanel.vue'
+import type { RemoteShareTarget } from '../webrtcStatus.ts'
+import ShareLinkPanel from './ShareLinkPanel.vue'
 import SButton from './SButton.vue'
 
 const props = defineProps<{
@@ -58,13 +54,19 @@ const props = defineProps<{
   port?: number | string | null
   isInBrowser: boolean
   serverRunning?: boolean
+  remote?: RemoteShareTarget[]
 }>()
 
 const open = defineModel('open', { type: Boolean, default: false })
-const panel = useTemplateRef<InstanceType<typeof ShareUrlPanel>>('panel')
+const panel = useTemplateRef<InstanceType<typeof ShareLinkPanel>>('panel')
 
-// In the browser the page itself is proof the server is up
-const canShare = computed(() => props.isInBrowser || (props.serverRunning ?? false))
+// In the browser the page itself is proof the server is up. A ready remote link is shareable
+// even when the local server is stopped, so either side counts.
+const canShare = computed(() =>
+  props.isInBrowser
+  || (props.serverRunning ?? false)
+  || (props.remote ?? []).some(target => target.availability === 'ready')
+)
 
 const title = computed(() => (props.timerId ? 'Share countdown' : 'Share remote'))
 

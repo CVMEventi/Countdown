@@ -11,6 +11,7 @@ import {
   formatRoomCode,
   isRtcFrame,
   isValidRoomCode,
+  buildWebRemoteUrl,
   formatPairingCode,
   normalizeRoomCode,
   parsePairingCode,
@@ -149,6 +150,15 @@ describe('pairing codes', () => {
     expect(parsePairingCode('https://example.com/remote#/r/XKTP9QM2.4FHB2WRD')).toEqual(pair);
   });
 
+  // The code sits mid-path in a display link, so the last segment is the windowId
+  it('parses a display URL with a timer and window after the code', () => {
+    expect(parsePairingCode('https://example.com/#/d/XKTP9QM2.4FHB2WRD/timer1/window1')).toEqual(pair);
+  });
+
+  it('parses a display URL with only a timer after the code', () => {
+    expect(parsePairingCode('#/d/XKTP9QM2.4FHB2WRD/timer1')).toEqual(pair);
+  });
+
   it.each([
     ['no separator', 'XKTP9QM24FHB2WRD'],
     ['a short session', 'XKTP.4FHB2WRD'],
@@ -163,6 +173,63 @@ describe('pairing codes', () => {
   it('keeps the two halves independent', () => {
     const parsed = parsePairingCode('AAAAAAAA.BBBBBBBB');
     expect(parsed).toEqual({sessionId: 'AAAAAAAA', key: 'BBBBBBBB'});
+  });
+});
+
+describe('buildWebRemoteUrl', () => {
+  const spaUrl = 'https://site.com/remote';
+  const code = 'XKTP-9QM2.4FHB-2WRD';
+  const pair = 'XKTP9QM2.4FHB2WRD';
+
+  it('builds the operator remote link when no timer is given', () => {
+    expect(buildWebRemoteUrl({spaUrl, code})).toBe(`https://site.com/remote#/r/${pair}`);
+  });
+
+  it('builds a timer display link', () => {
+    expect(buildWebRemoteUrl({spaUrl, code, timerId: 't1'}))
+      .toBe(`https://site.com/remote#/d/${pair}/t1`);
+  });
+
+  it('builds a window display link', () => {
+    expect(buildWebRemoteUrl({spaUrl, code, timerId: 't1', windowId: 'w1'}))
+      .toBe(`https://site.com/remote#/d/${pair}/t1/w1`);
+  });
+
+  it('ignores a windowId with no timerId', () => {
+    expect(buildWebRemoteUrl({spaUrl, code, windowId: 'w1'})).toBe(`https://site.com/remote#/r/${pair}`);
+  });
+
+  it('strips the dashes the code is displayed with', () => {
+    expect(buildWebRemoteUrl({spaUrl, code})).not.toContain('-');
+  });
+
+  it('normalises a trailing slash and an existing fragment to the same string', () => {
+    const plain = buildWebRemoteUrl({spaUrl, code});
+    expect(buildWebRemoteUrl({spaUrl: 'https://site.com/remote/', code})).toBe(plain);
+    expect(buildWebRemoteUrl({spaUrl: 'https://site.com/remote#/r/OLDCODE1.OLDCODE2', code})).toBe(plain);
+  });
+
+  it.each([
+    ['an empty base', '', 'XKTP-9QM2.4FHB-2WRD'],
+    ['an empty code', 'https://site.com', ''],
+    ['a code with no key', 'https://site.com', 'XKTP9QM2'],
+    ['a short code', 'https://site.com', 'XKTP.4FHB'],
+  ])('returns empty for %s', (_label, base, given) => {
+    expect(buildWebRemoteUrl({spaUrl: base, code: given})).toBe('');
+  });
+
+  // The SPA's router hands Display.vue the code SEGMENT, not the whole URL, which is why the
+  // round trip is asserted on the segment
+  it('produces a link whose code segment parses back to the original pair', () => {
+    const url = buildWebRemoteUrl({spaUrl, code, timerId: 't1', windowId: 'w1'});
+    const segment = url.split('#/d/')[1].split('/')[0];
+
+    expect(parsePairingCode(segment)).toEqual({sessionId: 'XKTP9QM2', key: '4FHB2WRD'});
+  });
+
+  it('produces a link a user can paste whole into the pairing box', () => {
+    const url = buildWebRemoteUrl({spaUrl, code, timerId: 't1', windowId: 'w1'});
+    expect(parsePairingCode(url)).toEqual({sessionId: 'XKTP9QM2', key: '4FHB2WRD'});
   });
 });
 

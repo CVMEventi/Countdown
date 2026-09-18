@@ -29,6 +29,7 @@
           :server-running="webServerStore.isRunning"
           :timer-id="timerId"
           :window-id="windowId"
+          :remote="remoteTargets"
         />
         <SButton title="Settings" tiny type="info" @click="emit('edit')"><CogIcon class="w-5" /></SButton>
         <SButton title="Delete" tiny type="danger" :disabled="!canDelete" @click="emit('remove')"><TrashIcon class="w-5" /></SButton>
@@ -45,6 +46,7 @@ import SButton from '@common/components/SButton.vue'
 import ShareTimerButton from '@common/components/ShareTimerButton.vue'
 import {WindowSettings} from '@common/config.ts'
 import {useWebServerStore} from '../stores/webServer.ts'
+import {useRemoteShare} from '../remoteShare.ts'
 
 defineOptions({
   name: 'WindowRow',
@@ -67,6 +69,10 @@ const emit = defineEmits<{
 
 const windowSettings = defineModel<WindowSettings>('window', {required: true})
 const webServerStore = useWebServerStore()
+const remoteShare = useRemoteShare()
+const remoteTargets = computed(() => [
+  remoteShare.target({id: 'view', label: 'Remote', role: 'view', timerId: props.timerId, windowId: props.windowId}),
+])
 
 const isFullscreen = computed(() => windowSettings.value.bounds.fullscreenOn !== null)
 
