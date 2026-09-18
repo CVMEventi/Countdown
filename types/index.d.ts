@@ -8,6 +8,7 @@ declare module '*.ico' {
   export default value;
 }
 
+
 interface IpcGetWindowSettingsArgs {
   timerId: string
   windowId: string

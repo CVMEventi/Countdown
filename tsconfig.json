@@ -1,6 +1,8 @@
 {
   "compilerOptions": {
     "allowImportingTsExtensions": true,
+    // TypeScript 6 defaults strict to true; this codebase predates that
+    "strict": false,
     "target": "ES6",
     "allowJs": true,
     "module": "node16",
@@ -8,16 +10,14 @@
     "esModuleInterop": true,
     "noImplicitAny": true,
     "sourceMap": true,
-    "baseUrl": ".",
     "outDir": "dist",
     "moduleResolution": "node16",
     "noEmit": true,
     "resolveJsonModule": true,
     "paths": {
-      "*": ["node_modules/*"],
-      "@common/*": ["src/common/*"],
-      "@/*": ["src/renderer/*"]
+      "@common/*": ["./src/common/*"],
+      "@/*": ["./src/renderer/*"]
     }
   },
-  "include": ["types/index.d.ts", "src/**/*"]
+  "include": ["types/**/*.d.ts", "src/**/*"]
 }

@@ -1,5 +1,8 @@
-import {ArgumentType, Server} from "node-osc";
+import {Server} from "node-osc";
 import {TimersOrchestrator} from "../Utilities/TimersOrchestrator.ts";
+
+// node-osc stopped exporting this in v11; these are the value types a decoded message carries
+type ArgumentType = boolean | number | string;
 
 const secondsPerMinute = 60;
 const secondsPerHour = secondsPerMinute * 60;

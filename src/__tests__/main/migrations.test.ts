@@ -370,7 +370,7 @@ describe('applyMigrations', () => {
       version: 3,
       settings: {
         timers: {},
-        presets: [],
+        presets: [] as number[],
         remote: {},
         setWindowAlwaysOnTop: false,
         closeAction: 'ASK',
