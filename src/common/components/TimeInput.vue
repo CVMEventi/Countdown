@@ -2,7 +2,7 @@
   <div class="inline-flex border rounded-lg justify-center" :class="classes">
     <input
       :value="formattedHours"
-      @input="updateTime('hours', $event.target.value)"
+      @input="onInput('hours', $event)"
       v-no-wheel
       min="0"
       max="23"
@@ -10,13 +10,13 @@
       :disabled="disabled"
       class="input input-big input-number-fixed focus:ring-0 text-black"
       :class="classes"
-      @click="$event.target.select()"
-      @focus="$event.target.select()"
+      @click="selectAll($event)"
+      @focus="selectAll($event)"
     >
     <p class="text-5xl">:</p>
     <input
       :value="formattedMinutes"
-      @input="updateTime('minutes', $event.target.value)"
+      @input="onInput('minutes', $event)"
       v-no-wheel
       min="0"
       max="60"
@@ -24,13 +24,13 @@
       :disabled="disabled"
       class="input input-big input-number-fixed focus:ring-0 text-black"
       :class="classes"
-      @click="$event.target.select()"
-      @focus="$event.target.select()"
+      @click="selectAll($event)"
+      @focus="selectAll($event)"
     >
     <p class="text-5xl">:</p>
     <input
       :value="formattedSeconds"
-      @input="updateTime('seconds', $event.target.value)"
+      @input="onInput('seconds', $event)"
       v-no-wheel
       min="0"
       max="60"
@@ -38,8 +38,8 @@
       :disabled="disabled"
       class="input input-big input-number-fixed focus:ring-0 text-black"
       :class="classes"
-      @click="$event.target.select()"
-      @focus="$event.target.select()"
+      @click="selectAll($event)"
+      @focus="selectAll($event)"
     >
   </div>
 </template>
@@ -91,6 +91,14 @@ function updatedValue(newVal: number) {
   seconds.value = duration.seconds()
   minutes.value = duration.minutes()
   hours.value = duration.hours()
+}
+
+function selectAll(event: Event) {
+  (event.target as HTMLInputElement).select()
+}
+
+function onInput(unit: string, event: Event) {
+  updateTime(unit, (event.target as HTMLInputElement).value)
 }
 
 function padNumber (number: number) {
