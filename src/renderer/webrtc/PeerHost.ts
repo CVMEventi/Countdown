@@ -1,4 +1,5 @@
-import Peer, {DataConnection} from 'peerjs'
+import {Peer} from 'peerjs'
+import type {DataConnection} from 'peerjs'
 import {
   MIN_SUPPORTED_PROTOCOL_VERSION,
   PROTOCOL_VERSION,

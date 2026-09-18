@@ -475,7 +475,7 @@ describe('applyMigrations', () => {
       version: 3,
       settings: {
         timers: {},
-        presets: [],
+        presets: [] as number[],
         remote: {webServerPort: 7000},
         setWindowAlwaysOnTop: false,
         closeAction: 'ASK',
