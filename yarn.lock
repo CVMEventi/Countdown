@@ -1817,13 +1817,6 @@
   dependencies:
     "@types/node" "*"
 
-"@types/node-osc@^9.1.0":
-  version "9.1.0"
-  resolved "https://registry.yarnpkg.com/@types/node-osc/-/node-osc-9.1.0.tgz#7e58ad2d8766db8ef77ae925da7822b4f24f8265"
-  integrity sha512-FG7mbygo2IgdFA1pF1WlluTY9zzisLh62HWnC/7q9PLSmWvyVW+GAu8giNo+Gj2NvB4Xk9oYU2W+UiZwOk2DgQ==
-  dependencies:
-    "@types/node" "*"
-
 "@types/node@*":
   version "25.8.0"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-25.8.0.tgz#d13033397d1c186876bed4c9b9d7f3f962097eb3"
@@ -5506,10 +5499,10 @@ node-fetch@^2.6.7:
   dependencies:
     whatwg-url "^5.0.0"
 
-node-osc@^11.3.0:
-  version "11.4.0"
-  resolved "https://registry.yarnpkg.com/node-osc/-/node-osc-11.4.0.tgz#8509d7681bf62d81a0d56d58c5b8490961dab04d"
-  integrity sha512-xP5RRBFfNTP8t0CuvxRQbFOUl1rzg+3CkYGNMvm/l5KnK+oNLr3gwPonSWdCngEG+IjyhDoY/fgRPPWpcg8QqQ==
+node-osc@^11.7.1:
+  version "11.7.1"
+  resolved "https://registry.yarnpkg.com/node-osc/-/node-osc-11.7.1.tgz#8d7bfb3730cca9796a089d7ae68e1d66c138f9e3"
+  integrity sha512-5RE3T26IRRcSFrcL9WIayyWIgm+Dmz4Wh/Q+y7T91v51AXm10/kyI8Tv+OgyAuLKLTgV6kcXK0/izHAlWqf61A==
 
 node-releases@^2.0.36:
   version "2.0.44"
