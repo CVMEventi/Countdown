@@ -3,8 +3,8 @@ import type {PlaybackProviderConfig, PlaybackProviderStatus, PlaybackState} from
 /**
  * What a provider is handed when it is built.
  *
- * Dependencies are injected rather than imported so a provider stays unit testable: the manager
- * supplies the real clock and fetch, a test supplies fakes.
+ * Deliberately transport-agnostic: a provider takes its own socket or fetch through its
+ * constructor, so adding a push based provider does not widen this contract.
  */
 export interface PlaybackProviderContext {
   // Publishes a state AND keeps it alive: a state the provider stops refreshing is expired by the
@@ -12,7 +12,6 @@ export interface PlaybackProviderContext {
   onState: (state: PlaybackState | null) => void
   onStatus: () => void
   now: () => number
-  fetchFn: typeof fetch
 }
 
 /**

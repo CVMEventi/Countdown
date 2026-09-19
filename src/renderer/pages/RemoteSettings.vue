@@ -175,6 +175,12 @@
               :is="playbackComponents[provider.id]"
               v-if="playbackComponents[provider.id] && remote.playback?.[provider.id]?.enabled"
               v-model="remote.playback[provider.id]" />
+            <p v-if="remote.playback?.[provider.id]?.enabled && !timersFollowing(provider.id)" class="text-sm text-amber-400">
+              No timer is following this source yet. Set "Follow playback source" to {{ provider.displayName }} in Timers settings.
+            </p>
+            <p v-if="provider.id === MILLUMIN_PROVIDER_ID && milluminPortClash" class="text-sm text-amber-400">
+              This is also the OSC remote control port. Give Millumin a different port, or the two will fight over the same packets.
+            </p>
           </div>
         </card>
       </div>
@@ -192,8 +198,9 @@ import ShareLinkPanel from "@common/components/ShareLinkPanel.vue";
 import WebRtcSessionPanel from "@common/components/WebRtcSessionPanel.vue";
 import {remoteControlPath} from "@common/network.ts";
 import {DEFAULT_WEBRTC_SPA_URL} from "@common/config.ts";
-import {PLAYBACK_PROVIDERS, resolvePlaybackConfig, VMIX_PROVIDER_ID} from "@common/playback.ts";
+import {MILLUMIN_PROVIDER_ID, PLAYBACK_PROVIDERS, resolvePlaybackConfig, VMIX_PROVIDER_ID} from "@common/playback.ts";
 import VMixSettingsCard from '../components/playback/VMixSettingsCard.vue'
+import MilluminSettingsCard from '../components/playback/MilluminSettingsCard.vue'
 import TopBar from '../components/TopBar.vue'
 import BaseContainer from '../components/BaseContainer.vue'
 import {useSettingsStore} from '../stores/settings.ts'
@@ -236,6 +243,7 @@ const playbackStore = usePlaybackStore();
 
 const playbackComponents: {[providerId: string]: unknown} = {
   [VMIX_PROVIDER_ID]: VMixSettingsCard,
+  [MILLUMIN_PROVIDER_ID]: MilluminSettingsCard,
 }
 
 // A stored config can predate a provider, so fill in the missing ones once settings arrive.
@@ -248,6 +256,21 @@ watch(() => settingsStore.settings.remote, (value) => {
     value.playback[provider.id] = resolvePlaybackConfig(value.playback, provider.id)
   })
 }, {immediate: true})
+
+// UDP sockets here are opened with reuseAddr, so a clash does not always fail loudly: it can
+// split the incoming packets between the two listeners instead
+const milluminPortClash = computed(() => {
+  const millumin = remote.value.playback?.[MILLUMIN_PROVIDER_ID]
+  if (!millumin?.enabled || !remote.value.oscEnabled) return false
+  return Number(millumin.port) === Number(remote.value.oscPort)
+})
+
+// Enabling a provider does nothing on its own: a timer has to point at it, which is the easiest
+// half of the setup to miss
+function timersFollowing(providerId: string) {
+  return Object.values(settingsStore.settings.timers ?? {})
+    .filter(timer => timer.playbackSource === providerId).length
+}
 
 function playbackStatus(providerId: string) {
   return playbackStore.statuses[providerId] ?? null

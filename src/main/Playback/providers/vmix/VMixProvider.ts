@@ -18,6 +18,7 @@ export class VMixProvider implements PlaybackProvider {
   readonly id = VMIX_PROVIDER_ID
 
   private _context: PlaybackProviderContext
+  private _fetchFn: typeof fetch
   private _config: VMixProviderConfig = {...DEFAULT_VMIX_CONFIG}
   private _configKey: string | null = null
   private _timer: NodeJS.Timeout = null
@@ -27,8 +28,9 @@ export class VMixProvider implements PlaybackProvider {
   private _lastError: string | null = null
   private _activeTitle: string | null = null
 
-  constructor(context: PlaybackProviderContext) {
+  constructor(context: PlaybackProviderContext, fetchFn: typeof fetch = (input, init) => fetch(input, init)) {
     this._context = context
+    this._fetchFn = fetchFn
   }
 
   applyConfig(config: PlaybackProviderConfig) {
@@ -128,7 +130,7 @@ export class VMixProvider implements PlaybackProvider {
     const timeout = setTimeout(() => controller.abort(), this._pollInterval() * 4)
 
     try {
-      const response = await this._context.fetchFn(
+      const response = await this._fetchFn(
         `http://${this._config.host}:${this._config.port}/api`,
         {headers: this._headers(), signal: controller.signal},
       )

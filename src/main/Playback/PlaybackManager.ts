@@ -14,7 +14,6 @@ export interface PlaybackManagerDeps {
   onStatus: (statuses: PlaybackProviderStatus[]) => void
   factories?: {[providerId: string]: PlaybackProviderFactory}
   now?: () => number
-  fetchFn?: typeof fetch
   // Test seam: the sweep that expires states a provider stopped refreshing
   sweepInterval?: number
 }
@@ -53,7 +52,6 @@ export class PlaybackManager {
         onState: (state) => this._providerState(meta.id, state),
         onStatus: () => this._pushStatus(),
         now: this._now,
-        fetchFn: deps.fetchFn ?? ((input, init) => fetch(input, init)),
       }))
     })
   }

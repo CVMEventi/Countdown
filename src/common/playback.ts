@@ -68,10 +68,41 @@ export const VMIX_PROVIDER_META: PlaybackProviderMeta = {
   staleAfterMs: 1000,
 }
 
+export const MILLUMIN_PROVIDER_ID = 'millumin'
+
+export interface MilluminProviderConfig extends PlaybackProviderConfig {
+  // Millumin pushes to us, so this is the port we listen on: set it as the feedback target in
+  // Millumin's Device manager (CMD+K, OSC tab, "API feedback")
+  port: number
+  // Empty follows whichever layer is playing; a name pins the timers to one layer
+  layer: string
+  // A playing layer must keep sending media/time. Silence this long means Millumin went away.
+  playingTimeout: number
+  // Logs every OSC packet to the console. Off by default: media/time arrives many times a second.
+  logMessages: boolean
+}
+
+export const DEFAULT_MILLUMIN_CONFIG: MilluminProviderConfig = {
+  enabled: false,
+  // Not 5000: that is Millumin's own OSC input port, which clashes when both run on one machine
+  port: 5001,
+  layer: '',
+  playingTimeout: 2000,
+  logMessages: false,
+}
+
+export const MILLUMIN_PROVIDER_META: PlaybackProviderMeta = {
+  id: MILLUMIN_PROVIDER_ID,
+  displayName: 'Millumin',
+  defaultConfig: DEFAULT_MILLUMIN_CONFIG,
+  staleAfterMs: 1000,
+}
+
 // Adding a provider means adding its meta here, a factory in main/Playback/providers, and a
 // settings component in the renderer. Nothing else in the app needs to know about it.
 export const PLAYBACK_PROVIDERS: PlaybackProviderMeta[] = [
   VMIX_PROVIDER_META,
+  MILLUMIN_PROVIDER_META,
 ]
 
 export function playbackProviderMeta(id: string): PlaybackProviderMeta | null {

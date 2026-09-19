@@ -20,8 +20,7 @@ describe('VMixProvider', () => {
       onState: (state) => { states.push(state) },
       onStatus: () => {},
       now: () => Date.now(),
-      fetchFn: fetchFn as unknown as typeof fetch,
-    });
+    }, fetchFn as unknown as typeof fetch);
   }
 
   beforeEach(() => {
