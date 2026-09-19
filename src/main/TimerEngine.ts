@@ -150,6 +150,11 @@ export class TimerEngine {
   // the end sound latch is bound to them and must keep its own schedule under an override.
   private _displaySeconds() {
     if (this._sourceOverride) return this._sourceOverride.remainingSeconds;
+    return this._internalSeconds();
+  }
+
+  // What the timer's own clock reads, whether or not a source is painted over it
+  private _internalSeconds() {
     if (this.options.setTimeLive && this.isReset()) return this.totalSeconds;
     return this._currentSeconds;
   }
@@ -195,6 +200,11 @@ export class TimerEngine {
       return dayjs().add(this._sourceOverride.remainingSeconds, 's');
     }
 
+    return this._internalEndsAt();
+  }
+
+  // When the timer's own clock runs out, whatever is painted over the display
+  private _internalEndsAt() {
     if (this.countSeconds() <= 0) return null;
     return dayjs().add(this._currentSeconds / 1000 * this._currentInterval, 's');
   }
@@ -340,6 +350,11 @@ export class TimerEngine {
       timerEndsAt: this.endsAt() ?? "",
       source: this._sourceOverride?.sourceName ?? null,
       timerIsReset: this.isReset(),
+      // Raw, so the control panel can split it into its own count and extra exactly as the
+      // engine would: setTimeLive is a display rule for the outputs, not for these
+      timerCurrentSeconds: this._currentSeconds,
+      timerIsRunning: this.timerIsRunning,
+      ownEndsAt: this._internalEndsAt()?.format('HH:mm') ?? "",
     })
   }
 
@@ -379,6 +394,8 @@ export class TimerEngine {
       state: state,
       source: override?.sourceName ?? null,
       timerState: this._state(),
+      timerCurrentTime: this._currentSeconds,
+      ownEndsAt: this._internalEndsAt()?.format('HH:mm') ?? "",
       setTime: this.totalSeconds,
       setTimeHms: setTimeDuration.format('HH:mm:ss'),
       setTimeMs: setTimeDuration.format('mm:ss'),

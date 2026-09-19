@@ -657,6 +657,88 @@ describe('TimerEngine', () => {
       expect(lastUpdate(onUpdate).isExpiring).toBe(true);
     });
 
+    it('keeps reporting the timer own countdown while a source is displayed', () => {
+      const { engine, onUpdate } = makeEngine();
+      engine.set(600);
+      engine.start();
+      engine.setSourceOverride(override);
+
+      vi.advanceTimersByTime(5000);
+
+      const update = lastUpdate(onUpdate);
+      // The display is the clip, but the operator can still see their own timer
+      expect(update.currentSeconds).toBe(45);
+      expect(update.timerCurrentSeconds).toBe(595);
+      expect(update.timerIsRunning).toBe(true);
+      expect(update.timerIsReset).toBe(false);
+    });
+
+    it('ticks the timer own countdown every second while overridden', () => {
+      const { engine, onUpdate } = makeEngine();
+      engine.set(600);
+      engine.start();
+      engine.setSourceOverride(override);
+      const before = lastUpdate(onUpdate).timerCurrentSeconds;
+
+      vi.advanceTimersByTime(1000);
+
+      expect(lastUpdate(onUpdate).timerCurrentSeconds).toBe(before - 1);
+    });
+
+    it('reports the timer own overtime, which the clip never shows', () => {
+      const { engine, onUpdate } = makeEngine({stopTimerAtZero: false});
+      engine.set(2);
+      engine.start();
+      engine.setSourceOverride(override);
+
+      vi.advanceTimersByTime(5000);
+
+      // The clip's extra stays at zero, so without this the overrun would be invisible
+      expect(lastUpdate(onUpdate).extraSeconds).toBe(0);
+      expect(lastUpdate(onUpdate).timerCurrentSeconds).toBeLessThan(0);
+    });
+
+    it('sends the timer own time on the wire too', () => {
+      const { engine } = makeEngine();
+      engine.set(600);
+      engine.start();
+      engine.setSourceOverride(override);
+
+      const state = engine.webSocketState();
+      expect(state.currentTime).toBe(45);
+      expect(state.timerCurrentTime).toBe(600);
+      expect(state.ownEndsAt).not.toBe('');
+    });
+
+    it('reports the timer own end time, not the one from the clip', () => {
+      const { engine, onUpdate } = makeEngine();
+      engine.set(600);
+      engine.start();
+      engine.setSourceOverride(override);
+
+      const update = lastUpdate(onUpdate);
+      // 45s of clip against 600s of timer: the two end times cannot be the same
+      expect(update.timerEndsAt).not.toBe(update.ownEndsAt);
+    });
+
+    it('reports raw seconds so the control panel can split count from extra', () => {
+      const { engine, onUpdate } = makeEngine({setTimeLive: true});
+      engine.set(600);
+
+      // setTimeLive shows the set time on the outputs while reset, but Count must still read zero
+      const update = lastUpdate(onUpdate);
+      expect(update.currentSeconds).toBe(600);
+      expect(update.timerCurrentSeconds).toBe(0);
+    });
+
+    it('reports the timer own time when nothing is overriding', () => {
+      const { engine, onUpdate } = makeEngine();
+      engine.set(60);
+      engine.start();
+
+      expect(lastUpdate(onUpdate).timerCurrentSeconds).toBe(60);
+    });
+
     it('clears back to the timer when the override is removed', () => {
       const { engine, onUpdate } = makeEngine();
       engine.setSourceOverride(override);

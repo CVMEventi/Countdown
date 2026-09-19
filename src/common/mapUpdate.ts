@@ -2,6 +2,7 @@ import type {TimerEngineUpdate, TimerEngineWebSocketUpdate} from './TimerInterfa
 
 export function mapUpdate(u: TimerEngineWebSocketUpdate): TimerEngineUpdate {
   const currentSeconds = u.currentTime ?? 0
+  const timerState = u.timerState ?? u.state
 
   return {
     setSeconds: u.setTime,
@@ -17,6 +18,9 @@ export function mapUpdate(u: TimerEngineWebSocketUpdate): TimerEngineUpdate {
     timerEndsAtEpochMs: u.timerEndsAtEpochMs ?? null,
     source: u.source ?? null,
     // The timer's own clock, which keeps running under a playback override
-    timerIsReset: (u.timerState ?? u.state) === 'Not Running',
+    timerIsReset: timerState === 'Not Running',
+    timerCurrentSeconds: u.timerCurrentTime ?? currentSeconds,
+    timerIsRunning: timerState === 'Running' || timerState === 'Expiring' || timerState === 'Expired',
+    ownEndsAt: u.ownEndsAt ?? u.timerEndsAt ?? null,
   }
 }

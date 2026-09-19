@@ -14,8 +14,14 @@ export interface TimerEngineUpdate {
   timerEndsAtEpochMs?: number | null
   // Set while a playback source is painted over this timer: the provider id driving the display
   source?: string | null
-  // Reset state of the timer's OWN clock, which keeps running underneath an override
+  // The timer's OWN clock, which keeps running underneath an override. Without these the
+  // operator loses sight of their own countdown the moment a playback source takes the display.
   timerIsReset?: boolean
+  timerCurrentSeconds?: number
+  timerIsRunning?: boolean
+  // When the timer's own clock runs out. `timerEndsAt` above is the DISPLAYED one, which a
+  // playback source takes over; this one always belongs to the timer itself.
+  ownEndsAt?: string | null
 }
 
 export interface TimerEngineUpdates {
@@ -68,8 +74,10 @@ export interface TimerEngineWebSocketUpdate {
   timerEndsAt?: string
   timerEndsAtEpochMs?: number | null
   source?: string | null
-  // State of the timer's OWN clock, which keeps running underneath an override
+  // The timer's OWN clock, which keeps running underneath an override
   timerState?: string
+  timerCurrentTime?: number
+  ownEndsAt?: string
 }
 
 /**

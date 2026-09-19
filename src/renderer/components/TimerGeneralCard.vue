@@ -30,7 +30,7 @@
       </div>
       <div class="flex flex-col gap-1">
         <div class="flex items-center gap-1">
-          <label for="playbackSource" class="text-sm">Follow playback source</label>
+          <label for="playbackSource" class="text-sm">Timer source</label>
           <InfoTip text="While this source plays a clip, outputs show the clip's remaining time. This timer keeps counting underneath and comes back when the clip ends." />
         </div>
         <select id="playbackSource" v-model="timer.playbackSource" class="input p-2 w-full">
@@ -40,7 +40,7 @@
           </option>
         </select>
         <p v-if="Object.keys(playbackSources).length === 0" class="text-xs italic text-zinc-400">
-          Add a playback source in Remote settings first.
+          Add one under Remote settings → Timer sources first.
         </p>
       </div>
       <div class="flex flex-col gap-1">

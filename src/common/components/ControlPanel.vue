@@ -29,20 +29,28 @@
           color="white"
         />
         <div class="uppercase mt-2 text-white flex flex-row justify-between">
-          <div class="flex flex-row items-center gap-2">
-            <span>Count</span>
-            <span v-if="playbackSourceName" class="text-xs normal-case rounded bg-amber-500/20 text-amber-300 px-1.5 py-0.5">
-              {{ playbackSourceName }}
-            </span>
-          </div>
+          <span>Count</span>
           <div class="flex flex-row items-center gap-1">
-            <PlayPauseIcon v-if="displayUpdate.timerEndsAt" class="w-6 h-6 inline-flex" />
-            <span>{{ displayUpdate.timerEndsAt }}</span>
+            <PlayPauseIcon v-if="ownEndsAt" class="w-6 h-6 inline-flex" />
+            <span>{{ ownEndsAt }}</span>
           </div>
         </div>
         <TimeInput :modelValue="countSeconds" color="green" :disabled="true" />
         <div class="uppercase mt-2 text-white">Extra</div>
-        <TimeInput color="red" :modelValue="displayUpdate.extraSeconds" :disabled="true" />
+        <TimeInput color="red" :modelValue="extraSeconds" :disabled="true" />
+
+        <!-- The source drives the outputs, so the operator needs it too, but their own timer keeps
+             Count and Extra above -->
+        <template v-if="playbackSourceName">
+          <div class="uppercase mt-2 text-white flex flex-row justify-between gap-2">
+            <span class="truncate">{{ playbackSourceName }}</span>
+            <div class="flex flex-row items-center gap-1 shrink-0">
+              <PlayPauseIcon v-if="displayUpdate.timerEndsAt" class="w-6 h-6 inline-flex" />
+              <span>{{ displayUpdate.timerEndsAt }}</span>
+            </div>
+          </div>
+          <TimeInput :modelValue="sourceSeconds" color="white" :disabled="true" />
+        </template>
       </Card>
 
       <Card class="flex flex-col max-sm:flex-1" style="min-width: 250px">
@@ -172,6 +180,7 @@ const timerIsReset = computed(() => currentUpdate.value.timerIsReset ?? currentU
 
 const playbackSourceName = computed<string | null>(() => currentUpdate.value.source ?? null)
 
+
 const followingTimerId = computed<string | null>(() => {
   const followTimer = currentTimer.value?.followTimer
   if (!Object.keys(props.timers).find((timerId) => timerId === followTimer)) return null
@@ -192,9 +201,15 @@ const displayUpdate = computed<TimerEngineUpdate>(() => {
   return (followingTimerId.value ? props.updates[followingTimerId.value] : null) ?? currentUpdate.value
 })
 
-const countSeconds = computed(() => {
-  return displayUpdate.value.countSeconds > 0 ? displayUpdate.value.countSeconds : 0
-})
+// Count and Extra follow the timer's own clock, so they keep meaning the same thing whether or
+// not a playback source has taken the outputs
+const ownSeconds = computed(() => displayUpdate.value.timerCurrentSeconds ?? displayUpdate.value.currentSeconds)
+const countSeconds = computed(() => (ownSeconds.value > 0 ? ownSeconds.value : 0))
+const extraSeconds = computed(() => (ownSeconds.value < 0 ? Math.abs(ownSeconds.value) : 0))
+const ownEndsAt = computed(() => displayUpdate.value.ownEndsAt ?? displayUpdate.value.timerEndsAt)
+
+// What the outputs are showing while a source drives them
+const sourceSeconds = computed(() => (displayUpdate.value.currentSeconds > 0 ? displayUpdate.value.currentSeconds : 0))
 
 function jog(seconds: number) {
   if (!props.currentTimerId) return

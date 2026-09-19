@@ -1,43 +1,54 @@
 <template>
   <BaseContainer>
-    <TopBar />
-    <div class="flex flex-1 gap-2 p-1 min-h-0 text-white">
-      <div class="flex flex-col gap-2 flex-1 min-w-[300px] min-h-0 overflow-y-auto">
-        <card class="flex flex-col w-full">
-          <p class="text-2xl pb-2">HTTP Server</p>
-          <check-box id="httpServerEnabled" v-model="settingsStore.settings.remote.webServerEnabled">Enable</check-box>
-          <p>Port</p>
-          <input
-            @click="($event.target as HTMLInputElement).select()"
-            @focus="($event.target as HTMLInputElement).select()"
-            v-model="settingsStore.settings.remote.webServerPort"
-            :disabled="isRunning"
-            class="input w-full disabled:opacity-40 disabled:cursor-not-allowed">
-          <p v-if="isRunning" class="text-xs italic text-zinc-400">Disable the server to change the port</p>
-          <p :class="[isRunning ? 'text-emerald-300' : 'text-red-300']">{{ isRunning ? `Server running on port ${currentPort}` : "Server not running" }}</p>
-          <p v-if="lastError" class="text-sm italic">Last error: {{ lastError }}</p>
-          <SButton
-            :disabled="!settingsStore.settings.remote.webServerEnabled"
-            class="uppercase mt-3"
-            type="warning"
-            @click="restartHttpServer">
-            <svg v-if="isLoading" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
+    <TopBar>
+      <TimersNavigation>
+        <TimerTabButton
+          v-for="tab in TABS"
+          :key="tab.id"
+          :active="currentTab === tab.id"
+          @click="currentTab = tab.id">
+          {{ tab.name }}
+        </TimerTabButton>
+      </TimersNavigation>
+    </TopBar>
+    <div class="flex flex-1 gap-2 p-1 min-h-0 text-white overflow-y-auto">
+      <div v-if="currentTab === 'web'" class="flex flex-wrap gap-2 w-full max-w-5xl items-start">
+        <div class="flex flex-col gap-2 flex-1 min-w-[320px]">
+          <card class="flex flex-col w-full">
+            <p class="text-2xl pb-2">Web server</p>
+            <check-box id="httpServerEnabled" v-model="settingsStore.settings.remote.webServerEnabled">Enable</check-box>
+            <p>Port</p>
+            <input
+              @click="($event.target as HTMLInputElement).select()"
+              @focus="($event.target as HTMLInputElement).select()"
+              v-model="settingsStore.settings.remote.webServerPort"
+              :disabled="isRunning"
+              class="input w-full disabled:opacity-40 disabled:cursor-not-allowed">
+            <p v-if="isRunning" class="text-xs italic text-zinc-400">Disable the server to change the port</p>
+            <p :class="[isRunning ? 'text-emerald-300' : 'text-red-300']">{{ isRunning ? `Server running on port ${currentPort}` : "Server not running" }}</p>
+            <p v-if="lastError" class="text-sm italic">Last error: {{ lastError }}</p>
+            <SButton
+              :disabled="!settingsStore.settings.remote.webServerEnabled"
+              class="uppercase mt-3"
+              type="warning"
+              @click="restartHttpServer">
+              <svg v-if="isLoading" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
 
-            {{ !isLoading ? httpToggleText : '' }}
-          </SButton>
-
-          <div class="mt-3 pt-3 border-t border-zinc-700 flex flex-col gap-2">
-            <p class="uppercase text-sm text-zinc-400">Connect</p>
-
+              {{ !isLoading ? httpToggleText : '' }}
+            </SButton>
+          </card>
+        </div>
+        <div class="flex flex-col gap-2 w-80 grow min-w-[280px]">
+          <card class="flex flex-col w-full">
+            <p class="text-2xl pb-2">Connect</p>
             <p v-if="!isRunning" class="text-sm italic text-zinc-400">
               Start the server to get a connection address.
             </p>
 
             <ShareLinkPanel
-              compact
               :path="remoteControlPath()"
               :addresses="webServerStore.addresses"
               :port="currentPort"
@@ -48,92 +59,99 @@
             <p v-if="isRunning && webServerStore.addresses.length === 0" class="text-sm italic text-zinc-400">
               No network connection found. Only this computer can reach the server.
             </p>
-          </div>
-        </card>
+          </card>
+        </div>
       </div>
-      <div class="flex flex-col gap-2 flex-1 min-w-[300px] min-h-0 overflow-y-auto">
-        <card class="flex flex-col w-full">
-          <p class="text-2xl pb-2">Web Remote</p>
-          <CheckBox id="webrtcEnabled" v-model="remote.webrtcEnabled">Enable</CheckBox>
 
-          <p class="text-xs italic text-zinc-400 mt-1">
-            Connects a browser to this app directly, from anywhere. Anyone with the code can control
-            the timers.
-          </p>
+      <div v-else-if="currentTab === 'internet'" class="flex flex-wrap gap-2 w-full max-w-5xl items-start">
+        <div class="flex flex-col gap-2 flex-1 min-w-[320px]">
+          <card class="flex flex-col w-full">
+            <p class="text-2xl pb-2">Internet remote</p>
+            <CheckBox id="webrtcEnabled" v-model="remote.webrtcEnabled">Enable</CheckBox>
 
-          <p class="text-sm mt-2" :class="webRtcStateClass">{{ webRtcStateText }}</p>
-          <p v-if="webRtcStore.lastError" class="text-xs italic text-zinc-400">{{ webRtcStore.lastError }}</p>
+            <p class="text-xs italic text-zinc-400 mt-1">
+              Connects a browser to this app directly, from anywhere. Anyone with the code can control
+              the timers.
+            </p>
 
-          <div class="mt-3 pt-3 border-t border-zinc-700 flex flex-col gap-3">
-            <ShareLinkPanel compact :remote="codeTargets" />
+            <p class="text-sm mt-2" :class="webRtcStateClass">{{ webRtcStateText }}</p>
+            <p v-if="webRtcStore.lastError" class="text-xs italic text-zinc-400">{{ webRtcStore.lastError }}</p>
+
+
+            <details class="mt-3 pt-3 border-t border-zinc-700">
+              <summary class="uppercase text-sm text-zinc-400 cursor-pointer select-none">Advanced</summary>
+
+              <div class="flex flex-col gap-2 mt-2">
+                <p class="uppercase text-xs text-zinc-400">Remote page address</p>
+                <input
+                  @click="($event.target as HTMLInputElement).select()"
+                  @focus="($event.target as HTMLInputElement).select()"
+                  v-model="remote.webrtcSpaUrl"
+                  :placeholder="DEFAULT_WEBRTC_SPA_URL"
+                  class="input w-full">
+
+                <p class="uppercase text-xs text-zinc-400 mt-2">Signaling</p>
+                <input
+                  v-model="remote.webrtcSignaling.host"
+                  placeholder="Host (blank for the public broker)"
+                  class="input w-full">
+                <input
+                  v-model.number="signalingPort"
+                  placeholder="Port"
+                  class="input w-full">
+                <input v-model="remote.webrtcSignaling.path" placeholder="Path" class="input w-full">
+                <input v-model="remote.webrtcSignaling.key" placeholder="Key" class="input w-full">
+                <CheckBox id="webrtcSignalingSecure" v-model="remote.webrtcSignaling.secure">Use TLS</CheckBox>
+
+                <p class="uppercase text-xs text-zinc-400 mt-2">ICE servers</p>
+                <div
+                  v-for="(server, index) in remote.webrtcIceServers"
+                  :key="index"
+                  class="flex flex-col gap-1 border border-zinc-700 rounded p-2">
+                  <input
+                    :value="urlsToText(server.urls)"
+                    @input="setUrls(index, ($event.target as HTMLInputElement).value)"
+                    placeholder="stun: or turn: URLs, comma separated"
+                    class="input w-full text-xs">
+                  <input v-model="server.username" placeholder="Username (TURN only)" class="input w-full text-xs">
+                  <input v-model="server.credential" placeholder="Credential (TURN only)" class="input w-full text-xs">
+                  <SButton tiny type="danger" class="self-end" @click="removeIceServer(index)">Remove</SButton>
+                </div>
+                <SButton tiny type="info" @click="addIceServer">Add ICE server</SButton>
+
+                <p class="uppercase text-xs text-zinc-400 mt-2">Connection</p>
+                <select v-model="remote.webrtcIceTransportPolicy" class="input w-full">
+                  <option value="all">Direct when possible</option>
+                  <option value="relay">Force relay (test TURN)</option>
+                </select>
+
+                <p class="uppercase text-xs text-zinc-400 mt-2">Code</p>
+                <select v-model="remote.webrtcCodeRotation" class="input w-full">
+                  <option value="session">New code each start</option>
+                  <option value="manual">Keep the same code</option>
+                </select>
+                <CheckBox id="webrtcRequireApproval" v-model="remote.webrtcRequireApproval">
+                  Ask before a new device connects
+                </CheckBox>
+              </div>
+            </details>
+          </card>
+        </div>
+        <div class="flex flex-col gap-2 w-80 grow min-w-[280px]">
+          <card class="flex flex-col w-full">
+            <p class="text-2xl pb-2">Connect</p>
+            <ShareLinkPanel :remote="codeTargets" />
 
             <WebRtcSessionPanel
               :clients="webRtcStore.clients"
               @rotate="rotateCode"
               @revoke="revokeClient"
             />
-          </div>
-
-          <details class="mt-3 pt-3 border-t border-zinc-700">
-            <summary class="uppercase text-sm text-zinc-400 cursor-pointer select-none">Advanced</summary>
-
-            <div class="flex flex-col gap-2 mt-2">
-              <p class="uppercase text-xs text-zinc-400">Remote page address</p>
-              <input
-                @click="($event.target as HTMLInputElement).select()"
-                @focus="($event.target as HTMLInputElement).select()"
-                v-model="remote.webrtcSpaUrl"
-                :placeholder="DEFAULT_WEBRTC_SPA_URL"
-                class="input w-full">
-
-              <p class="uppercase text-xs text-zinc-400 mt-2">Signaling</p>
-              <input
-                v-model="remote.webrtcSignaling.host"
-                placeholder="Host (blank for the public broker)"
-                class="input w-full">
-              <input
-                v-model.number="signalingPort"
-                placeholder="Port"
-                class="input w-full">
-              <input v-model="remote.webrtcSignaling.path" placeholder="Path" class="input w-full">
-              <input v-model="remote.webrtcSignaling.key" placeholder="Key" class="input w-full">
-              <CheckBox id="webrtcSignalingSecure" v-model="remote.webrtcSignaling.secure">Use TLS</CheckBox>
-
-              <p class="uppercase text-xs text-zinc-400 mt-2">ICE servers</p>
-              <div
-                v-for="(server, index) in remote.webrtcIceServers"
-                :key="index"
-                class="flex flex-col gap-1 border border-zinc-700 rounded p-2">
-                <input
-                  :value="urlsToText(server.urls)"
-                  @input="setUrls(index, ($event.target as HTMLInputElement).value)"
-                  placeholder="stun: or turn: URLs, comma separated"
-                  class="input w-full text-xs">
-                <input v-model="server.username" placeholder="Username (TURN only)" class="input w-full text-xs">
-                <input v-model="server.credential" placeholder="Credential (TURN only)" class="input w-full text-xs">
-                <SButton tiny type="danger" class="self-end" @click="removeIceServer(index)">Remove</SButton>
-              </div>
-              <SButton tiny type="info" @click="addIceServer">Add ICE server</SButton>
-
-              <p class="uppercase text-xs text-zinc-400 mt-2">Connection</p>
-              <select v-model="remote.webrtcIceTransportPolicy" class="input w-full">
-                <option value="all">Direct when possible</option>
-                <option value="relay">Force relay (test TURN)</option>
-              </select>
-
-              <p class="uppercase text-xs text-zinc-400 mt-2">Code</p>
-              <select v-model="remote.webrtcCodeRotation" class="input w-full">
-                <option value="session">New code each start</option>
-                <option value="manual">Keep the same code</option>
-              </select>
-              <CheckBox id="webrtcRequireApproval" v-model="remote.webrtcRequireApproval">
-                Ask before a new device connects
-              </CheckBox>
-            </div>
-          </details>
-        </card>
+          </card>
+        </div>
       </div>
-      <div class="flex flex-col gap-2 flex-1 min-w-[300px] min-h-0 overflow-y-auto">
+
+      <div v-else-if="currentTab === 'protocols'" class="grid w-full grid-cols-1 lg:grid-cols-3 gap-2 items-start">
         <card class="flex flex-col w-full">
           <p class="text-2xl pb-2">NDI</p>
           <CheckBox id="ndiEnabled" v-model="settingsStore.settings.remote.ndiEnabled">Enable</CheckBox>
@@ -154,60 +172,100 @@
             :disabled="settingsStore.settings.remote.oscEnabled"
             class="input w-full disabled:opacity-40 disabled:cursor-not-allowed">
         </card>
-        <card class="flex flex-col w-full">
-          <p class="text-2xl pb-2">Playback sources</p>
-          <p class="text-sm text-zinc-400 pb-2">
-            Mirror the remaining time of the clip a playback system is running. Add one source per machine, or per layer
-            of a machine, then pick the source per timer in Timers settings.
-          </p>
+      </div>
 
-          <div
-            v-for="(source, sourceId, index) in playbackSources"
-            :key="sourceId"
-            :class="['flex flex-col gap-1', index > 0 ? 'mt-3 pt-3 border-t border-zinc-700' : '']">
-            <div class="flex items-center gap-2">
-              <input
-                @click="($event.target as HTMLInputElement).select()"
-                @focus="($event.target as HTMLInputElement).select()"
-                v-model="source.name"
-                :placeholder="providerName(source.provider)"
-                class="input flex-1 min-w-0">
-              <SButton tiny type="danger" title="Remove source" @click="removeSource(sourceId)">
+      <div v-else-if="currentTab === 'sources'" class="flex flex-wrap gap-2 w-full max-w-5xl items-start">
+        <div class="flex flex-col gap-2 w-72 grow min-w-[240px]">
+          <card class="flex flex-col w-full">
+            <p class="text-lg uppercase pb-2">Sources</p>
+
+            <div v-if="sourceIds.length" class="flex flex-col gap-1">
+              <button
+                v-for="(source, sourceId) in playbackSources"
+                :key="sourceId"
+                type="button"
+                class="flex items-center gap-2 w-full rounded-lg px-2 py-1.5 text-left cursor-pointer ring-2 ring-inset transition-shadow"
+                :class="sourceId === selectedSourceId ? 'bg-zinc-700 ring-blue-500' : 'bg-zinc-800 ring-transparent hover:bg-zinc-700/60'"
+                @click="selectedSourceId = sourceId as string">
+                <span
+                  class="w-2 h-2 rounded-full shrink-0"
+                  :class="statusDotClass(sourceId as string, source)"
+                  :title="playbackStatusText(sourceId as string)" />
+                <span class="flex-1 min-w-0">
+                  <span class="block truncate text-sm">{{ source.name || providerName(source.provider) }}</span>
+                  <span class="block truncate text-xs uppercase text-zinc-400">{{ providerName(source.provider) }}</span>
+                </span>
+              </button>
+            </div>
+
+            <p v-else class="text-sm italic text-zinc-400 py-2">No sources yet.</p>
+
+            <div class="flex flex-wrap gap-2 mt-3 pt-3 border-t border-zinc-700">
+              <SButton
+                v-for="provider in PLAYBACK_PROVIDERS"
+                :key="provider.id"
+                tiny
+                type="info"
+                @click="addSource(provider.id)">
+                Add {{ provider.displayName }}
+              </SButton>
+            </div>
+          </card>
+        </div>
+
+        <div class="flex flex-col gap-2 flex-1 min-w-[320px]">
+          <card v-if="selectedSource && selectedSourceId" class="flex flex-col w-full">
+            <div class="flex items-center gap-2 pb-2">
+              <p class="text-2xl flex-1 min-w-0 truncate">
+                {{ selectedSource.name || providerName(selectedSource.provider) }}
+              </p>
+              <SButton tiny type="danger" title="Remove source" @click="removeSource(selectedSourceId)">
                 <XMarkIcon class="w-4" />
               </SButton>
             </div>
-            <p class="text-xs uppercase text-zinc-400">{{ providerName(source.provider) }}</p>
-            <CheckBox :id="`playback-${sourceId}`" v-model="source.config.enabled">Enable</CheckBox>
-            <p v-if="playbackStatus(sourceId)" class="text-sm" :class="playbackStatus(sourceId).connected ? 'text-green-400' : 'text-zinc-400'">
-              {{ playbackStatusText(sourceId) }}
+
+            <p>Name</p>
+            <input
+              @click="($event.target as HTMLInputElement).select()"
+              @focus="($event.target as HTMLInputElement).select()"
+              v-model="selectedSource.name"
+              :placeholder="providerName(selectedSource.provider)"
+              class="input w-full mb-2">
+
+            <CheckBox :id="`playback-${selectedSourceId}`" v-model="selectedSource.config.enabled">Enable</CheckBox>
+
+            <p
+              v-if="playbackStatus(selectedSourceId)"
+              class="text-sm mt-1"
+              :class="playbackStatus(selectedSourceId).connected ? 'text-green-400' : 'text-zinc-400'">
+              {{ playbackStatusText(selectedSourceId) }}
             </p>
-            <component
-              :is="playbackComponents[source.provider]"
-              v-if="playbackComponents[source.provider] && source.config.enabled"
-              v-model="source.config" />
-            <p v-if="source.config.enabled && !timersFollowing(sourceId)" class="text-sm text-amber-400">
-              No timer is following this source yet. Set "Follow playback source" to {{ source.name || providerName(source.provider) }} in Timers settings.
+
+            <div v-if="selectedSource.config.enabled" class="mt-3 pt-3 border-t border-zinc-700">
+              <component
+                :is="playbackComponents[selectedSource.provider]"
+                v-if="playbackComponents[selectedSource.provider]"
+                v-model="selectedSource.config" />
+            </div>
+
+            <p v-if="selectedSource.config.enabled && !timersFollowing(selectedSourceId)" class="text-sm text-amber-400 mt-3">
+              No timer is following this source yet. Set "Timer source" to
+              {{ selectedSource.name || providerName(selectedSource.provider) }} in Timers settings.
             </p>
-            <p v-if="listensLocally(source) && oscPortClash(source)" class="text-sm text-amber-400">
+            <p v-if="listensLocally(selectedSource) && oscPortClash(selectedSource)" class="text-sm text-amber-400 mt-3">
               This is also the OSC remote control port. Give this source a different port, or the two will fight over the same packets.
             </p>
-          </div>
+          </card>
 
-          <p v-if="Object.keys(playbackSources).length === 0" class="text-sm italic text-zinc-400 py-2">
-            No sources yet.
-          </p>
-
-          <div class="flex flex-wrap gap-2 mt-3 pt-3 border-t border-zinc-700">
-            <SButton
-              v-for="provider in PLAYBACK_PROVIDERS"
-              :key="provider.id"
-              tiny
-              type="info"
-              @click="addSource(provider.id)">
-              Add {{ provider.displayName }}
-            </SButton>
-          </div>
-        </card>
+          <card v-else class="flex flex-col w-full">
+            <p class="text-2xl pb-2">Timer sources</p>
+            <p class="text-sm text-zinc-400">
+              Mirror the remaining time of the clip a playback system is running. Add one source per machine, or per
+              layer of a machine, then pick the source per timer in Timers settings.
+            </p>
+            <p class="text-sm italic text-zinc-400 mt-3">Add a source to get started.</p>
+          </card>
+        </div>
       </div>
     </div>
   </BaseContainer>
@@ -240,6 +298,8 @@ import MilluminSettingsCard from '../components/playback/MilluminSettingsCard.vu
 import QLabSettingsCard from '../components/playback/QLabSettingsCard.vue'
 import OscPointSettingsCard from '../components/playback/OscPointSettingsCard.vue'
 import TopBar from '../components/TopBar.vue'
+import TimersNavigation from '@common/components/TimersNavigation.vue'
+import TimerTabButton from '@common/components/TimerTabButton.vue'
 import BaseContainer from '../components/BaseContainer.vue'
 import {useSettingsStore} from '../stores/settings.ts'
 import {useWebServerStore} from '../stores/webServer.ts'
@@ -250,6 +310,15 @@ import {useRemoteShare} from '../remoteShare.ts'
 defineOptions({
   'name': 'RemoteTab',
 });
+
+const TABS = [
+  {id: 'web', name: 'Web server'},
+  {id: 'internet', name: 'Internet remote'},
+  {id: 'protocols', name: 'Other protocols'},
+  {id: 'sources', name: 'Timer sources'},
+] as const
+
+const currentTab = ref<typeof TABS[number]['id']>('web')
 
 const settingsStore = useSettingsStore()
 // Status is kept in a store, populated once in StoresUpdater, so the share links elsewhere in the
@@ -287,6 +356,22 @@ const playbackComponents: {[providerId: string]: unknown} = {
 }
 
 const playbackSources = computed(() => remote.value.playback ?? {})
+const sourceIds = computed(() => Object.keys(playbackSources.value))
+
+const selectedSourceId = ref<string | null>(null)
+const selectedSource = computed(() => (selectedSourceId.value ? playbackSources.value[selectedSourceId.value] ?? null : null))
+
+// Watching the ids rather than the map: adding a key leaves the object identity alone, so a plain
+// watch on the map would never fire
+watch(() => sourceIds.value.join(','), () => {
+  if (selectedSourceId.value && sourceIds.value.includes(selectedSourceId.value)) return
+  selectedSourceId.value = sourceIds.value[0] ?? null
+}, {immediate: true})
+
+function statusDotClass(sourceId: string, source: PlaybackSource) {
+  if (!source.config.enabled) return 'bg-zinc-600'
+  return playbackStatus(sourceId)?.connected ? 'bg-green-400' : 'bg-amber-400'
+}
 
 function providerName(providerId: string) {
   return playbackProviderMeta(providerId)?.displayName ?? providerId
@@ -297,11 +382,13 @@ function addSource(providerId: string) {
   if (!meta) return
   if (!remote.value.playback) remote.value.playback = {}
 
-  remote.value.playback[ulid()] = {
+  const sourceId = ulid()
+  remote.value.playback[sourceId] = {
     name: defaultSourceName(providerId, remote.value.playback),
     provider: providerId,
     config: {...meta.defaultConfig},
   } as PlaybackSource
+  selectedSourceId.value = sourceId
 }
 
 function removeSource(sourceId: string) {

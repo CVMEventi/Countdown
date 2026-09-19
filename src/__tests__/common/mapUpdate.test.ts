@@ -135,5 +135,31 @@ describe('mapUpdate', () => {
       expect(mapUpdate(wire({state: 'Not Running'})).timerIsReset).toBe(true);
       expect(mapUpdate(wire({state: 'Running'})).timerIsReset).toBe(false);
     });
+    it('passes the timer own countdown through to browser clients', () => {
+      const update = mapUpdate(wire({
+        source: 'vMix', state: 'Running', currentTime: 48,
+        timerState: 'Running', timerCurrentTime: 423,
+      }));
+
+      expect(update.currentSeconds).toBe(48);
+      expect(update.timerCurrentSeconds).toBe(423);
+      expect(update.timerIsRunning).toBe(true);
+    });
+
+    it('falls back to the displayed time when no timer time is sent', () => {
+      expect(mapUpdate(wire({currentTime: 30})).timerCurrentSeconds).toBe(30);
+    });
+
+    it('passes the timer own end time through, falling back to the displayed one', () => {
+      expect(mapUpdate(wire({ownEndsAt: '16:49', timerEndsAt: '16:42'})).ownEndsAt).toBe('16:49');
+      expect(mapUpdate(wire({timerEndsAt: '16:42'})).ownEndsAt).toBe('16:42');
+    });
+
+    it('reports a paused timer under a running clip', () => {
+      const update = mapUpdate(wire({source: 'vMix', state: 'Running', timerState: 'Paused'}));
+
+      expect(update.isRunning).toBe(true);
+      expect(update.timerIsRunning).toBe(false);
+    });
   });
 });
