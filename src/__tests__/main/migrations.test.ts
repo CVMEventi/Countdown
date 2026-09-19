@@ -9,7 +9,8 @@ import { AddWebRtcRemoteSettings } from '../../main/Migrations/AddWebRtcRemoteSe
 import { SetDefaultWebRtcSpaUrl } from '../../main/Migrations/SetDefaultWebRtcSpaUrl.ts';
 import { DEFAULT_WEBRTC_SPA_URL } from '../../common/config.ts';
 import { AddPlaybackSettings } from '../../main/Migrations/AddPlaybackSettings.ts';
-import { DEFAULT_PLAYBACK_SETTINGS, VMIX_PROVIDER_ID } from '../../common/playback.ts';
+import { DEFAULT_PLAYBACK_SETTINGS, MILLUMIN_PROVIDER_ID, VMIX_PROVIDER_ID } from '../../common/playback.ts';
+import { PlaybackProvidersToSources } from '../../main/Migrations/PlaybackProvidersToSources.ts';
 import { ContentAtReset } from '../../common/config.ts';
 
 // ─────────────────────────────────────────────────────────────
@@ -361,6 +362,88 @@ describe('AddPlaybackSettings', () => {
 });
 
 // ─────────────────────────────────────────────────────────────
+// PlaybackProvidersToSources
+// ─────────────────────────────────────────────────────────────
+describe('PlaybackProvidersToSources', () => {
+  const migration = new PlaybackProvidersToSources();
+
+  function migrate(settings: Record<string, unknown>, version = 6) {
+    return migration.migrate({version, settings}) as Record<string, unknown>;
+  }
+
+  function playbackOf(result: Record<string, unknown>) {
+    const remote = (result.settings as Record<string, unknown>).remote as Record<string, unknown>;
+    return remote.playback as Record<string, Record<string, unknown>>;
+  }
+
+  it('returns config unchanged when already at version 7', () => {
+    const config = {version: 7, settings: {remote: {}, timers: {}}};
+    expect(migration.migrate(config)).toBe(config);
+  });
+
+  it('bumps the version to 7', () => {
+    expect(migrate({remote: {}, timers: {}}).version).toBe(7);
+  });
+
+  it('turns each provider config into a named source under a new id', () => {
+    const result = migrate({
+      remote: {playback: {[VMIX_PROVIDER_ID]: {enabled: true, host: '10.0.0.5'}}},
+      timers: {},
+    });
+    const playback = playbackOf(result);
+    const [sourceId] = Object.keys(playback);
+
+    expect(sourceId).not.toBe(VMIX_PROVIDER_ID);
+    expect(playback[sourceId].name).toBe('vMix');
+    expect(playback[sourceId].provider).toBe(VMIX_PROVIDER_ID);
+    expect((playback[sourceId].config as Record<string, unknown>).host).toBe('10.0.0.5');
+  });
+
+  it('repoints a timer at the id of its new source', () => {
+    const result = migrate({
+      remote: {playback: {[MILLUMIN_PROVIDER_ID]: {enabled: true, layer: 'Main'}}},
+      timers: {t1: {name: 'A', playbackSource: MILLUMIN_PROVIDER_ID}, t2: {name: 'B', playbackSource: null}},
+    });
+    const playback = playbackOf(result);
+    const [sourceId] = Object.keys(playback);
+    const timers = (result.settings as Record<string, unknown>).timers as Record<string, Record<string, unknown>>;
+
+    expect(timers.t1.playbackSource).toBe(sourceId);
+    expect(timers.t2.playbackSource).toBeNull();
+    expect(timers.t1.name).toBe('A');
+  });
+
+  it('keeps both providers as separate sources', () => {
+    const result = migrate({
+      remote: {playback: {
+        [VMIX_PROVIDER_ID]: {enabled: false},
+        [MILLUMIN_PROVIDER_ID]: {enabled: true},
+      }},
+      timers: {},
+    });
+    const providers = Object.values(playbackOf(result)).map(source => source.provider).sort();
+
+    expect(providers).toEqual([MILLUMIN_PROVIDER_ID, VMIX_PROVIDER_ID].sort());
+  });
+
+  it('leaves a source that is already in the new shape alone', () => {
+    const existing = {name: 'Stage left', provider: MILLUMIN_PROVIDER_ID, config: {enabled: true}};
+    const result = migrate({remote: {playback: {abc: existing}}, timers: {}});
+
+    expect(playbackOf(result).abc).toEqual(existing);
+  });
+
+  it('drops an entry whose provider no longer exists', () => {
+    const result = migrate({remote: {playback: {ancient: {enabled: true}}}, timers: {}});
+    expect(playbackOf(result)).toEqual({});
+  });
+
+  it('copes with no playback settings at all', () => {
+    expect(playbackOf(migrate({remote: {}, timers: {}}))).toEqual({});
+  });
+});
+
+// ─────────────────────────────────────────────────────────────
 // applyMigrations — integration
 // ─────────────────────────────────────────────────────────────
 // ─────────────────────────────────────────────────────────────
@@ -542,8 +625,8 @@ describe('applyMigrations', () => {
 
     const result = applyMigrations(oldConfig) as Record<string, unknown>;
 
-    // Version should be bumped to 6 by AddPlaybackSettings
-    expect(result.version).toBe(6);
+    // Version should be bumped to 7 by PlaybackProvidersToSources
+    expect(result.version).toBe(7);
 
     const settings = result.settings as Record<string, unknown>;
 
@@ -564,9 +647,9 @@ describe('applyMigrations', () => {
     expect(Array.isArray(colors.thresholds)).toBe(true);
   });
 
-  it('is idempotent on a fully migrated config (version 6)', () => {
+  it('is idempotent on a fully migrated config (version 7)', () => {
     const migrated = {
-      version: 6,
+      version: 7,
       settings: {
         timers: {},
         presets: [] as number[],
@@ -596,7 +679,7 @@ describe('applyMigrations', () => {
     const result = applyMigrations(migrated) as Record<string, unknown>;
     const remote = (result.settings as Record<string, unknown>).remote as Record<string, unknown>;
 
-    expect(result.version).toBe(6);
+    expect(result.version).toBe(7);
     expect(remote.webrtcEnabled).toBe(false);
     expect(remote.webServerPort).toBe(7000);
   });

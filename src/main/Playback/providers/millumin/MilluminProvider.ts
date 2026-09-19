@@ -6,23 +6,9 @@ import {
   PlaybackProviderStatus,
   PlaybackState,
 } from "@common/playback.ts";
-import {Server} from "node-osc";
 import type {PlaybackProvider, PlaybackProviderContext} from "../../PlaybackProvider.ts";
 import {flattenOscBundle, MilluminTracker, OscMessage, parseMilluminAddress} from "./milluminOsc.ts";
-
-export interface OscListener {
-  on(event: 'message', callback: (message: OscMessage) => void): void
-  on(event: 'bundle', callback: (bundle: unknown) => void): void
-  on(event: 'error', callback: (error: Error) => void): void
-  close(): void
-}
-
-export type OscListenerFactory = (port: number, onListening: () => void) => OscListener
-
-// The factory is a parameter so a test can drive the protocol without binding a UDP socket
-const defaultOscListenerFactory: OscListenerFactory = (port, onListening) => {
-  return new Server(port, '0.0.0.0', onListening) as unknown as OscListener
-}
+import {oscListenerPool, OscListenerPool, OscSubscription} from "./oscListenerPool.ts";
 
 const HEARTBEAT_INTERVAL = 250
 // media/time arrives many times a second, so the log reports it on a timer instead of per packet
@@ -34,21 +20,25 @@ const TIME_LOG_INTERVAL = 2000
  * Read only, and push rather than poll: Millumin sends to us, so there is nothing to request. The
  * heartbeat republishes the current state so a paused clip is not expired by the manager, which
  * de-duplicates the repeats away.
+ *
+ * The socket comes from a pool, so several sources watching different layers of the same Millumin
+ * share one listener rather than fighting over the port.
  */
 export class MilluminProvider implements PlaybackProvider {
   readonly id = MILLUMIN_PROVIDER_ID
 
   private _context: PlaybackProviderContext
-  private _createListener: OscListenerFactory
+  private _pool: OscListenerPool
   private _config: MilluminProviderConfig = {...DEFAULT_MILLUMIN_CONFIG}
   private _configKey: string | null = null
   private _tracker = new MilluminTracker()
-  private _server: OscListener = null
+  private _subscription: OscSubscription = null
   private _heartbeat: NodeJS.Timeout = null
   private _running = false
   private _listening = false
   private _lastError: string | null = null
   private _activeTitle: string | null = null
+  private _label = 'Millumin'
 
   // Diagnostics
   private _packetCount = 0
@@ -56,9 +46,9 @@ export class MilluminProvider implements PlaybackProvider {
   private _lastTimeLogAt = 0
   private _lastLoggedState: string | null = null
 
-  constructor(context: PlaybackProviderContext, createListener: OscListenerFactory = defaultOscListenerFactory) {
+  constructor(context: PlaybackProviderContext, pool: OscListenerPool = oscListenerPool) {
     this._context = context
-    this._createListener = createListener
+    this._pool = pool
   }
 
   applyConfig(config: PlaybackProviderConfig) {
@@ -66,6 +56,7 @@ export class MilluminProvider implements PlaybackProvider {
     const key = [next.port, next.layer, next.playingTimeout, next.logMessages].join('|')
 
     this._config = next
+    this._label = next.layer ? `Millumin/${next.layer}` : 'Millumin'
 
     if (!next.enabled) {
       if (this._running) {
@@ -92,12 +83,8 @@ export class MilluminProvider implements PlaybackProvider {
       clearInterval(this._heartbeat)
       this._heartbeat = null
     }
-    try {
-      this._server?.close()
-    } catch {
-      // An unbound socket throws on close; nothing here can recover it and nothing depends on it
-    }
-    this._server = null
+    this._subscription?.release()
+    this._subscription = null
     this._tracker.clear()
     this._running = false
     this._listening = false
@@ -119,34 +106,30 @@ export class MilluminProvider implements PlaybackProvider {
   }
 
   private _log(message: string, ...rest: unknown[]) {
-    console.log(`[Millumin] ${message}`, ...rest)
+    console.log(`[${this._label}] ${message}`, ...rest)
   }
 
   private _start() {
     const port = Number(this._config.port)
+    const subscription = this._pool.subscribe(port)
+    this._subscription = subscription
 
-    try {
-      this._server = this._createListener(port, () => {
-        this._listening = true
-        this._log(`listening on 0.0.0.0:${port} — point Millumin's OSC feedback here (Device manager, OSC tab, "API feedback")`)
-        this._context.onStatus()
-      })
-    } catch (error) {
-      this._listening = false
-      this._lastError = error instanceof Error ? error.message : String(error)
-      this._log(`could not listen on port ${port}: ${this._lastError}`)
-      return
-    }
+    subscription.onListening(() => {
+      this._listening = true
+      this._lastError = null
+      this._log(`listening on 0.0.0.0:${port} — point Millumin's OSC feedback here (Device manager, OSC tab, "API feedback")`)
+      this._context.onStatus()
+    })
 
-    this._server.on('message', (message) => this._receive(message))
+    subscription.onMessage((message) => this._receive(message))
 
     // Millumin may pack its feedback into bundles, which node-osc reports on its own event. A
     // listener that only takes 'message' would drop every one of them without a word.
-    this._server.on('bundle', (bundle) => {
+    subscription.onBundle((bundle) => {
       flattenOscBundle(bundle).forEach(message => this._receive(message, true))
     })
 
-    this._server.on('error', (error) => {
+    subscription.onError((error) => {
       // Most often the port is already taken, which the operator has to see to fix
       this._listening = false
       this._lastError = error instanceof Error ? error.message : String(error)

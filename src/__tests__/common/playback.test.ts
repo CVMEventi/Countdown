@@ -7,7 +7,9 @@ import {
   PLAYBACK_PROVIDERS,
   playbackProviderMeta,
   playbackStateEquals,
-  resolvePlaybackConfig,
+  resolveSourceConfig,
+  playbackSourceLabel,
+  defaultSourceName,
   VMIX_PROVIDER_ID,
 } from '../../common/playback.ts';
 
@@ -17,18 +19,8 @@ describe('provider registry', () => {
     expect(new Set(ids).size).toBe(ids.length);
   });
 
-  it('gives every provider a default config that is disabled', () => {
-    PLAYBACK_PROVIDERS.forEach(provider => {
-      expect(provider.defaultConfig.enabled).toBe(false);
-    });
-  });
-
-  it('derives the default settings from the registry', () => {
-    expect(Object.keys(DEFAULT_PLAYBACK_SETTINGS).sort()).toEqual(PLAYBACK_PROVIDERS.map(p => p.id).sort());
-  });
-
-  it('hands back a copy, so one install cannot mutate the defaults of another', () => {
-    expect(DEFAULT_PLAYBACK_SETTINGS[VMIX_PROVIDER_ID]).not.toBe(DEFAULT_VMIX_CONFIG);
+  it('starts with no sources, because they are added by hand', () => {
+    expect(DEFAULT_PLAYBACK_SETTINGS).toEqual({});
   });
 
   it('looks a provider up by id', () => {
@@ -37,29 +29,49 @@ describe('provider registry', () => {
   });
 });
 
-describe('resolvePlaybackConfig', () => {
-  it('fills in the defaults for a provider the stored config has never seen', () => {
-    // The promise the architecture makes: adding a provider needs no migration. A config written
-    // before Millumin existed must still drive it.
-    const stored = {[VMIX_PROVIDER_ID]: {enabled: true, host: '10.0.0.5'}};
-
-    expect(resolvePlaybackConfig(stored, MILLUMIN_PROVIDER_ID)).toEqual(DEFAULT_MILLUMIN_CONFIG);
-  });
-
-  it('keeps stored values and fills only the gaps', () => {
-    const resolved = resolvePlaybackConfig({[VMIX_PROVIDER_ID]: {enabled: true, host: '10.0.0.5'}}, VMIX_PROVIDER_ID);
+describe('resolveSourceConfig', () => {
+  it('fills in the defaults for keys a stored source predates', () => {
+    // The promise the architecture makes: a provider gaining a setting needs no migration
+    const resolved = resolveSourceConfig({name: 'A', provider: VMIX_PROVIDER_ID, config: {enabled: true, host: '10.0.0.5'}});
 
     expect(resolved.enabled).toBe(true);
     expect(resolved.host).toBe('10.0.0.5');
     expect(resolved.port).toBe(DEFAULT_VMIX_CONFIG.port);
+    expect(resolved.input).toBe('');
   });
 
-  it('copes with playback settings that are missing entirely', () => {
-    expect(resolvePlaybackConfig(undefined, VMIX_PROVIDER_ID)).toEqual(DEFAULT_VMIX_CONFIG);
+  it('falls back to the provider defaults for a source with no config', () => {
+    expect(resolveSourceConfig({name: 'A', provider: MILLUMIN_PROVIDER_ID, config: undefined as never}))
+      .toEqual(DEFAULT_MILLUMIN_CONFIG);
   });
 
   it('reports an unknown provider as disabled rather than throwing', () => {
-    expect(resolvePlaybackConfig({}, 'not-a-provider')).toEqual({enabled: false});
+    expect(resolveSourceConfig({name: 'A', provider: 'not-a-provider', config: {enabled: true}}))
+      .toEqual({enabled: false});
+    expect(resolveSourceConfig(undefined)).toEqual({enabled: false});
+  });
+});
+
+describe('source naming', () => {
+  it('names the first source of a kind after the provider', () => {
+    expect(defaultSourceName(MILLUMIN_PROVIDER_ID, {})).toBe('Millumin');
+  });
+
+  it('numbers further sources of the same kind', () => {
+    const settings = {a: {name: 'Millumin', provider: MILLUMIN_PROVIDER_ID, config: {enabled: true}}};
+    expect(defaultSourceName(MILLUMIN_PROVIDER_ID, settings)).toBe('Millumin 2');
+    expect(defaultSourceName(VMIX_PROVIDER_ID, settings)).toBe('vMix');
+  });
+
+  it('labels a source by its name, falling back to the provider', () => {
+    const settings = {
+      a: {name: 'Stage left', provider: MILLUMIN_PROVIDER_ID, config: {enabled: true}},
+      b: {name: '', provider: VMIX_PROVIDER_ID, config: {enabled: true}},
+    };
+
+    expect(playbackSourceLabel('a', settings)).toBe('Stage left');
+    expect(playbackSourceLabel('b', settings)).toBe('vMix');
+    expect(playbackSourceLabel('gone', settings)).toBe('gone');
   });
 });
 

@@ -16,6 +16,8 @@ dayjs.extend(duration);
  */
 export interface TimerSourceOverride {
   sourceId: string
+  // What the operator called this source, so clients that never see the settings can label it
+  sourceName: string
   remainingSeconds: number
   totalSeconds: number
   isRunning: boolean
@@ -138,6 +140,7 @@ export class TimerEngine {
   private _sourceOverrideEquals(a: TimerSourceOverride | null, b: TimerSourceOverride | null) {
     if (a === null || b === null) return a === b;
     return a.sourceId === b.sourceId
+      && a.sourceName === b.sourceName
       && a.remainingSeconds === b.remainingSeconds
       && a.totalSeconds === b.totalSeconds
       && a.isRunning === b.isRunning;
@@ -335,7 +338,7 @@ export class TimerEngine {
       isRunning: this._displayIsRunning(),
       isCountingUp: this._displayIsCountingUp(),
       timerEndsAt: this.endsAt() ?? "",
-      source: this._sourceOverride?.sourceId ?? null,
+      source: this._sourceOverride?.sourceName ?? null,
       timerIsReset: this.isReset(),
     })
   }
@@ -374,7 +377,7 @@ export class TimerEngine {
 
     return {
       state: state,
-      source: override?.sourceId ?? null,
+      source: override?.sourceName ?? null,
       timerState: this._state(),
       setTime: this.totalSeconds,
       setTimeHms: setTimeDuration.format('HH:mm:ss'),

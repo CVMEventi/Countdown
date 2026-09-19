@@ -74,6 +74,26 @@ export function parseVmixApi(xml: string): VMixApiState {
   }
 }
 
+function activeInput(state: VMixApiState): VMixInput | null {
+  if (state.active === null) return null
+  return state.inputs.find(candidate => candidate.number === state.active) ?? null
+}
+
+/**
+ * A source pinned to one input follows it wherever it is, on Program or not: that is the point of
+ * pinning it. Matched by number first, then by title, so either is usable in the settings.
+ */
+function findInput(state: VMixApiState, wanted: string): VMixInput | null {
+  const asNumber = Number(wanted)
+  if (Number.isFinite(asNumber)) {
+    const byNumber = state.inputs.find(candidate => candidate.number === asNumber)
+    if (byNumber) return byNumber
+  }
+
+  const lowered = wanted.trim().toLowerCase()
+  return state.inputs.find(candidate => candidate.title.trim().toLowerCase() === lowered) ?? null
+}
+
 /**
  * Turns a vMix state into the clip the timers should mirror, or null for "no clip playing".
  *
@@ -82,11 +102,9 @@ export function parseVmixApi(xml: string): VMixApiState {
  */
 export function selectPlaybackState(
   state: VMixApiState,
-  options: { followLooping: boolean },
+  options: { followLooping: boolean, input?: string },
 ): PlaybackState | null {
-  if (state.active === null) return null
-
-  const input = state.inputs.find(candidate => candidate.number === state.active)
+  const input = options.input ? findInput(state, options.input) : activeInput(state)
   if (!input) return null
   if (!PLAYABLE_TYPES.has(input.type)) return null
   if (input.state !== 'Running' && input.state !== 'Paused') return null

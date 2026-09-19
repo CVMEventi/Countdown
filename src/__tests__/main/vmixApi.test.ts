@@ -63,6 +63,10 @@ describe('selectPlaybackState', () => {
     return selectPlaybackState(parseVmixApi(xml), {followLooping});
   }
 
+  function selectInput(xml: string, input: string) {
+    return selectPlaybackState(parseVmixApi(xml), {followLooping: false, input});
+  }
+
   it('mirrors a running clip on Program', () => {
     expect(select(vmix(clip))).toEqual({
       clipId: 'abc-123',
@@ -110,6 +114,26 @@ describe('selectPlaybackState', () => {
 
   it('returns null once the playhead has passed the duration', () => {
     expect(select(vmix(clip.replace('position="41230"', 'position="180000"')))).toBeNull();
+  });
+
+  it('pins to an input by number, even when it is not on Program', () => {
+    const xml = vmix(`<input key="a" number="1" type="Video" title="Other.mp4" state="Running" position="0" duration="30000" />${clip}`, {active: '2'});
+
+    expect(selectInput(xml, '1')).toMatchObject({title: 'Other.mp4', totalSeconds: 30});
+  });
+
+  it('pins to an input by title, ignoring case and padding', () => {
+    expect(selectInput(vmix(clip), '  package.MP4 ')).toMatchObject({title: 'Package.mp4'});
+  });
+
+  it('returns null when the pinned input is not there', () => {
+    expect(selectInput(vmix(clip), 'Missing.mp4')).toBeNull();
+    expect(selectInput(vmix(clip), '99')).toBeNull();
+  });
+
+  it('still applies the playable rules to a pinned input', () => {
+    const xml = vmix('<input key="a" number="1" type="Colour" title="BG" state="Running" position="0" duration="0" />');
+    expect(selectInput(xml, '1')).toBeNull();
   });
 
   it('falls back to the input number when the key is empty', () => {

@@ -14,6 +14,17 @@
       v-model.number="config.port"
       class="input w-full">
 
+    <div class="flex items-center gap-1">
+      <p>Input</p>
+      <InfoTip text="Leave empty to follow whatever is on Program. Give an input number or title to pin this source to one input, so a second source can watch a different one on the same machine." />
+    </div>
+    <input
+      @click="($event.target as HTMLInputElement).select()"
+      @focus="($event.target as HTMLInputElement).select()"
+      v-model="config.input"
+      placeholder="Program"
+      class="input w-full">
+
     <details class="mt-3 pt-3 border-t border-zinc-700">
       <summary class="uppercase text-sm text-zinc-400 cursor-pointer select-none">Advanced</summary>
       <div class="flex flex-col gap-1 mt-2">
@@ -39,7 +50,7 @@
           v-model.number="config.pollInterval"
           class="input w-full">
         <div class="flex items-center gap-1 mt-2">
-          <CheckBox id="vmixFollowLooping" v-model="config.followLooping">Follow looping clips</CheckBox>
+          <CheckBox :id="`vmixFollowLooping-${uid}`" v-model="config.followLooping">Follow looping clips</CheckBox>
           <InfoTip text="Off by default so a looping background does not hold the timers for the whole show" />
         </div>
       </div>
@@ -49,9 +60,12 @@
 
 <script lang="ts" setup>
 import CheckBox from '@common/components/CheckBox.vue'
+import {useId} from 'vue'
 import {DEFAULT_VMIX_CONFIG, VMixProviderConfig} from '@common/playback.ts'
 import InfoTip from '../InfoTip.vue'
 import {vNoWheel} from '@common/directives/noWheel.ts'
 
 const config = defineModel<VMixProviderConfig>({required: true})
+// Several sources of one kind can be on screen at once, so the label ids have to differ
+const uid = useId()
 </script>

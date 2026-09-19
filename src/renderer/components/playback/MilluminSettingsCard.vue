@@ -15,7 +15,7 @@
       <div class="flex flex-col gap-1 mt-2">
         <div class="flex items-center gap-1">
           <p>Layer</p>
-          <InfoTip text="Leave empty to follow whichever layer is playing. Set a layer name to pin the timers to it, so a background loop cannot take them over." />
+          <InfoTip text="Leave empty to follow whichever layer is playing. Set a layer name to pin this source to it, so a second source can watch a different layer of the same Millumin." />
         </div>
         <input
           @click="($event.target as HTMLInputElement).select()"
@@ -36,7 +36,7 @@
           v-model.number="config.playingTimeout"
           class="input w-full">
         <div class="flex items-center gap-1 mt-2">
-          <CheckBox id="milluminLogMessages" v-model="config.logMessages">Log every OSC message</CheckBox>
+          <CheckBox :id="`milluminLogMessages-${uid}`" v-model="config.logMessages">Log every OSC message</CheckBox>
           <InfoTip text="Prints each packet Millumin sends to the app console. Leave off in production: the time messages arrive many times a second." />
         </div>
       </div>
@@ -46,9 +46,12 @@
 
 <script lang="ts" setup>
 import CheckBox from '@common/components/CheckBox.vue'
+import {useId} from 'vue'
 import {MilluminProviderConfig} from '@common/playback.ts'
 import InfoTip from '../InfoTip.vue'
 import {vNoWheel} from '@common/directives/noWheel.ts'
 
 const config = defineModel<MilluminProviderConfig>({required: true})
+// Several sources of one kind can be on screen at once, so the label ids have to differ
+const uid = useId()
 </script>

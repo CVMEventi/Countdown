@@ -115,7 +115,6 @@ import { PlayPauseIcon, PlusIcon, MinusIcon, TrashIcon, ArrowRightIcon, SpeakerX
 import type { ITimerController } from '../TimerController.ts'
 import type { TimerEngineUpdate, TimerEngineUpdates } from '../TimerInterfaces.ts'
 import type { TimerSettings, Timers } from '../config.ts'
-import { playbackProviderMeta } from '../playback.ts'
 import Card from './Card.vue'
 import SButton from './SButton.vue'
 import TimeInput from './TimeInput.vue'
@@ -171,11 +170,7 @@ const currentTimer = computed<TimerSettings | null>(() => {
 // follow the timer's OWN clock instead, or they would target a timer the operator cannot see.
 const timerIsReset = computed(() => currentUpdate.value.timerIsReset ?? currentUpdate.value.isReset)
 
-const playbackSourceName = computed<string | null>(() => {
-  const sourceId = currentUpdate.value.source
-  if (!sourceId) return null
-  return playbackProviderMeta(sourceId)?.displayName ?? sourceId
-})
+const playbackSourceName = computed<string | null>(() => currentUpdate.value.source ?? null)
 
 const followingTimerId = computed<string | null>(() => {
   const followTimer = currentTimer.value?.followTimer

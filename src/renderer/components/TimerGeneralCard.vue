@@ -35,10 +35,13 @@
         </div>
         <select id="playbackSource" v-model="timer.playbackSource" class="input p-2 w-full">
           <option :value="null">None</option>
-          <option v-for="provider in PLAYBACK_PROVIDERS" :key="provider.id" :value="provider.id">
-            {{ provider.displayName }}
+          <option v-for="(source, sourceId) in playbackSources" :key="sourceId" :value="sourceId">
+            {{ source.name || providerName(source.provider) }}
           </option>
         </select>
+        <p v-if="Object.keys(playbackSources).length === 0" class="text-xs italic text-zinc-400">
+          Add a playback source in Remote settings first.
+        </p>
       </div>
       <div class="flex flex-col gap-1">
         <div class="flex items-center gap-1">
@@ -100,7 +103,8 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { CheckIcon, ClipboardDocumentIcon, MusicalNoteIcon, XMarkIcon } from '@heroicons/vue/20/solid'
 import { TimerSettings, Timers } from '@common/config.ts'
-import { PLAYBACK_PROVIDERS } from '@common/playback.ts'
+import { playbackProviderMeta } from '@common/playback.ts'
+import { useSettingsStore } from '../stores/settings.ts'
 import { copyText } from '@common/clipboard.ts'
 import Card from '@common/components/Card.vue'
 import CheckBox from '@common/components/CheckBox.vue'
@@ -115,6 +119,13 @@ const props = defineProps<{
 }>()
 
 const timer = defineModel<TimerSettings>({ required: true })
+
+const settingsStore = useSettingsStore()
+const playbackSources = computed(() => settingsStore.settings.remote?.playback ?? {})
+
+function providerName(providerId: string) {
+  return playbackProviderMeta(providerId)?.displayName ?? providerId
+}
 
 const otherTimers = computed(() => Object.keys(props.timers).filter((id) => id !== props.timerId))
 

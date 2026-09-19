@@ -1,5 +1,9 @@
 /**
- * The contract between a playback system (vMix, Mitti, Millumin, QLab, ...) and the timers.
+ * The contract between a playback system (vMix, Millumin, Mitti, QLab, ...) and the timers.
+ *
+ * A *provider* is a kind of system Countdown can speak to. A *source* is one configured instance
+ * of a provider: a machine, or a single layer on a machine. Timers follow a source, so one vMix
+ * rig and two Millumin layers can drive three different timers at once.
  *
  * Lives in common because the renderer builds its settings UI from the provider list, and because
  * config.ts must stay free of main process imports. Types and plain data only: no electron, no
@@ -18,6 +22,7 @@ export interface PlaybackState {
 }
 
 export interface PlaybackProviderStatus {
+  // The source id, not the provider id: two sources of the same kind report separately
   id: string
   enabled: boolean
   connected: boolean
@@ -27,8 +32,15 @@ export interface PlaybackProviderStatus {
 
 export type PlaybackProviderConfig = { enabled: boolean } & Record<string, unknown>
 
+/** One configured instance of a provider. Keyed by a ULID, as timers and windows are. */
+export interface PlaybackSource {
+  name: string
+  provider: string
+  config: PlaybackProviderConfig
+}
+
 export interface PlaybackSettings {
-  [providerId: string]: PlaybackProviderConfig
+  [sourceId: string]: PlaybackSource
 }
 
 export interface PlaybackProviderMeta {
@@ -49,16 +61,19 @@ export interface VMixProviderConfig extends PlaybackProviderConfig {
   password: string
   pollInterval: number
   followLooping: boolean
+  // Empty follows whatever is on Program; an input number or title pins this source to one input
+  input: string
 }
 
 export const DEFAULT_VMIX_CONFIG: VMixProviderConfig = {
-  enabled: false,
+  enabled: true,
   host: '127.0.0.1',
   port: 8088,
   username: '',
   password: '',
   pollInterval: 250,
   followLooping: false,
+  input: '',
 }
 
 export const VMIX_PROVIDER_META: PlaybackProviderMeta = {
@@ -72,9 +87,10 @@ export const MILLUMIN_PROVIDER_ID = 'millumin'
 
 export interface MilluminProviderConfig extends PlaybackProviderConfig {
   // Millumin pushes to us, so this is the port we listen on: set it as the feedback target in
-  // Millumin's Device manager (CMD+K, OSC tab, "API feedback")
+  // Millumin's Device manager (CMD+K, OSC tab, "API feedback"). Sources sharing a port share one
+  // socket, so several layers of one Millumin machine need no extra setup on the Millumin side.
   port: number
-  // Empty follows whichever layer is playing; a name pins the timers to one layer
+  // Empty follows whichever layer is playing; a name pins this source to one layer
   layer: string
   // A playing layer must keep sending media/time. Silence this long means Millumin went away.
   playingTimeout: number
@@ -83,7 +99,7 @@ export interface MilluminProviderConfig extends PlaybackProviderConfig {
 }
 
 export const DEFAULT_MILLUMIN_CONFIG: MilluminProviderConfig = {
-  enabled: false,
+  enabled: true,
   // Not 5000: that is Millumin's own OSC input port, which clashes when both run on one machine
   port: 5001,
   layer: '',
@@ -109,18 +125,28 @@ export function playbackProviderMeta(id: string): PlaybackProviderMeta | null {
   return PLAYBACK_PROVIDERS.find(provider => provider.id === id) ?? null
 }
 
-export const DEFAULT_PLAYBACK_SETTINGS: PlaybackSettings = Object.fromEntries(
-  PLAYBACK_PROVIDERS.map(provider => [provider.id, {...provider.defaultConfig}]),
-)
+// Sources are added by hand, so a fresh install has none
+export const DEFAULT_PLAYBACK_SETTINGS: PlaybackSettings = {}
 
-/** Fills in the defaults for providers missing from a stored config. */
-export function resolvePlaybackConfig(
-  settings: PlaybackSettings | undefined,
-  providerId: string,
-): PlaybackProviderConfig {
-  const meta = playbackProviderMeta(providerId)
+/** Fills in the defaults for keys a stored source predates. */
+export function resolveSourceConfig(source: PlaybackSource | undefined): PlaybackProviderConfig {
+  const meta = source ? playbackProviderMeta(source.provider) : null
   if (!meta) return {enabled: false}
-  return {...meta.defaultConfig, ...(settings?.[providerId] ?? {})}
+  return {...meta.defaultConfig, ...(source?.config ?? {})}
+}
+
+export function playbackSourceLabel(sourceId: string, settings: PlaybackSettings | undefined): string {
+  const source = settings?.[sourceId]
+  if (!source) return sourceId
+  if (source.name) return source.name
+  return playbackProviderMeta(source.provider)?.displayName ?? source.provider
+}
+
+/** A name for a newly added source, unique enough to tell two of a kind apart at a glance. */
+export function defaultSourceName(providerId: string, settings: PlaybackSettings | undefined): string {
+  const displayName = playbackProviderMeta(providerId)?.displayName ?? providerId
+  const sameKind = Object.values(settings ?? {}).filter(source => source.provider === providerId).length
+  return sameKind === 0 ? displayName : `${displayName} ${sameKind + 1}`
 }
 
 export function playbackStateEquals(a: PlaybackState | null, b: PlaybackState | null): boolean {

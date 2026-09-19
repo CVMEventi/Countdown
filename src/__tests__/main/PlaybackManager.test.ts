@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { PlaybackManager } from '../../main/Playback/PlaybackManager.ts';
 import type { PlaybackProvider, PlaybackProviderContext } from '../../main/Playback/PlaybackProvider.ts';
-import { PlaybackProviderConfig, PlaybackProviderStatus, PlaybackState, VMIX_PROVIDER_ID } from '../../common/playback.ts';
+import { PlaybackProviderConfig, PlaybackProviderStatus, PlaybackSettings, PlaybackState, MILLUMIN_PROVIDER_ID, VMIX_PROVIDER_ID } from '../../common/playback.ts';
 
 /**
  * Deliberately not the vMix provider: the manager is the reusable half of the feature, so it is
@@ -9,12 +9,14 @@ import { PlaybackProviderConfig, PlaybackProviderStatus, PlaybackState, VMIX_PRO
  */
 class FakeProvider implements PlaybackProvider {
   readonly id = VMIX_PROVIDER_ID;
+  static built: FakeProvider[] = [];
   context: PlaybackProviderContext;
   enabled = false;
   stopped = 0;
 
   constructor(context: PlaybackProviderContext) {
     this.context = context;
+    FakeProvider.built.push(this);
   }
 
   applyConfig(config: PlaybackProviderConfig) {
@@ -49,6 +51,13 @@ function state(overrides: Partial<PlaybackState> = {}): PlaybackState {
   };
 }
 
+function sources(overrides: {[id: string]: Partial<PlaybackProviderConfig>} = {a: {enabled: true}}): PlaybackSettings {
+  return Object.fromEntries(Object.entries(overrides).map(([id, config]) => [
+    id,
+    {name: id, provider: VMIX_PROVIDER_ID, config: {enabled: true, ...config} as PlaybackProviderConfig},
+  ]));
+}
+
 describe('PlaybackManager', () => {
   let onState: ReturnType<typeof vi.fn>;
   let onStatus: ReturnType<typeof vi.fn>;
@@ -69,7 +78,8 @@ describe('PlaybackManager', () => {
       factories: {[VMIX_PROVIDER_ID]: (context) => (provider = new FakeProvider(context))},
     });
 
-    manager.applyState({[VMIX_PROVIDER_ID]: {enabled: true}});
+    FakeProvider.built = [];
+    manager.applyState(sources());
     onState.mockClear();
   });
 
@@ -81,8 +91,8 @@ describe('PlaybackManager', () => {
   it('passes a new state through to the timers', () => {
     provider.publish(state());
 
-    expect(onState).toHaveBeenCalledWith(VMIX_PROVIDER_ID, expect.objectContaining({remainingSeconds: 30}));
-    expect(manager.stateFor(VMIX_PROVIDER_ID)?.remainingSeconds).toBe(30);
+    expect(onState).toHaveBeenCalledWith('a', expect.objectContaining({remainingSeconds: 30}));
+    expect(manager.stateFor('a')?.remainingSeconds).toBe(30);
   });
 
   it('emits once when the same state is published repeatedly', () => {
@@ -116,8 +126,8 @@ describe('PlaybackManager', () => {
       vi.advanceTimersByTime(500);
     }
 
-    expect(manager.stateFor(VMIX_PROVIDER_ID)).not.toBeNull();
-    expect(onState).not.toHaveBeenCalledWith(VMIX_PROVIDER_ID, null);
+    expect(manager.stateFor('a')).not.toBeNull();
+    expect(onState).not.toHaveBeenCalledWith('a', null);
   });
 
   it('expires a state the provider stopped refreshing', () => {
@@ -131,8 +141,8 @@ describe('PlaybackManager', () => {
 
     now += 400;
     vi.advanceTimersByTime(400);
-    expect(onState).toHaveBeenCalledWith(VMIX_PROVIDER_ID, null);
-    expect(manager.stateFor(VMIX_PROVIDER_ID)).toBeNull();
+    expect(onState).toHaveBeenCalledWith('a', null);
+    expect(manager.stateFor('a')).toBeNull();
   });
 
   it('releases the timers when a provider reports nothing playing', () => {
@@ -141,7 +151,7 @@ describe('PlaybackManager', () => {
 
     provider.publish(null);
 
-    expect(onState).toHaveBeenCalledWith(VMIX_PROVIDER_ID, null);
+    expect(onState).toHaveBeenCalledWith('a', null);
   });
 
   it('does not re-emit null when there was no state to begin with', () => {
@@ -155,27 +165,68 @@ describe('PlaybackManager', () => {
 
     manager.stop();
 
-    expect(onState).toHaveBeenCalledWith(VMIX_PROVIDER_ID, null);
+    expect(onState).toHaveBeenCalledWith('a', null);
     expect(provider.stopped).toBe(1);
   });
 
   it('hands the provider its config on every save', () => {
-    manager.applyState({[VMIX_PROVIDER_ID]: {enabled: false}});
-    expect(provider.enabled).toBe(false);
-  });
-
-  it('fills in defaults for a provider missing from the stored config', () => {
-    manager.applyState({});
+    manager.applyState(sources({a: {enabled: false}}));
     expect(provider.enabled).toBe(false);
   });
 
   it('pushes status only when it actually changes', () => {
     onStatus.mockClear();
-    manager.applyState({[VMIX_PROVIDER_ID]: {enabled: true}});
-    manager.applyState({[VMIX_PROVIDER_ID]: {enabled: true}});
+    manager.applyState(sources({a: {enabled: true}}));
+    manager.applyState(sources({a: {enabled: true}}));
     expect(onStatus).not.toHaveBeenCalled();
 
-    manager.applyState({[VMIX_PROVIDER_ID]: {enabled: false}});
+    manager.applyState(sources({a: {enabled: false}}));
     expect(onStatus).toHaveBeenCalledTimes(1);
+  });
+
+  describe('several sources of the same provider', () => {
+    it('builds one provider per source', () => {
+      FakeProvider.built = [];
+      manager.applyState(sources({a: {enabled: true}, b: {enabled: true}}));
+
+      // 'a' already existed, so only 'b' is new
+      expect(FakeProvider.built).toHaveLength(1);
+      expect(manager.statuses().map(s => s.id).sort()).toEqual(['a', 'b']);
+    });
+
+    it('keeps the state of each source apart', () => {
+      const sourceA = provider;
+      manager.applyState(sources({a: {enabled: true}, b: {enabled: true}}));
+      const sourceB = FakeProvider.built[FakeProvider.built.length - 1];
+
+      sourceA.publish(state({remainingSeconds: 30}));
+      sourceB.publish(state({remainingSeconds: 5}));
+
+      expect(manager.stateFor('a')?.remainingSeconds).toBe(30);
+      expect(manager.stateFor('b')?.remainingSeconds).toBe(5);
+    });
+
+    it('stops and releases a source that was removed', () => {
+      manager.applyState(sources({a: {enabled: true}, b: {enabled: true}}));
+      const removed = FakeProvider.built[FakeProvider.built.length - 1];
+      removed.publish(state());
+      onState.mockClear();
+
+      manager.applyState(sources({a: {enabled: true}}));
+
+      expect(removed.stopped).toBe(1);
+      expect(onState).toHaveBeenCalledWith('b', null);
+      expect(manager.statuses().map(s => s.id)).toEqual(['a']);
+    });
+
+    it('rebuilds a source whose provider kind was changed', () => {
+      FakeProvider.built = [];
+      manager.applyState({
+        a: {name: 'a', provider: MILLUMIN_PROVIDER_ID, config: {enabled: true}},
+      });
+
+      // No factory registered for millumin here, so the old vmix instance is simply torn down
+      expect(manager.statuses()).toEqual([]);
+    });
   });
 });

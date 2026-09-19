@@ -1,10 +1,10 @@
 import {
-  PLAYBACK_PROVIDERS,
+  playbackProviderMeta,
   PlaybackProviderStatus,
   PlaybackSettings,
   PlaybackState,
   playbackStateEquals,
-  resolvePlaybackConfig,
+  resolveSourceConfig,
 } from "@common/playback.ts";
 import type {PlaybackProvider, PlaybackProviderFactory} from "./PlaybackProvider.ts";
 import {playbackProviderFactories} from "./providers/index.ts";
@@ -19,21 +19,31 @@ export interface PlaybackManagerDeps {
 }
 
 const DEFAULT_SWEEP_INTERVAL = 250
+const DEFAULT_STALE_AFTER = 1000
+
+interface Instance {
+  provider: PlaybackProvider
+  providerId: string
+}
 
 /**
- * Owns every playback provider and the three concerns that are identical for all of them, so a
- * new provider only has to speak its own protocol:
+ * Owns every configured playback source and the three concerns that are identical for all of
+ * them, so a new provider only has to speak its own protocol:
  *
  *  - de-duplication, so a fast poller does not turn into a flood of IPC
  *  - staleness, so a source that goes quiet releases the timers instead of freezing them
  *  - status fan-out to the renderer
+ *
+ * Sources are instances, not provider kinds: two vMix rigs, or two layers of one Millumin, each
+ * get their own provider object keyed by source id.
  */
 export class PlaybackManager {
-  private _providers = new Map<string, PlaybackProvider>()
+  private _instances = new Map<string, Instance>()
   private _states = new Map<string, { state: PlaybackState, refreshedAt: number }>()
   private _lastStatusKey: string | null = null
   private _sweepTimer: NodeJS.Timeout = null
   private _deps: PlaybackManagerDeps
+  private _factories: {[providerId: string]: PlaybackProviderFactory}
   private _now: () => number
   private _sweepInterval: number
 
@@ -41,24 +51,37 @@ export class PlaybackManager {
     this._deps = deps
     this._now = deps.now ?? (() => Date.now())
     this._sweepInterval = deps.sweepInterval ?? DEFAULT_SWEEP_INTERVAL
-
-    const factories = deps.factories ?? playbackProviderFactories
-
-    PLAYBACK_PROVIDERS.forEach(meta => {
-      const factory = factories[meta.id]
-      if (!factory) return
-
-      this._providers.set(meta.id, factory({
-        onState: (state) => this._providerState(meta.id, state),
-        onStatus: () => this._pushStatus(),
-        now: this._now,
-      }))
-    })
+    this._factories = deps.factories ?? playbackProviderFactories
   }
 
   applyState(playback: PlaybackSettings | undefined) {
-    this._providers.forEach((provider, id) => {
-      provider.applyConfig(resolvePlaybackConfig(playback, id))
+    const sources = playback ?? {}
+
+    // Drop sources that were deleted, or whose provider kind changed under the same id
+    Array.from(this._instances.keys()).forEach(sourceId => {
+      const source = sources[sourceId]
+      if (source && source.provider === this._instances.get(sourceId).providerId) return
+      this._destroy(sourceId)
+    })
+
+    Object.entries(sources).forEach(([sourceId, source]) => {
+      const factory = this._factories[source.provider]
+      if (!factory) return
+
+      let instance = this._instances.get(sourceId)
+      if (!instance) {
+        instance = {
+          providerId: source.provider,
+          provider: factory({
+            onState: (state) => this._providerState(sourceId, state),
+            onStatus: () => this._pushStatus(),
+            now: this._now,
+          }),
+        }
+        this._instances.set(sourceId, instance)
+      }
+
+      instance.provider.applyConfig(resolveSourceConfig(source))
     })
 
     this._startSweep()
@@ -67,18 +90,26 @@ export class PlaybackManager {
 
   stop() {
     this._stopSweep()
-    this._providers.forEach(provider => provider.stop())
-    // Release every timer before going quiet: no further refresh will arrive to expire them
-    Array.from(this._states.keys()).forEach(id => this._clearState(id))
+    Array.from(this._instances.keys()).forEach(sourceId => this._destroy(sourceId))
     this._pushStatus()
   }
 
   statuses(): PlaybackProviderStatus[] {
-    return Array.from(this._providers.values()).map(provider => provider.status())
+    return Array.from(this._instances.entries())
+      .map(([sourceId, instance]) => ({...instance.provider.status(), id: sourceId}))
   }
 
   stateFor(sourceId: string): PlaybackState | null {
     return this._states.get(sourceId)?.state ?? null
+  }
+
+  private _destroy(sourceId: string) {
+    const instance = this._instances.get(sourceId)
+    if (!instance) return
+    instance.provider.stop()
+    this._instances.delete(sourceId)
+    // Release every timer following it: no further refresh will arrive to expire the state
+    this._clearState(sourceId)
   }
 
   private _providerState(sourceId: string, state: PlaybackState | null) {
@@ -116,11 +147,11 @@ export class PlaybackManager {
   private _sweep() {
     const now = this._now()
 
-    PLAYBACK_PROVIDERS.forEach(meta => {
-      const entry = this._states.get(meta.id)
-      if (!entry) return
-      if (now - entry.refreshedAt <= meta.staleAfterMs) return
-      this._clearState(meta.id)
+    Array.from(this._states.entries()).forEach(([sourceId, entry]) => {
+      const providerId = this._instances.get(sourceId)?.providerId
+      const staleAfter = (providerId ? playbackProviderMeta(providerId)?.staleAfterMs : null) ?? DEFAULT_STALE_AFTER
+      if (now - entry.refreshedAt <= staleAfter) return
+      this._clearState(sourceId)
     })
   }
 

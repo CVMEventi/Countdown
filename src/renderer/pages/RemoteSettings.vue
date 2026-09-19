@@ -157,30 +157,55 @@
         <card class="flex flex-col w-full">
           <p class="text-2xl pb-2">Playback sources</p>
           <p class="text-sm text-zinc-400 pb-2">
-            Mirror the remaining time of the clip a playback system is running. Pick the source per timer in Timers settings.
+            Mirror the remaining time of the clip a playback system is running. Add one source per machine, or per layer
+            of a machine, then pick the source per timer in Timers settings.
           </p>
+
           <div
-            v-for="(provider, index) in PLAYBACK_PROVIDERS"
-            :key="provider.id"
+            v-for="(source, sourceId, index) in playbackSources"
+            :key="sourceId"
             :class="['flex flex-col gap-1', index > 0 ? 'mt-3 pt-3 border-t border-zinc-700' : '']">
-            <p class="uppercase text-sm text-zinc-400">{{ provider.displayName }}</p>
-            <CheckBox
-              v-if="remote.playback?.[provider.id]"
-              :id="`${provider.id}Enabled`"
-              v-model="remote.playback[provider.id].enabled">Enable</CheckBox>
-            <p v-if="playbackStatus(provider.id)" class="text-sm" :class="playbackStatus(provider.id).connected ? 'text-green-400' : 'text-zinc-400'">
-              {{ playbackStatusText(provider.id) }}
+            <div class="flex items-center gap-2">
+              <input
+                @click="($event.target as HTMLInputElement).select()"
+                @focus="($event.target as HTMLInputElement).select()"
+                v-model="source.name"
+                :placeholder="providerName(source.provider)"
+                class="input flex-1 min-w-0">
+              <SButton tiny type="danger" title="Remove source" @click="removeSource(sourceId)">
+                <XMarkIcon class="w-4" />
+              </SButton>
+            </div>
+            <p class="text-xs uppercase text-zinc-400">{{ providerName(source.provider) }}</p>
+            <CheckBox :id="`playback-${sourceId}`" v-model="source.config.enabled">Enable</CheckBox>
+            <p v-if="playbackStatus(sourceId)" class="text-sm" :class="playbackStatus(sourceId).connected ? 'text-green-400' : 'text-zinc-400'">
+              {{ playbackStatusText(sourceId) }}
             </p>
             <component
-              :is="playbackComponents[provider.id]"
-              v-if="playbackComponents[provider.id] && remote.playback?.[provider.id]?.enabled"
-              v-model="remote.playback[provider.id]" />
-            <p v-if="remote.playback?.[provider.id]?.enabled && !timersFollowing(provider.id)" class="text-sm text-amber-400">
-              No timer is following this source yet. Set "Follow playback source" to {{ provider.displayName }} in Timers settings.
+              :is="playbackComponents[source.provider]"
+              v-if="playbackComponents[source.provider] && source.config.enabled"
+              v-model="source.config" />
+            <p v-if="source.config.enabled && !timersFollowing(sourceId)" class="text-sm text-amber-400">
+              No timer is following this source yet. Set "Follow playback source" to {{ source.name || providerName(source.provider) }} in Timers settings.
             </p>
-            <p v-if="provider.id === MILLUMIN_PROVIDER_ID && milluminPortClash" class="text-sm text-amber-400">
+            <p v-if="source.provider === MILLUMIN_PROVIDER_ID && oscPortClash(source)" class="text-sm text-amber-400">
               This is also the OSC remote control port. Give Millumin a different port, or the two will fight over the same packets.
             </p>
+          </div>
+
+          <p v-if="Object.keys(playbackSources).length === 0" class="text-sm italic text-zinc-400 py-2">
+            No sources yet.
+          </p>
+
+          <div class="flex flex-wrap gap-2 mt-3 pt-3 border-t border-zinc-700">
+            <SButton
+              v-for="provider in PLAYBACK_PROVIDERS"
+              :key="provider.id"
+              tiny
+              type="info"
+              @click="addSource(provider.id)">
+              Add {{ provider.displayName }}
+            </SButton>
           </div>
         </card>
       </div>
@@ -198,7 +223,16 @@ import ShareLinkPanel from "@common/components/ShareLinkPanel.vue";
 import WebRtcSessionPanel from "@common/components/WebRtcSessionPanel.vue";
 import {remoteControlPath} from "@common/network.ts";
 import {DEFAULT_WEBRTC_SPA_URL} from "@common/config.ts";
-import {MILLUMIN_PROVIDER_ID, PLAYBACK_PROVIDERS, resolvePlaybackConfig, VMIX_PROVIDER_ID} from "@common/playback.ts";
+import {
+  MILLUMIN_PROVIDER_ID,
+  PLAYBACK_PROVIDERS,
+  PlaybackSource,
+  defaultSourceName,
+  playbackProviderMeta,
+  VMIX_PROVIDER_ID,
+} from "@common/playback.ts";
+import {ulid} from "ulid";
+import {XMarkIcon} from "@heroicons/vue/20/solid";
 import VMixSettingsCard from '../components/playback/VMixSettingsCard.vue'
 import MilluminSettingsCard from '../components/playback/MilluminSettingsCard.vue'
 import TopBar from '../components/TopBar.vue'
@@ -246,38 +280,52 @@ const playbackComponents: {[providerId: string]: unknown} = {
   [MILLUMIN_PROVIDER_ID]: MilluminSettingsCard,
 }
 
-// A stored config can predate a provider, so fill in the missing ones once settings arrive.
-// Done in a watcher rather than during render, which would mutate state mid render.
-watch(() => settingsStore.settings.remote, (value) => {
-  if (!value) return
-  if (!value.playback) value.playback = {}
-  PLAYBACK_PROVIDERS.forEach(provider => {
-    if (value.playback[provider.id]) return
-    value.playback[provider.id] = resolvePlaybackConfig(value.playback, provider.id)
+const playbackSources = computed(() => remote.value.playback ?? {})
+
+function providerName(providerId: string) {
+  return playbackProviderMeta(providerId)?.displayName ?? providerId
+}
+
+function addSource(providerId: string) {
+  const meta = playbackProviderMeta(providerId)
+  if (!meta) return
+  if (!remote.value.playback) remote.value.playback = {}
+
+  remote.value.playback[ulid()] = {
+    name: defaultSourceName(providerId, remote.value.playback),
+    provider: providerId,
+    config: {...meta.defaultConfig},
+  } as PlaybackSource
+}
+
+function removeSource(sourceId: string) {
+  delete remote.value.playback[sourceId]
+  // A timer left pointing at a deleted source would silently never update again
+  Object.values(settingsStore.settings.timers ?? {}).forEach(timer => {
+    if (timer.playbackSource === sourceId) timer.playbackSource = null
   })
-}, {immediate: true})
+}
 
 // UDP sockets here are opened with reuseAddr, so a clash does not always fail loudly: it can
 // split the incoming packets between the two listeners instead
-const milluminPortClash = computed(() => {
-  const millumin = remote.value.playback?.[MILLUMIN_PROVIDER_ID]
-  if (!millumin?.enabled || !remote.value.oscEnabled) return false
-  return Number(millumin.port) === Number(remote.value.oscPort)
-})
+function oscPortClash(source: PlaybackSource) {
+  if (!remote.value.oscEnabled) return false
+  return Number(source.config.port) === Number(remote.value.oscPort)
+}
 
-// Enabling a provider does nothing on its own: a timer has to point at it, which is the easiest
+// Enabling a source does nothing on its own: a timer has to point at it, which is the easiest
 // half of the setup to miss
-function timersFollowing(providerId: string) {
+function timersFollowing(sourceId: string) {
   return Object.values(settingsStore.settings.timers ?? {})
-    .filter(timer => timer.playbackSource === providerId).length
+    .filter(timer => timer.playbackSource === sourceId).length
 }
 
-function playbackStatus(providerId: string) {
-  return playbackStore.statuses[providerId] ?? null
+function playbackStatus(sourceId: string) {
+  return playbackStore.statuses[sourceId] ?? null
 }
 
-function playbackStatusText(providerId: string) {
-  const status = playbackStatus(providerId)
+function playbackStatusText(sourceId: string) {
+  const status = playbackStatus(sourceId)
   if (!status || !status.enabled) return 'Disabled'
   if (status.connected) return status.activeTitle ? `Connected — ${status.activeTitle}` : 'Connected — no clip playing'
   return status.lastError ? `Not connected — ${status.lastError}` : 'Not connected'

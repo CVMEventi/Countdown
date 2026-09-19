@@ -34,7 +34,7 @@ export function getActiveThreshold(
   })
 }
 
-export const CURRENT_CONFIG_VERSION: number = 6
+export const CURRENT_CONFIG_VERSION: number = 7
 
 export const DEFAULT_TIMER_NAME = 'Timer'
 

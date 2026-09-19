@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { MilluminProvider, OscListener } from '../../main/Playback/providers/millumin/MilluminProvider.ts';
+import { MilluminProvider } from '../../main/Playback/providers/millumin/MilluminProvider.ts';
+import { OscListener, OscListenerPool } from '../../main/Playback/providers/millumin/oscListenerPool.ts';
 import { DEFAULT_MILLUMIN_CONFIG, PlaybackState } from '../../common/playback.ts';
 
 class FakeListener implements OscListener {
@@ -45,6 +46,7 @@ describe('MilluminProvider', () => {
   let listeners: FakeListener[];
   let now: number;
   let provider: MilluminProvider;
+  let pool: OscListenerPool;
 
   beforeEach(() => {
     vi.useFakeTimers();
@@ -52,18 +54,20 @@ describe('MilluminProvider', () => {
     listeners = [];
     now = 1000;
 
+    pool = new OscListenerPool((port, onListening) => {
+      const listener = new FakeListener(port);
+      listeners.push(listener);
+      onListening();
+      return listener;
+    });
+
     provider = new MilluminProvider(
       {
         onState: (state) => { states.push(state) },
         onStatus: () => {},
         now: () => now,
       },
-      (port, onListening) => {
-        const listener = new FakeListener(port);
-        listeners.push(listener);
-        onListening();
-        return listener;
-      },
+      pool,
     );
   });
 
@@ -176,15 +180,73 @@ describe('MilluminProvider', () => {
     expect(provider.status().lastError).toBe('bind EADDRINUSE 0.0.0.0:5001');
   });
 
-  it('surfaces a listener that throws on construction', () => {
+  it('surfaces a listener that throws on construction', async () => {
+    const throwingPool = new OscListenerPool(() => { throw new Error('no socket for you') });
     const throwing = new MilluminProvider(
       {onState: () => {}, onStatus: () => {}, now: () => now},
-      () => { throw new Error('no socket for you') },
+      throwingPool,
     );
     throwing.applyConfig({...DEFAULT_MILLUMIN_CONFIG, enabled: true});
+    // The pool reports a failed bind on the microtask queue, so every subscriber hears it
+    await Promise.resolve();
 
     expect(throwing.status().lastError).toBe('no socket for you');
     expect(throwing.status().connected).toBe(false);
+  });
+
+  it('shares one socket with another source on the same port', () => {
+    enable({port: 5001, layer: 'Main'});
+
+    const second = new MilluminProvider(
+      {onState: () => {}, onStatus: () => {}, now: () => now},
+      pool,
+    );
+    second.applyConfig({...DEFAULT_MILLUMIN_CONFIG, enabled: true, port: 5001, layer: 'Sponsor'});
+
+    // Millumin sends everything to one port, so a second bind would split the packets
+    expect(listeners).toHaveLength(1);
+    expect(pool.subscriberCount(5001)).toBe(2);
+
+    second.stop();
+    expect(listeners[0].closed).toBe(0);
+    expect(pool.subscriberCount(5001)).toBe(1);
+  });
+
+  it('closes the socket once the last source on the port lets go', () => {
+    enable({port: 5001, layer: 'Main'});
+    const second = new MilluminProvider(
+      {onState: () => {}, onStatus: () => {}, now: () => now},
+      pool,
+    );
+    second.applyConfig({...DEFAULT_MILLUMIN_CONFIG, enabled: true, port: 5001, layer: 'Sponsor'});
+
+    second.stop();
+    provider.stop();
+
+    expect(listeners[0].closed).toBe(1);
+    expect(pool.subscriberCount(5001)).toBe(0);
+  });
+
+  it('feeds both sources on a port, each filtered to its own layer', () => {
+    enable({port: 5001, layer: 'Main'});
+
+    const otherStates: (PlaybackState | null)[] = [];
+    const second = new MilluminProvider(
+      {onState: (s) => otherStates.push(s), onStatus: () => {}, now: () => now},
+      pool,
+    );
+    second.applyConfig({...DEFAULT_MILLUMIN_CONFIG, enabled: true, port: 5001, layer: 'Sponsor'});
+
+    listeners[0].send('/millumin/layer:Main/mediaStarted', 0, 'Package.mov', 60);
+    listeners[0].send('/millumin/layer:Main/media/time', 15, 60);
+    listeners[0].send('/millumin/layer:Sponsor/mediaStarted', 0, 'Advert.mov', 30);
+    listeners[0].send('/millumin/layer:Sponsor/media/time', 10, 30);
+    vi.advanceTimersByTime(250);
+
+    expect(lastState()).toMatchObject({title: 'Package.mov', remainingSeconds: 45});
+    expect(otherStates[otherStates.length - 1]).toMatchObject({title: 'Advert.mov', remainingSeconds: 20});
+
+    second.stop();
   });
 
   it('rebinds when the port changes', () => {

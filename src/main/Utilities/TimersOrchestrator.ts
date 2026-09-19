@@ -4,7 +4,7 @@ import {
   WindowSettings
 } from "../../common/config.ts";
 import {TimerEngine, TimerEngineConstructorOptions, TimerEngineOptions} from "../TimerEngine.ts";
-import type {PlaybackState} from "../../common/playback.ts";
+import {playbackSourceLabel, type PlaybackState} from "../../common/playback.ts";
 import BrowserWinHandler from "./BrowserWinHandler.ts";
 import createCountdownWindow from "../countdownWindow.ts";
 import {BrowserWindow, powerMonitor, screen} from "electron";
@@ -594,6 +594,7 @@ export class TimersOrchestrator {
 
     timer.engine.setSourceOverride(state === null ? null : {
       sourceId,
+      sourceName: playbackSourceLabel(sourceId, this.app.config.settings.remote?.playback),
       remainingSeconds: state.remainingSeconds,
       totalSeconds: state.totalSeconds,
       isRunning: state.isRunning,

@@ -537,7 +537,7 @@ describe('TimerEngine', () => {
     });
   });
   describe('playback source override', () => {
-    const override = {sourceId: 'vmix', remainingSeconds: 45, totalSeconds: 60, isRunning: true};
+    const override = {sourceId: 'src1', sourceName: 'vMix', remainingSeconds: 45, totalSeconds: 60, isRunning: true};
 
     function lastUpdate(onUpdate: ReturnType<typeof vi.fn>) {
       return onUpdate.mock.calls[onUpdate.mock.calls.length - 1][0];
@@ -554,7 +554,7 @@ describe('TimerEngine', () => {
       expect(update.currentSeconds).toBe(45);
       expect(update.countSeconds).toBe(45);
       expect(update.secondsSetOnCurrentTimer).toBe(60);
-      expect(update.source).toBe('vmix');
+      expect(update.source).toBe('vMix');
     });
 
     it('leaves the operator Set box on the timer value', () => {
@@ -650,10 +650,10 @@ describe('TimerEngine', () => {
       ];
       const { engine, onUpdate } = makeEngine({colorThresholds: thresholds});
 
-      engine.setSourceOverride({sourceId: 'vmix', remainingSeconds: 30, totalSeconds: 60, isRunning: true});
+      engine.setSourceOverride({sourceId: 'src1', sourceName: 'vMix', remainingSeconds: 30, totalSeconds: 60, isRunning: true});
       expect(lastUpdate(onUpdate).isExpiring).toBe(false);
 
-      engine.setSourceOverride({sourceId: 'vmix', remainingSeconds: 5, totalSeconds: 60, isRunning: true});
+      engine.setSourceOverride({sourceId: 'src1', sourceName: 'vMix', remainingSeconds: 5, totalSeconds: 60, isRunning: true});
       expect(lastUpdate(onUpdate).isExpiring).toBe(true);
     });
 
@@ -672,7 +672,7 @@ describe('TimerEngine', () => {
       const { engine } = makeEngine();
       // Half speed timer: clip seconds are real seconds and must not be scaled with it
       engine.setTimerInterval(500);
-      engine.setSourceOverride({sourceId: 'vmix', remainingSeconds: 120, totalSeconds: 120, isRunning: true});
+      engine.setSourceOverride({sourceId: 'src1', sourceName: 'vMix', remainingSeconds: 120, totalSeconds: 120, isRunning: true});
 
       const endsAt = engine.endsAtEpochMs();
       expect(Math.round((endsAt - Date.now()) / 1000)).toBe(120);

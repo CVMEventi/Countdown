@@ -101,7 +101,7 @@ export class VMixProvider implements PlaybackProvider {
 
     try {
       const state = await this._fetchState()
-      const playback = selectPlaybackState(state, {followLooping: this._config.followLooping})
+      const playback = selectPlaybackState(state, {followLooping: this._config.followLooping, input: this._config.input})
 
       this._connected = true
       this._lastError = null
