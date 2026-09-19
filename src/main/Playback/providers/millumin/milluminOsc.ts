@@ -31,30 +31,6 @@ export interface MilluminAddress {
   path: string
 }
 
-import type {OscMessage} from "../../osc/OscSocketPool.ts";
-
-/**
- * Flattens an OSC bundle into its messages.
- *
- * node-osc reports a bundle on its own event rather than as messages, and bundles can nest, so a
- * listener that only handles 'message' silently drops everything an app sends bundled.
- */
-export function flattenOscBundle(bundle: unknown): OscMessage[] {
-  const elements = (bundle as {elements?: unknown[]})?.elements
-  if (!Array.isArray(elements)) return []
-
-  const messages: OscMessage[] = []
-  elements.forEach(element => {
-    if (Array.isArray(element) && typeof element[0] === 'string') {
-      messages.push(element as OscMessage)
-      return
-    }
-    messages.push(...flattenOscBundle(element))
-  })
-
-  return messages
-}
-
 export interface MilluminStateOptions {
   layer: string
   playingTimeoutMs: number

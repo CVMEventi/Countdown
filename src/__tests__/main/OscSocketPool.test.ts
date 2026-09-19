@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { OscListener, OscSocketPool } from '../../main/Playback/osc/OscSocketPool.ts';
+import { flattenOscBundle } from '../../main/Playback/osc/OscPushProvider.ts';
 
 class FakeListener implements OscListener {
   closed = 0;
@@ -147,5 +148,23 @@ describe('OscSocketPool', () => {
     const late = vi.fn();
     pool.subscribe(5001).onError(late);
     expect(late).toHaveBeenCalledWith(new Error('EADDRINUSE'));
+  });
+});
+
+describe('flattenOscBundle', () => {
+  it('pulls the messages out of a bundle', () => {
+    expect(flattenOscBundle({timetag: [0, 0], elements: [['/a', 1], ['/b', 2]]}))
+      .toEqual([['/a', 1], ['/b', 2]]);
+  });
+
+  it('walks nested bundles', () => {
+    const nested = {timetag: [0, 0], elements: [['/a', 1], {timetag: [0, 0], elements: [['/b', 2]]}]};
+    expect(flattenOscBundle(nested)).toEqual([['/a', 1], ['/b', 2]]);
+  });
+
+  it('returns nothing for a plain message or junk', () => {
+    expect(flattenOscBundle(['/a', 1])).toEqual([]);
+    expect(flattenOscBundle(null)).toEqual([]);
+    expect(flattenOscBundle({})).toEqual([]);
   });
 });

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { flattenOscBundle, MilluminTracker, parseMilluminAddress } from '../../main/Playback/providers/millumin/milluminOsc.ts';
+import { MilluminTracker, parseMilluminAddress } from '../../main/Playback/providers/millumin/milluminOsc.ts';
 
 const OPTIONS = {layer: '', playingTimeoutMs: 2000};
 
@@ -17,24 +17,6 @@ function tracker() {
       t.handleMessage(`/millumin/layer:${layer}/mediaStopped`, [0, 'x'], now),
   };
 }
-
-describe('flattenOscBundle', () => {
-  it('pulls the messages out of a bundle', () => {
-    expect(flattenOscBundle({timetag: [0, 0], elements: [['/a', 1], ['/b', 2]]}))
-      .toEqual([['/a', 1], ['/b', 2]]);
-  });
-
-  it('walks nested bundles', () => {
-    const nested = {timetag: [0, 0], elements: [['/a', 1], {timetag: [0, 0], elements: [['/b', 2]]}]};
-    expect(flattenOscBundle(nested)).toEqual([['/a', 1], ['/b', 2]]);
-  });
-
-  it('returns nothing for a plain message or junk', () => {
-    expect(flattenOscBundle(['/a', 1])).toEqual([]);
-    expect(flattenOscBundle(null)).toEqual([]);
-    expect(flattenOscBundle({})).toEqual([]);
-  });
-});
 
 describe('parseMilluminAddress', () => {
   it('splits a layer address', () => {

@@ -2,227 +2,87 @@ import {
   DEFAULT_MILLUMIN_CONFIG,
   MILLUMIN_PROVIDER_ID,
   MilluminProviderConfig,
-  PlaybackProviderConfig,
-  PlaybackProviderStatus,
   PlaybackState,
 } from "@common/playback.ts";
-import type {PlaybackProvider, PlaybackProviderContext} from "../../PlaybackProvider.ts";
-import {flattenOscBundle, MilluminTracker, parseMilluminAddress} from "./milluminOsc.ts";
-import {oscSocketPool, OscMessage, OscSocketPool, OscSubscription} from "../../osc/OscSocketPool.ts";
-
-const HEARTBEAT_INTERVAL = 250
-// media/time arrives many times a second, so the log reports it on a timer instead of per packet
-const TIME_LOG_INTERVAL = 2000
+import type {PlaybackProviderContext} from "../../PlaybackProvider.ts";
+import {oscSocketPool, OscSocketPool} from "../../osc/OscSocketPool.ts";
+import {OscPushProvider} from "../../osc/OscPushProvider.ts";
+import {MilluminTracker, parseMilluminAddress} from "./milluminOsc.ts";
 
 /**
  * Mirrors the layer Millumin is playing, over its OSC feedback.
  *
  * Read only, and push rather than poll: Millumin sends to us, so there is nothing to request. The
- * heartbeat republishes the current state so a paused clip is not expired by the manager, which
- * de-duplicates the repeats away.
- *
- * The socket comes from a pool, so several sources watching different layers of the same Millumin
+ * socket comes from a pool, so several sources watching different layers of the same Millumin
  * share one listener rather than fighting over the port.
  */
-export class MilluminProvider implements PlaybackProvider {
+export class MilluminProvider extends OscPushProvider<MilluminProviderConfig> {
   readonly id = MILLUMIN_PROVIDER_ID
 
-  private _context: PlaybackProviderContext
-  private _pool: OscSocketPool
-  private _config: MilluminProviderConfig = {...DEFAULT_MILLUMIN_CONFIG}
-  private _configKey: string | null = null
   private _tracker = new MilluminTracker()
-  private _subscription: OscSubscription = null
-  private _heartbeat: NodeJS.Timeout = null
-  private _running = false
-  private _listening = false
-  private _lastError: string | null = null
-  private _activeTitle: string | null = null
-  private _label = 'Millumin'
-
-  // Diagnostics
-  private _packetCount = 0
-  private _seenAddresses = new Set<string>()
-  private _lastTimeLogAt = 0
-  private _lastLoggedState: string | null = null
 
   constructor(context: PlaybackProviderContext, pool: OscSocketPool = oscSocketPool) {
-    this._context = context
-    this._pool = pool
+    super(context, pool, DEFAULT_MILLUMIN_CONFIG)
   }
 
-  applyConfig(config: PlaybackProviderConfig) {
-    const next = {...DEFAULT_MILLUMIN_CONFIG, ...config} as MilluminProviderConfig
-    const key = [next.port, next.layer, next.playingTimeout, next.logMessages].join('|')
-
-    this._config = next
-    this._label = next.layer ? `Millumin/${next.layer}` : 'Millumin'
-
-    if (!next.enabled) {
-      if (this._running) {
-        this._log('disabled, releasing the timers')
-        this.stop()
-      }
-      this._context.onStatus()
-      return
-    }
-
-    // Edge triggered: an unrelated settings save must not drop a bound socket
-    if (this._running && key === this._configKey) return
-    if (this._running) this.stop()
-
-    this._configKey = key
-    this._running = true
-    this._lastError = null
-    this._start()
-    this._context.onStatus()
+  protected defaults() {
+    return DEFAULT_MILLUMIN_CONFIG
   }
 
-  stop() {
-    if (this._heartbeat) {
-      clearInterval(this._heartbeat)
-      this._heartbeat = null
-    }
-    this._subscription?.release()
-    this._subscription = null
-    this._tracker.clear()
-    this._running = false
-    this._listening = false
-    this._activeTitle = null
-    this._configKey = null
-    this._packetCount = 0
-    this._seenAddresses.clear()
-    this._lastLoggedState = null
+  protected label() {
+    return this._config.layer ? `Millumin/${this._config.layer}` : 'Millumin'
   }
 
-  status(): PlaybackProviderStatus {
-    return {
-      id: this.id,
-      enabled: this._config.enabled,
-      connected: this._listening,
-      lastError: this._lastError,
-      activeTitle: this._activeTitle,
-    }
+  protected identity(config: MilluminProviderConfig) {
+    return [config.port, config.layer, config.playingTimeout, config.logMessages].join('|')
   }
 
-  private _log(message: string, ...rest: unknown[]) {
-    console.log(`[${this._label}] ${message}`, ...rest)
+  protected listenPort(config: MilluminProviderConfig) {
+    return Number(config.port)
   }
 
-  private _start() {
-    const port = Number(this._config.port)
-    const subscription = this._pool.subscribe(port)
-    this._subscription = subscription
-
-    subscription.onListening(() => {
-      this._listening = true
-      this._lastError = null
-      this._log(`listening on 0.0.0.0:${port} — point Millumin's OSC feedback here (Device manager, OSC tab, "API feedback")`)
-      this._context.onStatus()
-    })
-
-    subscription.onMessage((message) => this._receive(message))
-
-    // Millumin may pack its feedback into bundles, which node-osc reports on its own event. A
-    // listener that only takes 'message' would drop every one of them without a word.
-    subscription.onBundle((bundle) => {
-      flattenOscBundle(bundle).forEach(message => this._receive(message, true))
-    })
-
-    subscription.onError((error) => {
-      // Most often the port is already taken, which the operator has to see to fix
-      this._listening = false
-      this._lastError = error instanceof Error ? error.message : String(error)
-      this._log(`socket error: ${this._lastError}`)
-      this._context.onStatus()
-    })
-
-    this._heartbeat = setInterval(this._publish.bind(this), HEARTBEAT_INTERVAL)
+  protected listeningHint(port: number) {
+    return `listening on 0.0.0.0:${port} — point Millumin's OSC feedback here (Device manager, OSC tab, "API feedback")`
   }
 
-  private _receive(message: OscMessage, fromBundle = false) {
-    const [address, ...args] = message
-    const now = this._context.now()
+  protected verboseLogging() {
+    return this._config.logMessages === true
+  }
 
-    this._packetCount += 1
-    if (this._packetCount === 1) {
-      this._log(`first OSC packet received${fromBundle ? ' (inside a bundle)' : ''}`)
-    }
+  protected isRepeating(address: string) {
+    return address.endsWith('/media/time')
+  }
 
-    this._logAddress(address, args, now, fromBundle)
+  protected describeAddress(address: string) {
+    const parsed = parseMilluminAddress(address)
+    return parsed ? `(layer "${parsed.layer}", ${parsed.path})` : '(ignored: not a layer media address)'
+  }
+
+  protected handleMessage(address: string, args: unknown[], now: number) {
     this._tracker.handleMessage(address, args, now)
   }
 
-  private _logAddress(address: string, args: unknown[], now: number, fromBundle: boolean) {
-    const suffix = fromBundle ? ' (bundled)' : ''
-
-    if (this._config.logMessages) {
-      this._log(`<- ${address}${suffix}`, args)
-      return
-    }
-
-    // Every distinct address once, so an unexpected shape shows up without flooding the console
-    if (!this._seenAddresses.has(address)) {
-      this._seenAddresses.add(address)
-      const parsed = parseMilluminAddress(address)
-      this._log(`<- ${address}${suffix}`, args, parsed ? `(layer "${parsed.layer}", ${parsed.path})` : '(ignored: not a layer media address)')
-      return
-    }
-
-    // …then the repeating time messages on a slow timer, so the values stay visible
-    if (address.endsWith('/media/time') && now - this._lastTimeLogAt >= TIME_LOG_INTERVAL) {
-      this._lastTimeLogAt = now
-      this._log(`<- ${address}${suffix}`, args)
-    }
-  }
-
-  private _publish() {
-    if (!this._running) return
-
-    const state = this._tracker.state(this._context.now(), {
+  protected computeState(now: number): PlaybackState | null {
+    return this._tracker.state(now, {
       layer: this._config.layer,
       playingTimeoutMs: Number(this._config.playingTimeout) || DEFAULT_MILLUMIN_CONFIG.playingTimeout,
     })
-
-    this._logState(state)
-
-    const title = state?.title ?? null
-    if (title !== this._activeTitle) {
-      this._activeTitle = title
-      this._context.onStatus()
-    }
-
-    this._context.onState(state)
   }
 
-  // Only transitions, so the console shows takeovers and releases rather than a stream
-  private _logState(state: PlaybackState | null) {
-    const key = state ? `${state.clipId}|${state.isRunning}` : 'none'
-    if (key === this._lastLoggedState) return
-    this._lastLoggedState = key
+  protected resetProtocol() {
+    this._tracker.clear()
+  }
 
-    if (state) {
-      this._log(`driving timers from "${state.title ?? 'untitled'}" — ${state.remainingSeconds}s left of ${state.totalSeconds}s, ${state.isRunning ? 'running' : 'paused'}`)
-      return
-    }
-
-    if (this._packetCount === 0) {
-      this._log('nothing to mirror: no OSC packets have arrived yet')
-      return
-    }
-
+  protected idleDetail() {
     const layers = this._tracker.snapshot()
-    if (layers.length === 0) {
-      this._log(`nothing to mirror: no layer is playing (${this._packetCount} packets seen, addresses: ${Array.from(this._seenAddresses).join(', ') || 'none'})`)
-      return
-    }
+    if (layers.length === 0) return null
 
-    this._log('nothing to mirror: no layer qualifies', layers.map(layer => ({
+    return layers.map(layer => ({
       layer: layer.layer,
       name: layer.name,
       duration: layer.duration,
       elapsed: layer.elapsed,
       paused: layer.paused,
-    })))
+    }))
   }
 }

@@ -148,12 +148,39 @@ export const QLAB_PROVIDER_META: PlaybackProviderMeta = {
   staleAfterMs: 2000,
 }
 
+export const OSCPOINT_PROVIDER_ID = 'oscpoint'
+
+export interface OscPointProviderConfig extends PlaybackProviderConfig {
+  // OSCPoint pushes to us: set this machine and port as the remote host in PowerPoint's OSCPoint
+  // ribbon tab. One add-in reports one deck, so a second presentation machine is a second source.
+  port: number
+  // Media messages repeat every 500ms while playing. Silence this long means OSCPoint went away.
+  playingTimeout: number
+  logMessages: boolean
+}
+
+export const DEFAULT_OSCPOINT_CONFIG: OscPointProviderConfig = {
+  enabled: true,
+  // OSCPoint's own default feedback port
+  port: 35550,
+  playingTimeout: 2000,
+  logMessages: false,
+}
+
+export const OSCPOINT_PROVIDER_META: PlaybackProviderMeta = {
+  id: OSCPOINT_PROVIDER_ID,
+  displayName: 'OSCPoint',
+  defaultConfig: DEFAULT_OSCPOINT_CONFIG,
+  staleAfterMs: 1000,
+}
+
 // Adding a provider means adding its meta here, a factory in main/Playback/providers, and a
 // settings component in the renderer. Nothing else in the app needs to know about it.
 export const PLAYBACK_PROVIDERS: PlaybackProviderMeta[] = [
   VMIX_PROVIDER_META,
   MILLUMIN_PROVIDER_META,
   QLAB_PROVIDER_META,
+  OSCPOINT_PROVIDER_META,
 ]
 
 export function playbackProviderMeta(id: string): PlaybackProviderMeta | null {

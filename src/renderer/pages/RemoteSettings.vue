@@ -188,8 +188,8 @@
             <p v-if="source.config.enabled && !timersFollowing(sourceId)" class="text-sm text-amber-400">
               No timer is following this source yet. Set "Follow playback source" to {{ source.name || providerName(source.provider) }} in Timers settings.
             </p>
-            <p v-if="source.provider === MILLUMIN_PROVIDER_ID && oscPortClash(source)" class="text-sm text-amber-400">
-              This is also the OSC remote control port. Give Millumin a different port, or the two will fight over the same packets.
+            <p v-if="listensLocally(source) && oscPortClash(source)" class="text-sm text-amber-400">
+              This is also the OSC remote control port. Give this source a different port, or the two will fight over the same packets.
             </p>
           </div>
 
@@ -225,6 +225,7 @@ import {remoteControlPath} from "@common/network.ts";
 import {DEFAULT_WEBRTC_SPA_URL} from "@common/config.ts";
 import {
   MILLUMIN_PROVIDER_ID,
+  OSCPOINT_PROVIDER_ID,
   PLAYBACK_PROVIDERS,
   QLAB_PROVIDER_ID,
   PlaybackSource,
@@ -237,6 +238,7 @@ import {XMarkIcon} from "@heroicons/vue/20/solid";
 import VMixSettingsCard from '../components/playback/VMixSettingsCard.vue'
 import MilluminSettingsCard from '../components/playback/MilluminSettingsCard.vue'
 import QLabSettingsCard from '../components/playback/QLabSettingsCard.vue'
+import OscPointSettingsCard from '../components/playback/OscPointSettingsCard.vue'
 import TopBar from '../components/TopBar.vue'
 import BaseContainer from '../components/BaseContainer.vue'
 import {useSettingsStore} from '../stores/settings.ts'
@@ -281,6 +283,7 @@ const playbackComponents: {[providerId: string]: unknown} = {
   [VMIX_PROVIDER_ID]: VMixSettingsCard,
   [MILLUMIN_PROVIDER_ID]: MilluminSettingsCard,
   [QLAB_PROVIDER_ID]: QLabSettingsCard,
+  [OSCPOINT_PROVIDER_ID]: OscPointSettingsCard,
 }
 
 const playbackSources = computed(() => remote.value.playback ?? {})
@@ -307,6 +310,11 @@ function removeSource(sourceId: string) {
   Object.values(settingsStore.settings.timers ?? {}).forEach(timer => {
     if (timer.playbackSource === sourceId) timer.playbackSource = null
   })
+}
+
+// Only the providers that bind a local port can collide with the OSC remote
+function listensLocally(source: PlaybackSource) {
+  return source.provider === MILLUMIN_PROVIDER_ID || source.provider === OSCPOINT_PROVIDER_ID
 }
 
 // UDP sockets here are opened with reuseAddr, so a clash does not always fail loudly: it can
