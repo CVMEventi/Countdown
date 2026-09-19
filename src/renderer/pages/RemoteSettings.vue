@@ -154,13 +154,36 @@
             :disabled="settingsStore.settings.remote.oscEnabled"
             class="input w-full disabled:opacity-40 disabled:cursor-not-allowed">
         </card>
+        <card class="flex flex-col w-full">
+          <p class="text-2xl pb-2">Playback sources</p>
+          <p class="text-sm text-zinc-400 pb-2">
+            Mirror the remaining time of the clip a playback system is running. Pick the source per timer in Timers settings.
+          </p>
+          <div
+            v-for="(provider, index) in PLAYBACK_PROVIDERS"
+            :key="provider.id"
+            :class="['flex flex-col gap-1', index > 0 ? 'mt-3 pt-3 border-t border-zinc-700' : '']">
+            <p class="uppercase text-sm text-zinc-400">{{ provider.displayName }}</p>
+            <CheckBox
+              v-if="remote.playback?.[provider.id]"
+              :id="`${provider.id}Enabled`"
+              v-model="remote.playback[provider.id].enabled">Enable</CheckBox>
+            <p v-if="playbackStatus(provider.id)" class="text-sm" :class="playbackStatus(provider.id).connected ? 'text-green-400' : 'text-zinc-400'">
+              {{ playbackStatusText(provider.id) }}
+            </p>
+            <component
+              :is="playbackComponents[provider.id]"
+              v-if="playbackComponents[provider.id] && remote.playback?.[provider.id]?.enabled"
+              v-model="remote.playback[provider.id]" />
+          </div>
+        </card>
       </div>
     </div>
   </BaseContainer>
 </template>
 
 <script lang="ts" setup>
-import {computed, ref} from "vue";
+import {computed, ref, watch} from "vue";
 import Card from "@common/components/Card.vue";
 import CheckBox from "@common/components/CheckBox.vue";
 const { api } = window
@@ -169,11 +192,14 @@ import ShareLinkPanel from "@common/components/ShareLinkPanel.vue";
 import WebRtcSessionPanel from "@common/components/WebRtcSessionPanel.vue";
 import {remoteControlPath} from "@common/network.ts";
 import {DEFAULT_WEBRTC_SPA_URL} from "@common/config.ts";
+import {PLAYBACK_PROVIDERS, resolvePlaybackConfig, VMIX_PROVIDER_ID} from "@common/playback.ts";
+import VMixSettingsCard from '../components/playback/VMixSettingsCard.vue'
 import TopBar from '../components/TopBar.vue'
 import BaseContainer from '../components/BaseContainer.vue'
 import {useSettingsStore} from '../stores/settings.ts'
 import {useWebServerStore} from '../stores/webServer.ts'
 import {useWebRtcStore} from '../stores/webRtc.ts'
+import {usePlaybackStore} from '../stores/playback.ts'
 import {useRemoteShare} from '../remoteShare.ts'
 
 defineOptions({
@@ -205,6 +231,34 @@ let httpToggleText = computed(() => isRunning.value ? "Restart" : "Start");
 const remote = computed(() => settingsStore.settings.remote);
 
 const webRtcStore = useWebRtcStore();
+
+const playbackStore = usePlaybackStore();
+
+const playbackComponents: {[providerId: string]: unknown} = {
+  [VMIX_PROVIDER_ID]: VMixSettingsCard,
+}
+
+// A stored config can predate a provider, so fill in the missing ones once settings arrive.
+// Done in a watcher rather than during render, which would mutate state mid render.
+watch(() => settingsStore.settings.remote, (value) => {
+  if (!value) return
+  if (!value.playback) value.playback = {}
+  PLAYBACK_PROVIDERS.forEach(provider => {
+    if (value.playback[provider.id]) return
+    value.playback[provider.id] = resolvePlaybackConfig(value.playback, provider.id)
+  })
+}, {immediate: true})
+
+function playbackStatus(providerId: string) {
+  return playbackStore.statuses[providerId] ?? null
+}
+
+function playbackStatusText(providerId: string) {
+  const status = playbackStatus(providerId)
+  if (!status || !status.enabled) return 'Disabled'
+  if (status.connected) return status.activeTitle ? `Connected — ${status.activeTitle}` : 'Connected — no clip playing'
+  return status.lastError ? `Not connected — ${status.lastError}` : 'Not connected'
+}
 
 const remoteShare = useRemoteShare();
 

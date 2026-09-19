@@ -8,6 +8,8 @@ import { MigrateToColorThresholds } from '../../main/Migrations/MigrateToColorTh
 import { AddWebRtcRemoteSettings } from '../../main/Migrations/AddWebRtcRemoteSettings.ts';
 import { SetDefaultWebRtcSpaUrl } from '../../main/Migrations/SetDefaultWebRtcSpaUrl.ts';
 import { DEFAULT_WEBRTC_SPA_URL } from '../../common/config.ts';
+import { AddPlaybackSettings } from '../../main/Migrations/AddPlaybackSettings.ts';
+import { DEFAULT_PLAYBACK_SETTINGS, VMIX_PROVIDER_ID } from '../../common/playback.ts';
 import { ContentAtReset } from '../../common/config.ts';
 
 // ─────────────────────────────────────────────────────────────
@@ -305,6 +307,60 @@ describe('MigrateToColorThresholds', () => {
 });
 
 // ─────────────────────────────────────────────────────────────
+// AddPlaybackSettings
+// ─────────────────────────────────────────────────────────────
+describe('AddPlaybackSettings', () => {
+  const migration = new AddPlaybackSettings();
+
+  function migrate(settings: Record<string, unknown>, version = 5) {
+    return migration.migrate({version, settings}) as Record<string, unknown>;
+  }
+
+  it('returns config unchanged when already at version 6', () => {
+    const config = {version: 6, settings: {remote: {}, timers: {}}};
+    expect(migration.migrate(config)).toBe(config);
+  });
+
+  it('bumps the version to 6', () => {
+    expect(migrate({remote: {}, timers: {}}).version).toBe(6);
+  });
+
+  it('adds the playback defaults to remote', () => {
+    const result = migrate({remote: {}, timers: {}});
+    const remote = (result.settings as Record<string, unknown>).remote as Record<string, unknown>;
+    expect(remote.playback).toEqual(DEFAULT_PLAYBACK_SETTINGS);
+  });
+
+  it('keeps existing remote settings and stored provider config', () => {
+    const result = migrate({
+      remote: {oscPort: 9999, playback: {[VMIX_PROVIDER_ID]: {enabled: true, host: '10.0.0.5'}}},
+      timers: {},
+    });
+    const remote = (result.settings as Record<string, unknown>).remote as Record<string, unknown>;
+    const playback = remote.playback as Record<string, Record<string, unknown>>;
+
+    expect(remote.oscPort).toBe(9999);
+    expect(playback[VMIX_PROVIDER_ID]).toEqual({enabled: true, host: '10.0.0.5'});
+  });
+
+  it('defaults playbackSource to null on every timer', () => {
+    const result = migrate({remote: {}, timers: {a: {name: 'A'}, b: {name: 'B'}}});
+    const timers = (result.settings as Record<string, unknown>).timers as Record<string, Record<string, unknown>>;
+
+    expect(timers.a.playbackSource).toBeNull();
+    expect(timers.b.playbackSource).toBeNull();
+    expect(timers.a.name).toBe('A');
+  });
+
+  it('does not overwrite a timer that already has a playback source', () => {
+    const result = migrate({remote: {}, timers: {a: {playbackSource: VMIX_PROVIDER_ID}}});
+    const timers = (result.settings as Record<string, unknown>).timers as Record<string, Record<string, unknown>>;
+
+    expect(timers.a.playbackSource).toBe(VMIX_PROVIDER_ID);
+  });
+});
+
+// ─────────────────────────────────────────────────────────────
 // applyMigrations — integration
 // ─────────────────────────────────────────────────────────────
 // ─────────────────────────────────────────────────────────────
@@ -486,8 +542,8 @@ describe('applyMigrations', () => {
 
     const result = applyMigrations(oldConfig) as Record<string, unknown>;
 
-    // Version should be bumped to 5 by SetDefaultWebRtcSpaUrl
-    expect(result.version).toBe(5);
+    // Version should be bumped to 6 by AddPlaybackSettings
+    expect(result.version).toBe(6);
 
     const settings = result.settings as Record<string, unknown>;
 
@@ -508,13 +564,13 @@ describe('applyMigrations', () => {
     expect(Array.isArray(colors.thresholds)).toBe(true);
   });
 
-  it('is idempotent on a fully migrated config (version 5)', () => {
+  it('is idempotent on a fully migrated config (version 6)', () => {
     const migrated = {
-      version: 5,
+      version: 6,
       settings: {
         timers: {},
         presets: [] as number[],
-        remote: {},
+        remote: {playback: DEFAULT_PLAYBACK_SETTINGS},
         setWindowAlwaysOnTop: false,
         closeAction: 'ASK',
         startHidden: false,
@@ -540,7 +596,7 @@ describe('applyMigrations', () => {
     const result = applyMigrations(migrated) as Record<string, unknown>;
     const remote = (result.settings as Record<string, unknown>).remote as Record<string, unknown>;
 
-    expect(result.version).toBe(5);
+    expect(result.version).toBe(6);
     expect(remote.webrtcEnabled).toBe(false);
     expect(remote.webServerPort).toBe(7000);
   });

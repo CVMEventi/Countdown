@@ -52,6 +52,8 @@ interface API {
   webrtcRotateCode(): Promise<import('../src/common/webrtcStatus.ts').WebRtcStatus | null>
   webrtcRevoke(clientId: string): Promise<void>
   onWebrtcUpdate(callback: (event: any, status: import('../src/common/webrtcStatus.ts').WebRtcStatus) => void): any
+  playbackStatus(): Promise<import('../src/common/playback.ts').PlaybackProviderStatus[]>
+  onPlaybackUpdate(callback: (event: any, statuses: import('../src/common/playback.ts').PlaybackProviderStatus[]) => void): any
 }
 
 interface WebRtcHostAPI {

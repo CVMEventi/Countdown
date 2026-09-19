@@ -10,6 +10,17 @@ import {
 import {ColorThreshold, DEFAULT_SET_TIME_LIVE, DEFAULT_STOP_TIMER_AT_ZERO, getActiveThreshold} from "../common/config.ts";
 dayjs.extend(duration);
 
+/**
+ * A playback source painted over the timer. The timer's own clock keeps running underneath and is
+ * never touched, so clearing the override reveals it exactly where it would have been.
+ */
+export interface TimerSourceOverride {
+  sourceId: string
+  remainingSeconds: number
+  totalSeconds: number
+  isRunning: boolean
+}
+
 export interface TimerEngineOptions {
   setTimeLive?: boolean
   stopTimerAtZero?: boolean
@@ -33,6 +44,7 @@ export class TimerEngine {
   private _timer: Timer;
   private _currentInterval = 1000;
   private _message: string | null = null;
+  private _sourceOverride: TimerSourceOverride | null = null;
 
   options: TimerEngineOptions = {
     stopTimerAtZero: DEFAULT_STOP_TIMER_AT_ZERO,
@@ -97,13 +109,91 @@ export class TimerEngine {
   }
 
   endsAt() {
-    if (this.countSeconds() <= 0) return null;
-    return dayjs().add(this._currentSeconds / 1000 * this._currentInterval, 's').format('HH:mm');
+    return this._displayEndsAt()?.format('HH:mm') ?? null;
   }
 
   endsAtEpochMs(): number | null {
+    return this._displayEndsAt()?.valueOf() ?? null;
+  }
+
+  /**
+   * Paints a playback source over this timer, or clears it with null.
+   *
+   * Nothing here touches the underlying Timer: the manual countdown keeps running the whole time
+   * an override is displayed, so clearing one reveals it already advanced.
+   */
+  setSourceOverride(override: TimerSourceOverride | null) {
+    const changed = !this._sourceOverrideEquals(this._sourceOverride, override);
+    this._sourceOverride = override;
+    if (!changed) return;
+
+    this._sendUpdate();
+    this._sendWebSocketUpdate();
+  }
+
+  hasSourceOverride() {
+    return this._sourceOverride !== null;
+  }
+
+  private _sourceOverrideEquals(a: TimerSourceOverride | null, b: TimerSourceOverride | null) {
+    if (a === null || b === null) return a === b;
+    return a.sourceId === b.sourceId
+      && a.remainingSeconds === b.remainingSeconds
+      && a.totalSeconds === b.totalSeconds
+      && a.isRunning === b.isRunning;
+  }
+
+  // Display read-throughs. The public isReset/isExpiring/_state keep meaning the internal timer:
+  // the end sound latch is bound to them and must keep its own schedule under an override.
+  private _displaySeconds() {
+    if (this._sourceOverride) return this._sourceOverride.remainingSeconds;
+    if (this.options.setTimeLive && this.isReset()) return this.totalSeconds;
+    return this._currentSeconds;
+  }
+
+  private _displaySetSeconds() {
+    return this._sourceOverride ? this._sourceOverride.totalSeconds : this._secondsSetOnCurrentTimer;
+  }
+
+  private _displayIsReset() {
+    return this._sourceOverride ? false : this.isReset();
+  }
+
+  private _displayIsRunning() {
+    return this._sourceOverride ? this._sourceOverride.isRunning : this.timerIsRunning;
+  }
+
+  private _displayIsCountingUp() {
+    return this._sourceOverride ? this._sourceOverride.remainingSeconds <= 0 : this.isCountingUp();
+  }
+
+  private _displayIsExpiring() {
+    if (!this._sourceOverride) return this.isExpiring();
+    if (this._displayIsCountingUp()) return false;
+
+    return getActiveThreshold(
+      this.options.colorThresholds ?? [],
+      this._sourceOverride.remainingSeconds,
+      this._sourceOverride.totalSeconds,
+    ) !== null;
+  }
+
+  private _displayState(): string {
+    if (!this._sourceOverride) return this._state();
+    if (this._sourceOverride.remainingSeconds <= 0) return 'Expired';
+    if (!this._sourceOverride.isRunning) return 'Paused';
+    return this._displayIsExpiring() ? 'Expiring' : 'Running';
+  }
+
+  // Clip seconds are real seconds, so the ms-per-second scaling must not be applied to them
+  private _displayEndsAt() {
+    if (this._sourceOverride) {
+      if (this._sourceOverride.remainingSeconds <= 0) return null;
+      return dayjs().add(this._sourceOverride.remainingSeconds, 's');
+    }
+
     if (this.countSeconds() <= 0) return null;
-    return dayjs().add(this._currentSeconds / 1000 * this._currentInterval, 's').valueOf();
+    return dayjs().add(this._currentSeconds / 1000 * this._currentInterval, 's');
   }
 
   setTimerInterval(interval: number) {
@@ -225,23 +315,28 @@ export class TimerEngine {
   }
 
   private _sendUpdate() {
-    let currentSeconds = this._currentSeconds;
-
-    if (this.options.setTimeLive && this.isReset()) {
-      currentSeconds = this.totalSeconds;
-    }
+    const currentSeconds = this._displaySeconds();
 
     this.update?.({
+      // Never overridden: the control panel two-way binds its Set box to this
       setSeconds: this.totalSeconds,
       currentSeconds: currentSeconds,
-      countSeconds: this.countSeconds(),
-      extraSeconds: this.extraSeconds(),
-      secondsSetOnCurrentTimer: this._secondsSetOnCurrentTimer,
-      isExpiring: this.isExpiring(),
-      isReset: this.isReset(),
-      isRunning: this.timerIsRunning,
-      isCountingUp: this.isCountingUp(),
+      // Deliberately not from currentSeconds: setTimeLive shows the set time while reset, but
+      // count/extra must stay at zero there
+      countSeconds: this._sourceOverride
+        ? Math.max(this._sourceOverride.remainingSeconds, 0)
+        : this.countSeconds(),
+      extraSeconds: this._sourceOverride
+        ? Math.max(-this._sourceOverride.remainingSeconds, 0)
+        : this.extraSeconds(),
+      secondsSetOnCurrentTimer: this._displaySetSeconds(),
+      isExpiring: this._displayIsExpiring(),
+      isReset: this._displayIsReset(),
+      isRunning: this._displayIsRunning(),
+      isCountingUp: this._displayIsCountingUp(),
       timerEndsAt: this.endsAt() ?? "",
+      source: this._sourceOverride?.sourceId ?? null,
+      timerIsReset: this.isReset(),
     })
   }
 
@@ -254,6 +349,8 @@ export class TimerEngine {
   }
 
   private _sendWebSocketUpdate() {
+    // Bound to the internal state on purpose: the timer's own end sound keeps its own schedule
+    // even while a playback source is painted over the display
     if (this._state() === 'Expired' && this.audioEnabled && !this._audioRun && this.options.audioFile) {
       this.playSound?.(this.options.audioFile)
       this._audioRun = true;
@@ -263,14 +360,22 @@ export class TimerEngine {
   }
 
   webSocketState(): TimerEngineWebSocketUpdate {
-    const state = this._state();
+    const override = this._sourceOverride;
+    // mapUpdate rebuilds isReset/isRunning/isExpiring from `state` alone, so an override that did
+    // not replace it would leave browser and WebRTC clients showing reset colours mid clip
+    const state = this._displayState();
+
+    const currentTime = override ? override.remainingSeconds : this._currentSeconds;
+    const timeSetOnCurrentTimer = override ? override.totalSeconds : this._timer.secondsSet;
 
     const setTimeDuration = dayjs.duration(Math.abs(this.totalSeconds), 'seconds');
-    const currentTimeDuration = dayjs.duration(Math.abs(this._currentSeconds), 'seconds');
-    const timeSetOnCurrentTimerDuration = dayjs.duration(this._timer.secondsSet, 'seconds');
+    const currentTimeDuration = dayjs.duration(Math.abs(currentTime), 'seconds');
+    const timeSetOnCurrentTimerDuration = dayjs.duration(timeSetOnCurrentTimer, 'seconds');
 
     return {
       state: state,
+      source: override?.sourceId ?? null,
+      timerState: this._state(),
       setTime: this.totalSeconds,
       setTimeHms: setTimeDuration.format('HH:mm:ss'),
       setTimeMs: setTimeDuration.format('mm:ss'),
@@ -282,8 +387,8 @@ export class TimerEngine {
       currentTimeH: currentTimeDuration.format('HH'),
       currentTimeM: currentTimeDuration.format('mm'),
       currentTimeS: currentTimeDuration.format('ss'),
-      currentTime: this._currentSeconds,
-      timeSetOnCurrentTimer: this._timer.secondsSet,
+      currentTime: currentTime,
+      timeSetOnCurrentTimer: timeSetOnCurrentTimer,
       timeSetOnCurrentTimerHms: timeSetOnCurrentTimerDuration.format('HH:mm:ss'),
       timeSetOnCurrentTimerMs: timeSetOnCurrentTimerDuration.format('mm:ss'),
       timeSetOnCurrentTimerH: timeSetOnCurrentTimerDuration.format('HH'),

@@ -4,6 +4,7 @@ import {
   WindowSettings
 } from "../../common/config.ts";
 import {TimerEngine, TimerEngineConstructorOptions, TimerEngineOptions} from "../TimerEngine.ts";
+import type {PlaybackState} from "../../common/playback.ts";
 import BrowserWinHandler from "./BrowserWinHandler.ts";
 import createCountdownWindow from "../countdownWindow.ts";
 import {BrowserWindow, powerMonitor, screen} from "electron";
@@ -63,6 +64,8 @@ export class TimersOrchestrator {
   // Remotes that broadcast state to clients. Empty until App builds them once the main window
   // exists, so broadcasts before that are harmlessly dropped rather than throwing
   private _transports = new TransportRegistry()
+  // Latest state per playback provider, so a timer created or re-pointed mid clip joins at once
+  private _playbackStates = new Map<string, PlaybackState>()
 
   constructor(app: CountdownApp) {
     this.app = app
@@ -154,6 +157,8 @@ export class TimersOrchestrator {
       ndiServers,
       omtServers,
     }
+
+    this._applyPlaybackToTimer(timerId)
   }
 
   private _createWindow(timerId: string, timerName: string, windowId: string, windowSettings: WindowSettings) {
@@ -432,6 +437,8 @@ export class TimersOrchestrator {
         this.timers[timerId].engine.options = options
         this.timers[timerId].engine.setTimerInterval(timer.timerDuration)
         this.timers[timerId].settings = timer
+        // Re-point immediately so changing a timer's source does not wait for the next refresh
+        this._applyPlaybackToTimer(timerId)
 
         Object.keys(timer.windows).forEach(windowId => {
           if (!Object.keys(this.timers[timerId].windows).includes(windowId)) {
@@ -564,9 +571,40 @@ export class TimersOrchestrator {
     })
   }
 
+  /**
+   * Routes a playback provider's state to the timers that follow it. Every other timer is left
+   * alone, and a timer that no longer follows this source has its override cleared.
+   */
+  applyPlaybackState(sourceId: string, state: PlaybackState | null): void {
+    if (state === null) {
+      this._playbackStates.delete(sourceId)
+    } else {
+      this._playbackStates.set(sourceId, state)
+    }
+
+    Object.keys(this.timers).forEach(timerId => this._applyPlaybackToTimer(timerId))
+  }
+
+  private _applyPlaybackToTimer(timerId: string) {
+    const timer = this.timers[timerId]
+    if (!timer) return
+
+    const sourceId = timer.settings.playbackSource
+    const state = sourceId ? this._playbackStates.get(sourceId) ?? null : null
+
+    timer.engine.setSourceOverride(state === null ? null : {
+      sourceId,
+      remainingSeconds: state.remainingSeconds,
+      totalSeconds: state.totalSeconds,
+      isRunning: state.isRunning,
+    })
+  }
+
   cleanUp(): void {
+    this._playbackStates.clear()
     Object.keys(this.timers).forEach(timerId => {
       const timer = this.timers[timerId];
+      timer.engine.setSourceOverride(null)
       timer.engine.reset()
       Object.keys(timer.ndiServers).forEach(windowId => {
         timer.ndiServers[windowId].stop()

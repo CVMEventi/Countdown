@@ -536,4 +536,146 @@ describe('TimerEngine', () => {
       expect(engine.message).toBeNull();
     });
   });
+  describe('playback source override', () => {
+    const override = {sourceId: 'vmix', remainingSeconds: 45, totalSeconds: 60, isRunning: true};
+
+    function lastUpdate(onUpdate: ReturnType<typeof vi.fn>) {
+      return onUpdate.mock.calls[onUpdate.mock.calls.length - 1][0];
+    }
+
+    it('shows the clip time instead of the timer time', () => {
+      const { engine, onUpdate } = makeEngine();
+      engine.set(600);
+      engine.start();
+
+      engine.setSourceOverride(override);
+
+      const update = lastUpdate(onUpdate);
+      expect(update.currentSeconds).toBe(45);
+      expect(update.countSeconds).toBe(45);
+      expect(update.secondsSetOnCurrentTimer).toBe(60);
+      expect(update.source).toBe('vmix');
+    });
+
+    it('leaves the operator Set box on the timer value', () => {
+      const { engine, onUpdate } = makeEngine();
+      engine.set(600);
+      engine.start();
+
+      engine.setSourceOverride(override);
+
+      expect(lastUpdate(onUpdate).setSeconds).toBe(600);
+    });
+
+    it('reports not reset so outputs show the clip, while exposing the timer reset state', () => {
+      const { engine, onUpdate } = makeEngine();
+
+      engine.setSourceOverride(override);
+
+      const update = lastUpdate(onUpdate);
+      expect(update.isReset).toBe(false);
+      expect(update.timerIsReset).toBe(true);
+    });
+
+    it('never reports Not Running to websocket clients while a clip plays', () => {
+      const { engine } = makeEngine();
+
+      engine.setSourceOverride(override);
+
+      const state = engine.webSocketState();
+      expect(state.state).toBe('Running');
+      expect(state.currentTime).toBe(45);
+      expect(state.timeSetOnCurrentTimer).toBe(60);
+      expect(state.setTime).toBe(0);
+      expect(state.timerState).toBe('Not Running');
+    });
+
+    it('reports Paused when the clip is paused', () => {
+      const { engine } = makeEngine();
+      engine.setSourceOverride({...override, isRunning: false});
+      expect(engine.webSocketState().state).toBe('Paused');
+    });
+
+    it('does not disturb the timer underneath', () => {
+      const { engine, onUpdate } = makeEngine();
+      engine.set(60);
+      engine.start();
+
+      engine.setSourceOverride(override);
+      vi.advanceTimersByTime(10_000);
+      engine.setSourceOverride(null);
+
+      // The manual timer advanced through the whole clip and comes back where it belongs
+      expect(lastUpdate(onUpdate).currentSeconds).toBe(50);
+      expect(engine.timerIsRunning).toBe(true);
+    });
+
+    it('emits nothing when the same override is applied again', () => {
+      const { engine, onUpdate, onWebSocketUpdate } = makeEngine();
+      engine.setSourceOverride(override);
+      const updates = onUpdate.mock.calls.length;
+      const wsUpdates = onWebSocketUpdate.mock.calls.length;
+
+      engine.setSourceOverride({...override});
+
+      expect(onUpdate.mock.calls.length).toBe(updates);
+      expect(onWebSocketUpdate.mock.calls.length).toBe(wsUpdates);
+    });
+
+    it('emits when the clip moves on', () => {
+      const { engine, onUpdate } = makeEngine();
+      engine.setSourceOverride(override);
+      const updates = onUpdate.mock.calls.length;
+
+      engine.setSourceOverride({...override, remainingSeconds: 44});
+
+      expect(onUpdate.mock.calls.length).toBe(updates + 1);
+    });
+
+    it('still fires the timer own end sound on its own schedule', () => {
+      const { engine, onPlaySound } = makeEngine({audioFile: '/tmp/gong.mp3', stopTimerAtZero: false});
+      engine.set(2);
+      engine.start();
+
+      engine.setSourceOverride(override);
+      vi.advanceTimersByTime(3000);
+
+      expect(onPlaySound).toHaveBeenCalledTimes(1);
+      expect(onPlaySound).toHaveBeenCalledWith('/tmp/gong.mp3');
+    });
+
+    it('evaluates colour thresholds against the clip', () => {
+      const thresholds: ColorThreshold[] = [
+        {id: 'a', type: 'percent', value: 10, background: '#000000ff', text: '#ff0000'},
+      ];
+      const { engine, onUpdate } = makeEngine({colorThresholds: thresholds});
+
+      engine.setSourceOverride({sourceId: 'vmix', remainingSeconds: 30, totalSeconds: 60, isRunning: true});
+      expect(lastUpdate(onUpdate).isExpiring).toBe(false);
+
+      engine.setSourceOverride({sourceId: 'vmix', remainingSeconds: 5, totalSeconds: 60, isRunning: true});
+      expect(lastUpdate(onUpdate).isExpiring).toBe(true);
+    });
+
+    it('clears back to the timer when the override is removed', () => {
+      const { engine, onUpdate } = makeEngine();
+      engine.setSourceOverride(override);
+      engine.setSourceOverride(null);
+
+      const update = lastUpdate(onUpdate);
+      expect(update.isReset).toBe(true);
+      expect(update.source).toBeNull();
+      expect(engine.hasSourceOverride()).toBe(false);
+    });
+
+    it('does not apply the ms-per-second scaling to clip seconds', () => {
+      const { engine } = makeEngine();
+      // Half speed timer: clip seconds are real seconds and must not be scaled with it
+      engine.setTimerInterval(500);
+      engine.setSourceOverride({sourceId: 'vmix', remainingSeconds: 120, totalSeconds: 120, isRunning: true});
+
+      const endsAt = engine.endsAtEpochMs();
+      expect(Math.round((endsAt - Date.now()) / 1000)).toBe(120);
+    });
+  });
 });

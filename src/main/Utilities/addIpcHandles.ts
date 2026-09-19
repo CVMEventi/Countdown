@@ -84,9 +84,14 @@ export default function addIpcHandles(app: CountdownApp)
       }
       app.timersOrchestrator.setNdiAlpha(newSettings.remote.ndiAlpha);
       await app.webRtcRemote?.applyState(newSettings.remote);
+      app.playback?.applyState(newSettings.remote.playback);
     }
 
     return newSettings
+  })
+
+  ipcMain.handle('playback:status', () => {
+    return app.playback?.statuses() ?? []
   })
 
   ipcMain.handle('settings:get-window', (event, args: IpcGetWindowSettingsArgs) => {

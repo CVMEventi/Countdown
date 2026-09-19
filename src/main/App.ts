@@ -18,6 +18,7 @@ import {
 import HTTP from "./Remotes/HTTP.ts";
 import {OSC} from "./Remotes/OSC.ts";
 import {IpcTimerController} from "./Remotes/IpcTimerController.ts";
+import {PlaybackManager} from './Playback/PlaybackManager.ts';
 import {WebRtcRemote} from "./Remotes/WebRtcRemote.ts";
 import createWebRtcHostWindow from "./webRtcHostWindow.ts";
 import macosTrayIcon from "../icons/tray/TrayTemplate.png?no-inline"
@@ -44,6 +45,7 @@ export class CountdownApp {
   webServer: HTTP = null;
   oscServer: OSC = null;
   webRtcRemote: WebRtcRemote = null;
+  playback: PlaybackManager = null;
 
   constructor() {
     addDefaultEvents();
@@ -106,6 +108,7 @@ export class CountdownApp {
 
       app.on('before-quit', () => {
         this.webRtcRemote?.stop()
+        this.playback?.stop()
         this.timersOrchestrator.cleanUp()
         browserWindow.destroy()
       })
@@ -183,6 +186,15 @@ export class CountdownApp {
       if (webServerEnabled) {
         this.webServer.start();
       }
+
+      this.playback = new PlaybackManager({
+        onState: (sourceId, state) => this.timersOrchestrator.applyPlaybackState(sourceId, state),
+        onStatus: (statuses) => {
+          if (browserWindow.isDestroyed()) return;
+          browserWindow.webContents.send('playback-update', statuses);
+        },
+      });
+      this.playback.applyState(this.config.settings.remote.playback);
 
       const oscEnabled = this.config.settings.remote.oscEnabled ?? DEFAULT_OSC_ENABLED
       const oscPort = this.config.settings.remote.oscPort ?? DEFAULT_OSC_PORT

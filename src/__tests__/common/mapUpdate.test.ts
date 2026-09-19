@@ -113,4 +113,27 @@ describe('mapUpdate', () => {
       expect(mapUpdate(wire({timerEndsAt: undefined})).timerEndsAt).toBeNull();
     });
   });
+  describe('playback source', () => {
+    it('passes the source through', () => {
+      expect(mapUpdate(wire({source: 'vmix'})).source).toBe('vmix');
+    });
+
+    it('is null when no source is driving the timer', () => {
+      expect(mapUpdate(wire({})).source).toBeNull();
+    });
+
+    // A clip playing over a reset timer: the display must not fall back to reset colours, but the
+    // control UI still has to know the timer itself is reset
+    it('keeps the timer own reset state separate from the displayed state', () => {
+      const update = mapUpdate(wire({source: 'vmix', state: 'Running', timerState: 'Not Running'}));
+
+      expect(update.isReset).toBe(false);
+      expect(update.timerIsReset).toBe(true);
+    });
+
+    it('falls back to the displayed state when no timer state is sent', () => {
+      expect(mapUpdate(wire({state: 'Not Running'})).timerIsReset).toBe(true);
+      expect(mapUpdate(wire({state: 'Running'})).timerIsReset).toBe(false);
+    });
+  });
 });

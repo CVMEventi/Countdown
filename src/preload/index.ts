@@ -29,6 +29,8 @@ contextBridge.exposeInMainWorld(
     webrtcRotateCode: async () => await ipcRenderer.invoke('webrtc:rotate-code'),
     webrtcRevoke: async (clientId: string) => await ipcRenderer.invoke('webrtc:revoke', clientId),
     onWebrtcUpdate: (callback: (event: any, status: any) => void) => ipcRenderer.on('webrtc-update', callback),
+    playbackStatus: async () => await ipcRenderer.invoke('playback:status'),
+    onPlaybackUpdate: (callback: (event: any, statuses: any) => void) => ipcRenderer.on('playback-update', callback),
   }
 )
 

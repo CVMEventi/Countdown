@@ -30,6 +30,18 @@
       </div>
       <div class="flex flex-col gap-1">
         <div class="flex items-center gap-1">
+          <label for="playbackSource" class="text-sm">Follow playback source</label>
+          <InfoTip text="While this source plays a clip, outputs show the clip's remaining time. This timer keeps counting underneath and comes back when the clip ends." />
+        </div>
+        <select id="playbackSource" v-model="timer.playbackSource" class="input p-2 w-full">
+          <option :value="null">None</option>
+          <option v-for="provider in PLAYBACK_PROVIDERS" :key="provider.id" :value="provider.id">
+            {{ provider.displayName }}
+          </option>
+        </select>
+      </div>
+      <div class="flex flex-col gap-1">
+        <div class="flex items-center gap-1">
           <label for="followTimer" class="text-sm">Follow timer</label>
           <InfoTip text="When reset, outputs show the followed timer" />
         </div>
@@ -88,6 +100,7 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { CheckIcon, ClipboardDocumentIcon, MusicalNoteIcon, XMarkIcon } from '@heroicons/vue/20/solid'
 import { TimerSettings, Timers } from '@common/config.ts'
+import { PLAYBACK_PROVIDERS } from '@common/playback.ts'
 import { copyText } from '@common/clipboard.ts'
 import Card from '@common/components/Card.vue'
 import CheckBox from '@common/components/CheckBox.vue'

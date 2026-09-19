@@ -29,7 +29,12 @@
           color="white"
         />
         <div class="uppercase mt-2 text-white flex flex-row justify-between">
-          <span>Count</span>
+          <div class="flex flex-row items-center gap-2">
+            <span>Count</span>
+            <span v-if="playbackSourceName" class="text-xs normal-case rounded bg-amber-500/20 text-amber-300 px-1.5 py-0.5">
+              {{ playbackSourceName }}
+            </span>
+          </div>
           <div class="flex flex-row items-center gap-1">
             <PlayPauseIcon v-if="displayUpdate.timerEndsAt" class="w-6 h-6 inline-flex" />
             <span>{{ displayUpdate.timerEndsAt }}</span>
@@ -43,7 +48,7 @@
       <Card class="flex flex-col max-sm:flex-1" style="min-width: 250px">
         <SButton class="text-4xl mb-2 font-mono uppercase" @click="controller.start(currentTimerId)">Start</SButton>
         <SButton
-          :disabled="currentUpdate.isReset"
+          :disabled="timerIsReset"
           class="text-4xl mb-2 font-mono uppercase"
           type="warning"
           @click="controller.toggle(currentTimerId)"
@@ -110,6 +115,7 @@ import { PlayPauseIcon, PlusIcon, MinusIcon, TrashIcon, ArrowRightIcon, SpeakerX
 import type { ITimerController } from '../TimerController.ts'
 import type { TimerEngineUpdate, TimerEngineUpdates } from '../TimerInterfaces.ts'
 import type { TimerSettings, Timers } from '../config.ts'
+import { playbackProviderMeta } from '../playback.ts'
 import Card from './Card.vue'
 import SButton from './SButton.vue'
 import TimeInput from './TimeInput.vue'
@@ -161,6 +167,16 @@ const currentTimer = computed<TimerSettings | null>(() => {
   return (props.timers[props.currentTimerId] as TimerSettings) ?? null
 })
 
+// isReset reflects what is on screen, which a playback source can take over. Control actions must
+// follow the timer's OWN clock instead, or they would target a timer the operator cannot see.
+const timerIsReset = computed(() => currentUpdate.value.timerIsReset ?? currentUpdate.value.isReset)
+
+const playbackSourceName = computed<string | null>(() => {
+  const sourceId = currentUpdate.value.source
+  if (!sourceId) return null
+  return playbackProviderMeta(sourceId)?.displayName ?? sourceId
+})
+
 const followingTimerId = computed<string | null>(() => {
   const followTimer = currentTimer.value?.followTimer
   if (!Object.keys(props.timers).find((timerId) => timerId === followTimer)) return null
@@ -187,7 +203,7 @@ const countSeconds = computed(() => {
 
 function jog(seconds: number) {
   if (!props.currentTimerId) return
-  if (!currentUpdate.value.isReset) {
+  if (!timerIsReset.value) {
     props.controller.jogCurrent(props.currentTimerId, seconds)
   } else {
     props.controller.jogSet(props.currentTimerId, seconds)

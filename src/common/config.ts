@@ -1,4 +1,5 @@
 import {ulid} from 'ulid'
+import {DEFAULT_PLAYBACK_SETTINGS, PlaybackSettings} from './playback.ts'
 
 export interface ColorThreshold {
   id: string
@@ -33,7 +34,7 @@ export function getActiveThreshold(
   })
 }
 
-export const CURRENT_CONFIG_VERSION: number = 5
+export const CURRENT_CONFIG_VERSION: number = 6
 
 export const DEFAULT_TIMER_NAME = 'Timer'
 
@@ -184,6 +185,7 @@ export const DEFAULT_TIMER_SETTINGS: TimerSettings = {
   setTimeLive: DEFAULT_SET_TIME_LIVE,
   stopTimerAtZero: DEFAULT_STOP_TIMER_AT_ZERO,
   followTimer: null,
+  playbackSource: null,
   audioFile: null,
   audioOutputDeviceId: null,
   windows: {[ulid()]: DEFAULT_WINDOW_SETTINGS},
@@ -205,6 +207,7 @@ export const DEFAULT_REMOTE_SETTINGS: RemoteSettings = {
   webrtcRoomCode: null,
   webrtcRequireApproval: DEFAULT_WEBRTC_REQUIRE_APPROVAL,
   webrtcSpaUrl: DEFAULT_WEBRTC_SPA_URL,
+  playback: DEFAULT_PLAYBACK_SETTINGS,
 }
 
 export const DEFAULT_STORE: CountdownConfiguration = {
@@ -280,6 +283,8 @@ export interface TimerSettings {
   setTimeLive: boolean
   stopTimerAtZero: boolean
   followTimer: string
+  // Id of the playback provider this timer mirrors while that source is playing, null for none
+  playbackSource: string | null
   audioFile: string | null
   audioOutputDeviceId: string | null
   windows: Windows
@@ -319,6 +324,7 @@ export interface RemoteSettings {
   webrtcRoomCode: string | null
   webrtcRequireApproval: boolean
   webrtcSpaUrl: string
+  playback: PlaybackSettings
 }
 
 export interface Timers {

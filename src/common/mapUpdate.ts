@@ -15,5 +15,8 @@ export function mapUpdate(u: TimerEngineWebSocketUpdate): TimerEngineUpdate {
     isCountingUp: u.state === 'Expired',
     timerEndsAt: u.timerEndsAt ?? null,
     timerEndsAtEpochMs: u.timerEndsAtEpochMs ?? null,
+    source: u.source ?? null,
+    // The timer's own clock, which keeps running under a playback override
+    timerIsReset: (u.timerState ?? u.state) === 'Not Running',
   }
 }

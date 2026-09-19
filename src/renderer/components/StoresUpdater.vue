@@ -12,12 +12,14 @@
   import {useGlobalStore} from '../stores/global.ts'
   import {useWebServerStore} from '../stores/webServer.ts'
   import {useWebRtcStore} from '../stores/webRtc.ts'
+import {usePlaybackStore} from '../stores/playback.ts'
 
   const timersStore = useTimersStore()
   const settingsStore = useSettingsStore()
   const globalStore = useGlobalStore()
   const webServerStore = useWebServerStore()
   const webRtcStore = useWebRtcStore()
+const playbackStore = usePlaybackStore()
 
   const emit = defineEmits<{
     (e: 'mounted'): void
@@ -111,6 +113,10 @@
     await refreshNetworkAddresses()
   })
 
+  api.onPlaybackUpdate((event, statuses) => {
+    playbackStore.apply(statuses)
+  })
+
   api.onWebrtcUpdate((_event, status) => {
     webRtcStore.apply(status)
   })
@@ -127,6 +133,7 @@
 
     webServerStatusReceived(await api.isServerRunning())
     webRtcStore.apply(await api.webrtcStatus())
+  playbackStore.apply(await api.playbackStatus())
     await refreshNetworkAddresses()
   })
 </script>

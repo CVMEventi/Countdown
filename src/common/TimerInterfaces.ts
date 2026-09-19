@@ -12,6 +12,10 @@ export interface TimerEngineUpdate {
   isCountingUp: boolean
   timerEndsAt: string | null
   timerEndsAtEpochMs?: number | null
+  // Set while a playback source is painted over this timer: the provider id driving the display
+  source?: string | null
+  // Reset state of the timer's OWN clock, which keeps running underneath an override
+  timerIsReset?: boolean
 }
 
 export interface TimerEngineUpdates {
@@ -63,6 +67,9 @@ export interface TimerEngineWebSocketUpdate {
   timeSetOnCurrentTimerS?: string
   timerEndsAt?: string
   timerEndsAtEpochMs?: number | null
+  source?: string | null
+  // State of the timer's OWN clock, which keeps running underneath an override
+  timerState?: string
 }
 
 /**
