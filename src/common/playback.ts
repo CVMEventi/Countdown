@@ -114,11 +114,46 @@ export const MILLUMIN_PROVIDER_META: PlaybackProviderMeta = {
   staleAfterMs: 1000,
 }
 
+export const QLAB_PROVIDER_ID = 'qlab'
+
+export interface QLabProviderConfig extends PlaybackProviderConfig {
+  host: string
+  port: number
+  // We ask from this local port so replies land here, whether QLab answers the sender's port or
+  // its documented default of 53001
+  replyPort: number
+  // Blank asks every workspace listening; a workspace id or name targets one
+  workspace: string
+  passcode: string
+  // Empty follows whichever cue is running; a cue number, name or id pins this source to one
+  cue: string
+  pollInterval: number
+}
+
+export const DEFAULT_QLAB_CONFIG: QLabProviderConfig = {
+  enabled: true,
+  host: '127.0.0.1',
+  port: 53000,
+  replyPort: 53001,
+  workspace: '',
+  passcode: '',
+  cue: '',
+  pollInterval: 500,
+}
+
+export const QLAB_PROVIDER_META: PlaybackProviderMeta = {
+  id: QLAB_PROVIDER_ID,
+  displayName: 'QLab',
+  defaultConfig: DEFAULT_QLAB_CONFIG,
+  staleAfterMs: 2000,
+}
+
 // Adding a provider means adding its meta here, a factory in main/Playback/providers, and a
 // settings component in the renderer. Nothing else in the app needs to know about it.
 export const PLAYBACK_PROVIDERS: PlaybackProviderMeta[] = [
   VMIX_PROVIDER_META,
   MILLUMIN_PROVIDER_META,
+  QLAB_PROVIDER_META,
 ]
 
 export function playbackProviderMeta(id: string): PlaybackProviderMeta | null {

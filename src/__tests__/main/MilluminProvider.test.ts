@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { MilluminProvider } from '../../main/Playback/providers/millumin/MilluminProvider.ts';
-import { OscListener, OscListenerPool } from '../../main/Playback/providers/millumin/oscListenerPool.ts';
+import { OscListener, OscSocketPool } from '../../main/Playback/osc/OscSocketPool.ts';
 import { DEFAULT_MILLUMIN_CONFIG, PlaybackState } from '../../common/playback.ts';
 
 class FakeListener implements OscListener {
@@ -23,11 +23,17 @@ class FakeListener implements OscListener {
     if (event === 'error') this._error = callback as never;
   }
 
+  sent: {message: unknown[], port: number, host: string}[] = [];
+
+  send(message: [string, ...unknown[]], port: number, host: string) {
+    this.sent.push({message, port, host});
+  }
+
   close() {
     this.closed += 1;
   }
 
-  send(address: string, ...args: unknown[]) {
+  emit(address: string, ...args: unknown[]) {
     this._message?.([address, ...args]);
   }
 
@@ -46,7 +52,7 @@ describe('MilluminProvider', () => {
   let listeners: FakeListener[];
   let now: number;
   let provider: MilluminProvider;
-  let pool: OscListenerPool;
+  let pool: OscSocketPool;
 
   beforeEach(() => {
     vi.useFakeTimers();
@@ -54,7 +60,7 @@ describe('MilluminProvider', () => {
     listeners = [];
     now = 1000;
 
-    pool = new OscListenerPool((port, onListening) => {
+    pool = new OscSocketPool((port, onListening) => {
       const listener = new FakeListener(port);
       listeners.push(listener);
       onListening();
@@ -99,8 +105,8 @@ describe('MilluminProvider', () => {
 
   it('publishes the playing layer on the heartbeat', () => {
     enable();
-    listeners[0].send('/millumin/layer:Main/mediaStarted', 0, 'Package.mov', 60);
-    listeners[0].send('/millumin/layer:Main/media/time', 15, 60);
+    listeners[0].emit('/millumin/layer:Main/mediaStarted', 0, 'Package.mov', 60);
+    listeners[0].emit('/millumin/layer:Main/media/time', 15, 60);
 
     vi.advanceTimersByTime(250);
 
@@ -109,9 +115,9 @@ describe('MilluminProvider', () => {
 
   it('keeps republishing so a paused clip is not expired', () => {
     enable();
-    listeners[0].send('/millumin/layer:Main/mediaStarted', 0, 'Package.mov', 60);
-    listeners[0].send('/millumin/layer:Main/media/time', 15, 60);
-    listeners[0].send('/millumin/layer:Main/mediaPaused', 0, 'Package.mov');
+    listeners[0].emit('/millumin/layer:Main/mediaStarted', 0, 'Package.mov', 60);
+    listeners[0].emit('/millumin/layer:Main/media/time', 15, 60);
+    listeners[0].emit('/millumin/layer:Main/mediaPaused', 0, 'Package.mov');
 
     vi.advanceTimersByTime(250);
     const publishes = states.length;
@@ -149,11 +155,11 @@ describe('MilluminProvider', () => {
 
   it('releases the timers when the media stops', () => {
     enable();
-    listeners[0].send('/millumin/layer:Main/mediaStarted', 0, 'Package.mov', 60);
-    listeners[0].send('/millumin/layer:Main/media/time', 15, 60);
+    listeners[0].emit('/millumin/layer:Main/mediaStarted', 0, 'Package.mov', 60);
+    listeners[0].emit('/millumin/layer:Main/media/time', 15, 60);
     vi.advanceTimersByTime(250);
 
-    listeners[0].send('/millumin/layer:Main/mediaStopped', 0, 'Package.mov');
+    listeners[0].emit('/millumin/layer:Main/mediaStopped', 0, 'Package.mov');
     vi.advanceTimersByTime(250);
 
     expect(lastState()).toBeNull();
@@ -161,8 +167,8 @@ describe('MilluminProvider', () => {
 
   it('releases the timers when a playing layer goes silent', () => {
     enable({playingTimeout: 2000});
-    listeners[0].send('/millumin/layer:Main/mediaStarted', 0, 'Package.mov', 60);
-    listeners[0].send('/millumin/layer:Main/media/time', 15, 60);
+    listeners[0].emit('/millumin/layer:Main/mediaStarted', 0, 'Package.mov', 60);
+    listeners[0].emit('/millumin/layer:Main/media/time', 15, 60);
     vi.advanceTimersByTime(250);
     expect(lastState()).not.toBeNull();
 
@@ -181,7 +187,7 @@ describe('MilluminProvider', () => {
   });
 
   it('surfaces a listener that throws on construction', async () => {
-    const throwingPool = new OscListenerPool(() => { throw new Error('no socket for you') });
+    const throwingPool = new OscSocketPool(() => { throw new Error('no socket for you') });
     const throwing = new MilluminProvider(
       {onState: () => {}, onStatus: () => {}, now: () => now},
       throwingPool,
@@ -237,10 +243,10 @@ describe('MilluminProvider', () => {
     );
     second.applyConfig({...DEFAULT_MILLUMIN_CONFIG, enabled: true, port: 5001, layer: 'Sponsor'});
 
-    listeners[0].send('/millumin/layer:Main/mediaStarted', 0, 'Package.mov', 60);
-    listeners[0].send('/millumin/layer:Main/media/time', 15, 60);
-    listeners[0].send('/millumin/layer:Sponsor/mediaStarted', 0, 'Advert.mov', 30);
-    listeners[0].send('/millumin/layer:Sponsor/media/time', 10, 30);
+    listeners[0].emit('/millumin/layer:Main/mediaStarted', 0, 'Package.mov', 60);
+    listeners[0].emit('/millumin/layer:Main/media/time', 15, 60);
+    listeners[0].emit('/millumin/layer:Sponsor/mediaStarted', 0, 'Advert.mov', 30);
+    listeners[0].emit('/millumin/layer:Sponsor/media/time', 10, 30);
     vi.advanceTimersByTime(250);
 
     expect(lastState()).toMatchObject({title: 'Package.mov', remainingSeconds: 45});
@@ -267,8 +273,8 @@ describe('MilluminProvider', () => {
 
   it('closes the socket and stops publishing once disabled', () => {
     enable();
-    listeners[0].send('/millumin/layer:Main/mediaStarted', 0, 'Package.mov', 60);
-    listeners[0].send('/millumin/layer:Main/media/time', 15, 60);
+    listeners[0].emit('/millumin/layer:Main/mediaStarted', 0, 'Package.mov', 60);
+    listeners[0].emit('/millumin/layer:Main/media/time', 15, 60);
     vi.advanceTimersByTime(250);
 
     provider.applyConfig({...DEFAULT_MILLUMIN_CONFIG, enabled: false});
@@ -282,8 +288,8 @@ describe('MilluminProvider', () => {
 
   it('forgets its layers across a restart', () => {
     enable({port: 5001});
-    listeners[0].send('/millumin/layer:Main/mediaStarted', 0, 'Package.mov', 60);
-    listeners[0].send('/millumin/layer:Main/media/time', 15, 60);
+    listeners[0].emit('/millumin/layer:Main/mediaStarted', 0, 'Package.mov', 60);
+    listeners[0].emit('/millumin/layer:Main/media/time', 15, 60);
     vi.advanceTimersByTime(250);
 
     enable({port: 5002});
@@ -294,8 +300,8 @@ describe('MilluminProvider', () => {
 
   it('reports the playing media as the active title', () => {
     enable();
-    listeners[0].send('/millumin/layer:Main/mediaStarted', 0, 'Package.mov', 60);
-    listeners[0].send('/millumin/layer:Main/media/time', 15, 60);
+    listeners[0].emit('/millumin/layer:Main/mediaStarted', 0, 'Package.mov', 60);
+    listeners[0].emit('/millumin/layer:Main/media/time', 15, 60);
     vi.advanceTimersByTime(250);
 
     expect(provider.status().activeTitle).toBe('Package.mov');

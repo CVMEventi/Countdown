@@ -31,7 +31,7 @@ export interface MilluminAddress {
   path: string
 }
 
-export type OscMessage = [string, ...unknown[]]
+import type {OscMessage} from "../../osc/OscSocketPool.ts";
 
 /**
  * Flattens an OSC bundle into its messages.

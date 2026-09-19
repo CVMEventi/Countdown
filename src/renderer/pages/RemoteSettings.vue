@@ -226,6 +226,7 @@ import {DEFAULT_WEBRTC_SPA_URL} from "@common/config.ts";
 import {
   MILLUMIN_PROVIDER_ID,
   PLAYBACK_PROVIDERS,
+  QLAB_PROVIDER_ID,
   PlaybackSource,
   defaultSourceName,
   playbackProviderMeta,
@@ -235,6 +236,7 @@ import {ulid} from "ulid";
 import {XMarkIcon} from "@heroicons/vue/20/solid";
 import VMixSettingsCard from '../components/playback/VMixSettingsCard.vue'
 import MilluminSettingsCard from '../components/playback/MilluminSettingsCard.vue'
+import QLabSettingsCard from '../components/playback/QLabSettingsCard.vue'
 import TopBar from '../components/TopBar.vue'
 import BaseContainer from '../components/BaseContainer.vue'
 import {useSettingsStore} from '../stores/settings.ts'
@@ -278,6 +280,7 @@ const playbackStore = usePlaybackStore();
 const playbackComponents: {[providerId: string]: unknown} = {
   [VMIX_PROVIDER_ID]: VMixSettingsCard,
   [MILLUMIN_PROVIDER_ID]: MilluminSettingsCard,
+  [QLAB_PROVIDER_ID]: QLabSettingsCard,
 }
 
 const playbackSources = computed(() => remote.value.playback ?? {})

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { OscListener, OscListenerPool } from '../../main/Playback/providers/millumin/oscListenerPool.ts';
+import { OscListener, OscSocketPool } from '../../main/Playback/osc/OscSocketPool.ts';
 
 class FakeListener implements OscListener {
   closed = 0;
@@ -9,6 +9,12 @@ class FakeListener implements OscListener {
     this.handlers[event] = callback;
   }
 
+  sent: {message: unknown[], port: number, host: string}[] = [];
+
+  send(message: [string, ...unknown[]], port: number, host: string) {
+    this.sent.push({message, port, host});
+  }
+
   close() {
     this.closed += 1;
   }
@@ -16,7 +22,7 @@ class FakeListener implements OscListener {
 
 function makePool() {
   const built: {port: number, listener: FakeListener, announce: () => void}[] = [];
-  const pool = new OscListenerPool((port, onListening) => {
+  const pool = new OscSocketPool((port, onListening) => {
     const listener = new FakeListener();
     built.push({port, listener, announce: onListening});
     return listener;
@@ -24,7 +30,7 @@ function makePool() {
   return {pool, built};
 }
 
-describe('OscListenerPool', () => {
+describe('OscSocketPool', () => {
   it('binds once per port and fans messages out to every subscriber', () => {
     const {pool, built} = makePool();
     const first = vi.fn();
@@ -85,6 +91,40 @@ describe('OscListenerPool', () => {
     expect(error).toHaveBeenCalledWith(new Error('boom'));
   });
 
+  it('holds a send until the socket has bound, then flushes it in order', () => {
+    const {pool, built} = makePool();
+    const subscription = pool.subscribe(5001);
+
+    // A real UDP socket binds asynchronously, so the first query of a poll arrives before it is ready
+    subscription.send(['/first', 1], 53000, '127.0.0.1');
+    subscription.send(['/second', 2], 53000, '127.0.0.1');
+    expect(built[0].listener.sent).toHaveLength(0);
+
+    built[0].announce();
+
+    expect(built[0].listener.sent.map(entry => entry.message[0])).toEqual(['/first', '/second']);
+    expect(built[0].listener.sent[0]).toMatchObject({port: 53000, host: '127.0.0.1'});
+  });
+
+  it('sends straight away once the socket is bound', () => {
+    const {pool, built} = makePool();
+    const subscription = pool.subscribe(5001);
+    built[0].announce();
+
+    subscription.send(['/now', 1], 53000, '127.0.0.1');
+
+    expect(built[0].listener.sent).toHaveLength(1);
+  });
+
+  it('survives a socket that throws on send', () => {
+    const {pool, built} = makePool();
+    const subscription = pool.subscribe(5001);
+    built[0].announce();
+    built[0].listener.send = () => { throw new Error('socket closed') };
+
+    expect(() => subscription.send(['/x'], 53000, '127.0.0.1')).not.toThrow();
+  });
+
   it('replays the bound state to a subscriber that arrived late', () => {
     const {pool, built} = makePool();
     pool.subscribe(5001);
@@ -98,7 +138,7 @@ describe('OscListenerPool', () => {
   });
 
   it('replays a bind failure to a subscriber that arrived late', async () => {
-    const pool = new OscListenerPool(() => { throw new Error('EADDRINUSE') });
+    const pool = new OscSocketPool(() => { throw new Error('EADDRINUSE') });
     const first = vi.fn();
     pool.subscribe(5001).onError(first);
     await Promise.resolve();

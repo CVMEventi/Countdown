@@ -7,8 +7,8 @@ import {
   PlaybackState,
 } from "@common/playback.ts";
 import type {PlaybackProvider, PlaybackProviderContext} from "../../PlaybackProvider.ts";
-import {flattenOscBundle, MilluminTracker, OscMessage, parseMilluminAddress} from "./milluminOsc.ts";
-import {oscListenerPool, OscListenerPool, OscSubscription} from "./oscListenerPool.ts";
+import {flattenOscBundle, MilluminTracker, parseMilluminAddress} from "./milluminOsc.ts";
+import {oscSocketPool, OscMessage, OscSocketPool, OscSubscription} from "../../osc/OscSocketPool.ts";
 
 const HEARTBEAT_INTERVAL = 250
 // media/time arrives many times a second, so the log reports it on a timer instead of per packet
@@ -28,7 +28,7 @@ export class MilluminProvider implements PlaybackProvider {
   readonly id = MILLUMIN_PROVIDER_ID
 
   private _context: PlaybackProviderContext
-  private _pool: OscListenerPool
+  private _pool: OscSocketPool
   private _config: MilluminProviderConfig = {...DEFAULT_MILLUMIN_CONFIG}
   private _configKey: string | null = null
   private _tracker = new MilluminTracker()
@@ -46,7 +46,7 @@ export class MilluminProvider implements PlaybackProvider {
   private _lastTimeLogAt = 0
   private _lastLoggedState: string | null = null
 
-  constructor(context: PlaybackProviderContext, pool: OscListenerPool = oscListenerPool) {
+  constructor(context: PlaybackProviderContext, pool: OscSocketPool = oscSocketPool) {
     this._context = context
     this._pool = pool
   }
