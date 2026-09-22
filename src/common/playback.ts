@@ -174,6 +174,33 @@ export const OSCPOINT_PROVIDER_META: PlaybackProviderMeta = {
   staleAfterMs: 1000,
 }
 
+export const GRANDSHOW_PROVIDER_ID = 'grandshow'
+
+export interface GrandShowProviderConfig extends PlaybackProviderConfig {
+  host: string
+  // GrandShow's central control port. Replies come back to whichever local port asked, so there
+  // is no reply port to configure.
+  port: number
+  // Empty follows whichever node is playing; "2" pins a window row, "1,3" or "R1C3" one node
+  node: string
+  pollInterval: number
+}
+
+export const DEFAULT_GRANDSHOW_CONFIG: GrandShowProviderConfig = {
+  enabled: true,
+  host: '127.0.0.1',
+  port: 30303,
+  node: '',
+  pollInterval: 250,
+}
+
+export const GRANDSHOW_PROVIDER_META: PlaybackProviderMeta = {
+  id: GRANDSHOW_PROVIDER_ID,
+  displayName: 'GrandShow',
+  defaultConfig: DEFAULT_GRANDSHOW_CONFIG,
+  staleAfterMs: 1000,
+}
+
 // Adding a provider means adding its meta here, a factory in main/Playback/providers, and a
 // settings component in the renderer. Nothing else in the app needs to know about it.
 export const PLAYBACK_PROVIDERS: PlaybackProviderMeta[] = [
@@ -181,6 +208,7 @@ export const PLAYBACK_PROVIDERS: PlaybackProviderMeta[] = [
   MILLUMIN_PROVIDER_META,
   QLAB_PROVIDER_META,
   OSCPOINT_PROVIDER_META,
+  GRANDSHOW_PROVIDER_META,
 ]
 
 export function playbackProviderMeta(id: string): PlaybackProviderMeta | null {

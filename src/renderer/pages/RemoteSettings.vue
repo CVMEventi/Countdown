@@ -282,6 +282,7 @@ import WebRtcSessionPanel from "@common/components/WebRtcSessionPanel.vue";
 import {remoteControlPath} from "@common/network.ts";
 import {DEFAULT_WEBRTC_SPA_URL} from "@common/config.ts";
 import {
+  GRANDSHOW_PROVIDER_ID,
   MILLUMIN_PROVIDER_ID,
   OSCPOINT_PROVIDER_ID,
   PLAYBACK_PROVIDERS,
@@ -297,6 +298,7 @@ import VMixSettingsCard from '../components/playback/VMixSettingsCard.vue'
 import MilluminSettingsCard from '../components/playback/MilluminSettingsCard.vue'
 import QLabSettingsCard from '../components/playback/QLabSettingsCard.vue'
 import OscPointSettingsCard from '../components/playback/OscPointSettingsCard.vue'
+import GrandShowSettingsCard from '../components/playback/GrandShowSettingsCard.vue'
 import TopBar from '../components/TopBar.vue'
 import TimersNavigation from '@common/components/TimersNavigation.vue'
 import TimerTabButton from '@common/components/TimerTabButton.vue'
@@ -353,6 +355,7 @@ const playbackComponents: {[providerId: string]: unknown} = {
   [MILLUMIN_PROVIDER_ID]: MilluminSettingsCard,
   [QLAB_PROVIDER_ID]: QLabSettingsCard,
   [OSCPOINT_PROVIDER_ID]: OscPointSettingsCard,
+  [GRANDSHOW_PROVIDER_ID]: GrandShowSettingsCard,
 }
 
 const playbackSources = computed(() => remote.value.playback ?? {})
