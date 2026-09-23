@@ -625,8 +625,8 @@ describe('applyMigrations', () => {
 
     const result = applyMigrations(oldConfig) as Record<string, unknown>;
 
-    // Version should be bumped to 7 by PlaybackProvidersToSources
-    expect(result.version).toBe(7);
+    // Version should be bumped to 8 by AddDiscoverySettings
+    expect(result.version).toBe(8);
 
     const settings = result.settings as Record<string, unknown>;
 
@@ -647,13 +647,13 @@ describe('applyMigrations', () => {
     expect(Array.isArray(colors.thresholds)).toBe(true);
   });
 
-  it('is idempotent on a fully migrated config (version 7)', () => {
+  it('is idempotent on a fully migrated config (version 8)', () => {
     const migrated = {
-      version: 7,
+      version: 8,
       settings: {
         timers: {},
         presets: [] as number[],
-        remote: {playback: DEFAULT_PLAYBACK_SETTINGS},
+        remote: {playback: DEFAULT_PLAYBACK_SETTINGS, discoveryEnabled: true},
         setWindowAlwaysOnTop: false,
         closeAction: 'ASK',
         startHidden: false,
@@ -679,8 +679,9 @@ describe('applyMigrations', () => {
     const result = applyMigrations(migrated) as Record<string, unknown>;
     const remote = (result.settings as Record<string, unknown>).remote as Record<string, unknown>;
 
-    expect(result.version).toBe(7);
+    expect(result.version).toBe(8);
     expect(remote.webrtcEnabled).toBe(false);
+    expect(remote.discoveryEnabled).toBe(true);
     expect(remote.webServerPort).toBe(7000);
   });
 });

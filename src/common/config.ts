@@ -34,7 +34,7 @@ export function getActiveThreshold(
   })
 }
 
-export const CURRENT_CONFIG_VERSION: number = 7
+export const CURRENT_CONFIG_VERSION: number = 8
 
 export const DEFAULT_TIMER_NAME = 'Timer'
 
@@ -80,6 +80,8 @@ export const DEFAULT_OMT_ENABLED = false;
 
 export const DEFAULT_OSC_ENABLED = false;
 export const DEFAULT_OSC_PORT = 6566;
+
+export const DEFAULT_DISCOVERY_ENABLED = true;
 
 export const DEFAULT_WEBRTC_ENABLED = false;
 export const DEFAULT_WEBRTC_CODE_ROTATION: WebRtcCodeRotation = 'session';
@@ -199,6 +201,7 @@ export const DEFAULT_REMOTE_SETTINGS: RemoteSettings = {
   omtEnabled: DEFAULT_OMT_ENABLED,
   oscEnabled: DEFAULT_OSC_ENABLED,
   oscPort: DEFAULT_OSC_PORT,
+  discoveryEnabled: DEFAULT_DISCOVERY_ENABLED,
   webrtcEnabled: DEFAULT_WEBRTC_ENABLED,
   webrtcSignaling: DEFAULT_WEBRTC_SIGNALING,
   webrtcIceServers: DEFAULT_WEBRTC_ICE_SERVERS,
@@ -316,6 +319,7 @@ export interface RemoteSettings {
   omtEnabled: boolean
   oscEnabled: boolean
   oscPort: number
+  discoveryEnabled: boolean
   webrtcEnabled: boolean
   webrtcSignaling: SignalingConfig
   webrtcIceServers: IceServerConfig[]

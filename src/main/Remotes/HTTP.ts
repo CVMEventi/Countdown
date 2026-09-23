@@ -48,6 +48,7 @@ export default class HTTP implements TimerTransport {
   browserWindow: BrowserWindow = null;
   isRunning = false;
   port: number = null;
+  onStatusChange: () => void = null;
 
   lastError: unknown = null;
 
@@ -366,6 +367,7 @@ export default class HTTP implements TimerTransport {
   }
 
   sendIpcStatusUpdate() {
+    this.onStatusChange?.()
     this.browserWindow.webContents.send('webserver-update', this.buildStatusUpdateContent())
   }
 

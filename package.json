@@ -72,6 +72,7 @@
     "@heroicons/vue": "^2.0.16",
     "@tailwindcss/forms": "^0.5.10",
     "@vueuse/core": "^14.2.1",
+    "bonjour-service": "^1.4.4",
     "dayjs": "^1.11.13",
     "dot-prop": "^10.1.0",
     "electron-store": "^9.0.0",

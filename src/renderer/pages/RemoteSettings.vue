@@ -151,17 +151,17 @@
         </div>
       </div>
 
-      <div v-else-if="currentTab === 'protocols'" class="grid w-full grid-cols-1 lg:grid-cols-3 gap-2 items-start">
-        <card class="flex flex-col w-full">
+      <div v-else-if="currentTab === 'protocols'" class="w-full self-start columns-1 lg:columns-3 gap-2">
+        <card class="flex flex-col w-full break-inside-avoid mb-2">
           <p class="text-2xl pb-2">NDI</p>
           <CheckBox id="ndiEnabled" v-model="settingsStore.settings.remote.ndiEnabled">Enable</CheckBox>
           <CheckBox id="ndiAlpha" v-model="settingsStore.settings.remote.ndiAlpha">Alpha</CheckBox>
         </card>
-        <card class="flex flex-col w-full">
+        <card class="flex flex-col w-full break-inside-avoid mb-2">
           <p class="text-2xl pb-2">OMT</p>
           <CheckBox id="omtEnabled" v-model="settingsStore.settings.remote.omtEnabled">Enable</CheckBox>
         </card>
-        <card class="flex flex-col w-full">
+        <card class="flex flex-col w-full break-inside-avoid mb-2">
           <p class="text-2xl pb-2">OSC</p>
           <CheckBox id="oscEnabled" v-model="settingsStore.settings.remote.oscEnabled">Enable</CheckBox>
           <p>Port</p>
@@ -171,6 +171,13 @@
             v-model="settingsStore.settings.remote.oscPort"
             :disabled="settingsStore.settings.remote.oscEnabled"
             class="input w-full disabled:opacity-40 disabled:cursor-not-allowed">
+        </card>
+        <card class="flex flex-col w-full break-inside-avoid mb-2">
+          <p class="text-2xl pb-2">Network discovery</p>
+          <CheckBox id="discoveryEnabled" v-model="settingsStore.settings.remote.discoveryEnabled">Enable</CheckBox>
+          <p class="text-xs italic text-zinc-400 mt-2">
+            Advertises the web server and OSC over Bonjour/mDNS while they are running.
+          </p>
         </card>
       </div>
 

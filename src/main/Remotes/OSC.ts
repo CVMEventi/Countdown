@@ -12,6 +12,7 @@ export class OSC {
   oscServer: Server = null;
   port: number = null;
   timersOrchestrator: TimersOrchestrator = null
+  onStatusChange: () => void = null
   constructor(port: number, timersOrchestrator: TimersOrchestrator) {
     this.port = port;
     this.timersOrchestrator = timersOrchestrator;
@@ -21,6 +22,7 @@ export class OSC {
     if (this.isRunning) return;
     this.oscServer = new Server(this.port, '0.0.0.0', () => {
       this.isRunning = true;
+      this.onStatusChange?.()
     })
 
     this.oscServer.on('message', this._messageReceived.bind(this));
@@ -30,6 +32,7 @@ export class OSC {
     if (!this.isRunning) return;
     this.oscServer.close();
     this.isRunning = false;
+    this.onStatusChange?.()
   }
 
   _messageReceived(message: [string, ...ArgumentType[]]) {

@@ -85,6 +85,7 @@ export default function addIpcHandles(app: CountdownApp)
       app.timersOrchestrator.setNdiAlpha(newSettings.remote.ndiAlpha);
       await app.webRtcRemote?.applyState(newSettings.remote);
       app.playback?.applyState(newSettings.remote.playback);
+      app.refreshDiscovery();
     }
 
     return newSettings

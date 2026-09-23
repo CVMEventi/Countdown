@@ -8,6 +8,7 @@ import {app, BrowserWindow, screen, Tray, Menu, nativeImage, dialog, nativeTheme
 import {
   CloseAction,
   DEFAULT_CLOSE_ACTION,
+  DEFAULT_DISCOVERY_ENABLED,
   DEFAULT_NDI_ENABLED,
   DEFAULT_OMT_ENABLED,
   DEFAULT_OSC_ENABLED,
@@ -20,6 +21,8 @@ import {OSC} from "./Remotes/OSC.ts";
 import {IpcTimerController} from "./Remotes/IpcTimerController.ts";
 import {PlaybackManager} from './Playback/PlaybackManager.ts';
 import {WebRtcRemote} from "./Remotes/WebRtcRemote.ts";
+import {Discovery} from "./Remotes/Discovery.ts";
+import {APP_VERSION} from "../version.ts";
 import createWebRtcHostWindow from "./webRtcHostWindow.ts";
 import macosTrayIcon from "../icons/tray/TrayTemplate.png?no-inline"
 import macOsTrayIcon2x from "../icons/tray/TrayTemplate@2x.png?no-inline"
@@ -46,6 +49,7 @@ export class CountdownApp {
   oscServer: OSC = null;
   webRtcRemote: WebRtcRemote = null;
   playback: PlaybackManager = null;
+  discovery = new Discovery();
 
   constructor() {
     addDefaultEvents();
@@ -108,6 +112,7 @@ export class CountdownApp {
 
       app.on('before-quit', () => {
         this.webRtcRemote?.stop()
+        this.discovery.stop()
         this.playback?.stop()
         this.timersOrchestrator.cleanUp()
         browserWindow.destroy()
@@ -160,6 +165,7 @@ export class CountdownApp {
     this.mainWindowHandler.onCreated((browserWindow) => {
       this.webServer = new HTTP(this.timersOrchestrator, browserWindow);
       this.webServer.port = port;
+      this.webServer.onStatusChange = () => this.refreshDiscovery();
       this.timersOrchestrator.addTransport(this.webServer);
 
       this.webRtcRemote = new WebRtcRemote(
@@ -199,9 +205,12 @@ export class CountdownApp {
       const oscEnabled = this.config.settings.remote.oscEnabled ?? DEFAULT_OSC_ENABLED
       const oscPort = this.config.settings.remote.oscPort ?? DEFAULT_OSC_PORT
       this.oscServer = new OSC(oscPort, this.timersOrchestrator);
+      this.oscServer.onStatusChange = () => this.refreshDiscovery();
       if (oscEnabled) {
         this.oscServer.start();
       }
+
+      this.refreshDiscovery();
     })
 
     if (this.config.settings.remote.ndiEnabled ?? DEFAULT_NDI_ENABLED) {
@@ -241,6 +250,16 @@ export class CountdownApp {
 
   async omtIntervalCallback() {
     this.timersOrchestrator.sendOMTFrames()
+  }
+
+  refreshDiscovery() {
+    const remote = this.config.settings.remote
+    this.discovery.refresh({
+      enabled: remote.discoveryEnabled ?? DEFAULT_DISCOVERY_ENABLED,
+      version: APP_VERSION,
+      http: {running: this.webServer?.isRunning ?? false, port: this.webServer?.port},
+      osc: {running: this.oscServer?.isRunning ?? false, port: this.oscServer?.port},
+    })
   }
 
   _configUpdated() {
