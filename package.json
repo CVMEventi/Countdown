@@ -1,7 +1,7 @@
 {
   "name": "countdown",
   "productName": "countdown",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "CVM Countdown",
   "main": ".vite/build/index.js",
   "repository": "CVMEventi/Countdown",
