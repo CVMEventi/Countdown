@@ -76,6 +76,7 @@ describe('selectPlaybackState', () => {
       totalSeconds: 180,
       isRunning: true,
       isLooping: false,
+      media: {input_number: 2, input_type: 'Video', input_key: 'abc-123'},
     });
   });
 

@@ -8,6 +8,7 @@ import {
   WebSocketUpdateCallback
 } from "../common/TimerInterfaces.ts";
 import {ColorThreshold, DEFAULT_SET_TIME_LIVE, DEFAULT_STOP_TIMER_AT_ZERO, getActiveThreshold} from "../common/config.ts";
+import {type PlaybackMedia, playbackMediaEquals} from "../common/playback.ts";
 dayjs.extend(duration);
 
 /**
@@ -21,6 +22,8 @@ export interface TimerSourceOverride {
   remainingSeconds: number
   totalSeconds: number
   isRunning: boolean
+  title?: string | null
+  media?: PlaybackMedia | null
 }
 
 export interface TimerEngineOptions {
@@ -143,7 +146,9 @@ export class TimerEngine {
       && a.sourceName === b.sourceName
       && a.remainingSeconds === b.remainingSeconds
       && a.totalSeconds === b.totalSeconds
-      && a.isRunning === b.isRunning;
+      && a.isRunning === b.isRunning
+      && (a.title ?? null) === (b.title ?? null)
+      && playbackMediaEquals(a.media ?? null, b.media ?? null);
   }
 
   // Display read-throughs. The public isReset/isExpiring/_state keep meaning the internal timer:
@@ -349,6 +354,8 @@ export class TimerEngine {
       isCountingUp: this._displayIsCountingUp(),
       timerEndsAt: this.endsAt() ?? "",
       source: this._sourceOverride?.sourceName ?? null,
+      sourceTitle: this._sourceOverride?.title ?? null,
+      sourceMedia: this._sourceOverride?.media ?? null,
       timerIsReset: this.isReset(),
       // Raw, so the control panel can split it into its own count and extra exactly as the
       // engine would: setTimeLive is a display rule for the outputs, not for these
@@ -393,6 +400,8 @@ export class TimerEngine {
     return {
       state: state,
       source: override?.sourceName ?? null,
+      sourceTitle: override?.title ?? null,
+      sourceMedia: override?.media ?? null,
       timerState: this._state(),
       timerCurrentTime: this._currentSeconds,
       ownEndsAt: this._internalEndsAt()?.format('HH:mm') ?? "",

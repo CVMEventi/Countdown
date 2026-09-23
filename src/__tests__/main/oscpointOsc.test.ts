@@ -44,6 +44,7 @@ describe('OscPointTracker', () => {
       totalSeconds: 60,
       isRunning: true,
       isLooping: false,
+      media: {presentation: 'Keynote.pptx', slide: 4},
     });
   });
 

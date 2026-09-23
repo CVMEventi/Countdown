@@ -159,5 +159,10 @@ export function buildPlaybackState(node: GrandShowNode, isRunning: boolean): Pla
     totalSeconds: Math.round(durMs / 1000),
     isRunning,
     isLooping: false,
+    media: {
+      row: node.row,
+      col: node.col,
+      node_id: node.id,
+    },
   }
 }

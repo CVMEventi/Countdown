@@ -5,6 +5,8 @@ import {
 } from "../../common/config.ts";
 import {TimerEngine, TimerEngineConstructorOptions, TimerEngineOptions} from "../TimerEngine.ts";
 import {playbackSourceLabel, type PlaybackState} from "../../common/playback.ts";
+import {playbackTemplateVars, renderMessageTemplate} from "../../common/messageTemplate.ts";
+import {PlaybackMessageTracker} from "../Playback/PlaybackMessageTracker.ts";
 import BrowserWinHandler from "./BrowserWinHandler.ts";
 import createCountdownWindow from "../countdownWindow.ts";
 import {BrowserWindow, powerMonitor, screen} from "electron";
@@ -66,6 +68,7 @@ export class TimersOrchestrator {
   private _transports = new TransportRegistry()
   // Latest state per playback provider, so a timer created or re-pointed mid clip joins at once
   private _playbackStates = new Map<string, PlaybackState>()
+  private _playbackMessages = new Map<string, PlaybackMessageTracker>()
 
   constructor(app: CountdownApp) {
     this.app = app
@@ -406,6 +409,7 @@ export class TimersOrchestrator {
       this.destroyWindow(timerId, windowId)
     })
     delete this.timers[timerId]
+    this._playbackMessages.delete(timerId)
   }
 
   configUpdated() {
@@ -589,22 +593,47 @@ export class TimersOrchestrator {
     const timer = this.timers[timerId]
     if (!timer) return
 
-    const sourceId = timer.settings.playbackSource
-    const state = sourceId ? this._playbackStates.get(sourceId) ?? null : null
+    // Listed highest priority first: the first source playing drives the timer
+    const link = (timer.settings.playbackSources ?? []).find(candidate => this._playbackStates.has(candidate.sourceId))
+    const state = link ? this._playbackStates.get(link.sourceId) : null
+    const sourceName = link ? playbackSourceLabel(link.sourceId, this.app.config.settings.remote?.playback) : null
 
-    timer.engine.setSourceOverride(state === null ? null : {
-      sourceId,
-      sourceName: playbackSourceLabel(sourceId, this.app.config.settings.remote?.playback),
+    timer.engine.setSourceOverride(state ? {
+      sourceId: link.sourceId,
+      sourceName,
       remainingSeconds: state.remainingSeconds,
       totalSeconds: state.totalSeconds,
       isRunning: state.isRunning,
-    })
+      title: state.title,
+      media: state.media ?? null,
+    } : null)
+
+    const rendered = state && link.message
+      ? renderMessageTemplate(link.message, playbackTemplateVars(state, sourceName))
+      : null
+    this._setPlaybackMessage(timerId, rendered)
+  }
+
+  private _setPlaybackMessage(timerId: string, rendered: string | null) {
+    const engine = this.timers[timerId]?.engine
+    if (!engine) return
+
+    let tracker = this._playbackMessages.get(timerId)
+    if (!tracker) {
+      if (rendered === null) return
+      tracker = new PlaybackMessageTracker()
+      this._playbackMessages.set(timerId, tracker)
+    }
+
+    const message = tracker.update(rendered, engine.message)
+    if (message !== undefined) engine.setMessage(message ?? undefined)
   }
 
   cleanUp(): void {
     this._playbackStates.clear()
     Object.keys(this.timers).forEach(timerId => {
       const timer = this.timers[timerId];
+      this._setPlaybackMessage(timerId, null)
       timer.engine.setSourceOverride(null)
       timer.engine.reset()
       Object.keys(timer.ndiServers).forEach(windowId => {

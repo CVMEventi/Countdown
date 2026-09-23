@@ -145,6 +145,11 @@ export function buildPlaybackState(cue: QLabCue, values: QLabCueValues): Playbac
     totalSeconds: Math.round(values.currentDuration),
     isRunning: values.isRunning && !values.isPaused,
     isLooping: false,
+    media: {
+      cue_number: cue.number || null,
+      cue_name: cue.name || null,
+      cue_type: cue.type || null,
+    },
   }
 }
 

@@ -34,7 +34,7 @@ export function getActiveThreshold(
   })
 }
 
-export const CURRENT_CONFIG_VERSION: number = 8
+export const CURRENT_CONFIG_VERSION: number = 9
 
 export const DEFAULT_TIMER_NAME = 'Timer'
 
@@ -187,7 +187,7 @@ export const DEFAULT_TIMER_SETTINGS: TimerSettings = {
   setTimeLive: DEFAULT_SET_TIME_LIVE,
   stopTimerAtZero: DEFAULT_STOP_TIMER_AT_ZERO,
   followTimer: null,
-  playbackSource: null,
+  playbackSources: [],
   audioFile: null,
   audioOutputDeviceId: null,
   windows: {[ulid()]: DEFAULT_WINDOW_SETTINGS},
@@ -280,14 +280,20 @@ export interface Windows {
   [key: string]: WindowSettings;
 }
 
+export interface TimerSourceLink {
+  sourceId: string
+  // Template set as the timer message while this source drives it, empty for none
+  message: string
+}
+
 export interface TimerSettings {
   name: string
   timerDuration: number
   setTimeLive: boolean
   stopTimerAtZero: boolean
   followTimer: string
-  // Id of the playback provider this timer mirrors while that source is playing, null for none
-  playbackSource: string | null
+  // Sources this timer mirrors while they play, highest priority first
+  playbackSources: TimerSourceLink[]
   audioFile: string | null
   audioOutputDeviceId: string | null
   windows: Windows

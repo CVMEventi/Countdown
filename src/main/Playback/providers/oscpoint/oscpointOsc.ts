@@ -163,6 +163,10 @@ export class OscPointTracker {
       totalSeconds: Math.round(total / 1000),
       isRunning: snapshot.mediaState === 'playing',
       isLooping: false,
+      media: {
+        presentation: snapshot.presentation || null,
+        slide: snapshot.currentSlide > 0 ? snapshot.currentSlide : null,
+      },
     }
   }
 }

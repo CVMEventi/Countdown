@@ -11,6 +11,7 @@ import { DEFAULT_WEBRTC_SPA_URL } from '../../common/config.ts';
 import { AddPlaybackSettings } from '../../main/Migrations/AddPlaybackSettings.ts';
 import { DEFAULT_PLAYBACK_SETTINGS, MILLUMIN_PROVIDER_ID, VMIX_PROVIDER_ID } from '../../common/playback.ts';
 import { PlaybackProvidersToSources } from '../../main/Migrations/PlaybackProvidersToSources.ts';
+import { PlaybackSourceToSources } from '../../main/Migrations/PlaybackSourceToSources.ts';
 import { ContentAtReset } from '../../common/config.ts';
 
 // ─────────────────────────────────────────────────────────────
@@ -444,8 +445,44 @@ describe('PlaybackProvidersToSources', () => {
 });
 
 // ─────────────────────────────────────────────────────────────
-// applyMigrations — integration
+// PlaybackSourceToSources
 // ─────────────────────────────────────────────────────────────
+describe('PlaybackSourceToSources', () => {
+  const migration = new PlaybackSourceToSources();
+
+  function timersOf(timers: Record<string, unknown>, version = 8) {
+    const result = migration.migrate({version, settings: {timers}}) as Record<string, unknown>;
+    return (result.settings as Record<string, unknown>).timers as Record<string, Record<string, unknown>>;
+  }
+
+  it('returns config unchanged when already at version 9', () => {
+    const config = {version: 9, settings: {timers: {a: {playbackSource: 'x'}}}};
+    expect(migration.migrate(config)).toBe(config);
+  });
+
+  it('turns a followed source into a one-entry list with no message', () => {
+    const timers = timersOf({a: {name: 'A', playbackSource: 'src-1'}});
+    expect(timers.a.playbackSources).toEqual([{sourceId: 'src-1', message: ''}]);
+    expect(timers.a.playbackSource).toBeUndefined();
+    expect(timers.a.name).toBe('A');
+  });
+
+  it('turns no source into an empty list', () => {
+    const timers = timersOf({a: {playbackSource: null}, b: {}});
+    expect(timers.a.playbackSources).toEqual([]);
+    expect(timers.b.playbackSources).toEqual([]);
+  });
+
+  it('leaves a timer already in the new shape alone', () => {
+    const links = [{sourceId: 's', message: 'Video: {media_title}'}];
+    expect(timersOf({a: {playbackSources: links}}).a.playbackSources).toBe(links);
+  });
+
+  it('bumps the version to 9', () => {
+    expect(migration.migrate({version: 8, settings: {}}).version).toBe(9);
+  });
+});
+
 // ─────────────────────────────────────────────────────────────
 // AddWebRtcRemoteSettings
 // ─────────────────────────────────────────────────────────────
@@ -625,8 +662,8 @@ describe('applyMigrations', () => {
 
     const result = applyMigrations(oldConfig) as Record<string, unknown>;
 
-    // Version should be bumped to 8 by AddDiscoverySettings
-    expect(result.version).toBe(8);
+    // Version should be bumped to 9 by PlaybackSourceToSources
+    expect(result.version).toBe(9);
 
     const settings = result.settings as Record<string, unknown>;
 
@@ -645,11 +682,13 @@ describe('applyMigrations', () => {
     const win = Object.values(windows)[0] as Record<string, unknown>;
     const colors = win.colors as Record<string, unknown>;
     expect(Array.isArray(colors.thresholds)).toBe(true);
+    expect(timer.playbackSources).toEqual([]);
+    expect(timer.playbackSource).toBeUndefined();
   });
 
-  it('is idempotent on a fully migrated config (version 8)', () => {
+  it('is idempotent on a fully migrated config (version 9)', () => {
     const migrated = {
-      version: 8,
+      version: 9,
       settings: {
         timers: {},
         presets: [] as number[],
@@ -679,7 +718,7 @@ describe('applyMigrations', () => {
     const result = applyMigrations(migrated) as Record<string, unknown>;
     const remote = (result.settings as Record<string, unknown>).remote as Record<string, unknown>;
 
-    expect(result.version).toBe(8);
+    expect(result.version).toBe(9);
     expect(remote.webrtcEnabled).toBe(false);
     expect(remote.discoveryEnabled).toBe(true);
     expect(remote.webServerPort).toBe(7000);

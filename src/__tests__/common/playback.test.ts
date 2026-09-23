@@ -94,8 +94,15 @@ describe('playbackStateEquals', () => {
     expect(playbackStateEquals(state, null)).toBe(false);
   });
 
-  it('ignores the title, which does not change what the timers show', () => {
-    expect(playbackStateEquals(state, {...state, title: 'Other.mov'})).toBe(true);
+  it('spots a renamed item, which the timers show and template messages use', () => {
+    expect(playbackStateEquals(state, {...state, title: 'Other.mov'})).toBe(false);
+  });
+
+  it('compares media field by field', () => {
+    const withMedia = {...state, media: {cue_number: '1', cue_name: 'Intro'}};
+    expect(playbackStateEquals(withMedia, {...withMedia, media: {cue_number: '1', cue_name: 'Intro'}})).toBe(true);
+    expect(playbackStateEquals(withMedia, {...withMedia, media: {cue_number: '2', cue_name: 'Intro'}})).toBe(false);
+    expect(playbackStateEquals(withMedia, state)).toBe(false);
   });
 
   it('spots a different clip at the same time', () => {

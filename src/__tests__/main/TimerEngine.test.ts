@@ -590,6 +590,26 @@ describe('TimerEngine', () => {
       expect(state.timerState).toBe('Not Running');
     });
 
+    it('carries the media title and details to the display and websocket clients', () => {
+      const { engine, onUpdate } = makeEngine();
+      const media = {input_number: 2, input_type: 'Video'};
+
+      engine.setSourceOverride({...override, title: 'Package.mp4', media});
+
+      expect(lastUpdate(onUpdate)).toMatchObject({sourceTitle: 'Package.mp4', sourceMedia: media});
+      expect(engine.webSocketState()).toMatchObject({sourceTitle: 'Package.mp4', sourceMedia: media});
+    });
+
+    it('sends an update when only the media changes', () => {
+      const { engine, onUpdate } = makeEngine();
+      engine.setSourceOverride({...override, title: 'A', media: {slide: 1}});
+      const calls = onUpdate.mock.calls.length;
+
+      engine.setSourceOverride({...override, title: 'A', media: {slide: 2}});
+
+      expect(onUpdate.mock.calls.length).toBe(calls + 1);
+    });
+
     it('reports Paused when the clip is paused', () => {
       const { engine } = makeEngine();
       engine.setSourceOverride({...override, isRunning: false});

@@ -405,7 +405,11 @@ function removeSource(sourceId: string) {
   delete remote.value.playback[sourceId]
   // A timer left pointing at a deleted source would silently never update again
   Object.values(settingsStore.settings.timers ?? {}).forEach(timer => {
-    if (timer.playbackSource === sourceId) timer.playbackSource = null
+    // Spliced in place: a filtered copy would hold reactive proxies, which break the IPC save
+    const links = timer.playbackSources ?? []
+    for (let i = links.length - 1; i >= 0; i--) {
+      if (links[i].sourceId === sourceId) links.splice(i, 1)
+    }
   })
 }
 
@@ -425,7 +429,7 @@ function oscPortClash(source: PlaybackSource) {
 // half of the setup to miss
 function timersFollowing(sourceId: string) {
   return Object.values(settingsStore.settings.timers ?? {})
-    .filter(timer => timer.playbackSource === sourceId).length
+    .filter(timer => (timer.playbackSources ?? []).some(link => link.sourceId === sourceId)).length
 }
 
 function playbackStatus(sourceId: string) {

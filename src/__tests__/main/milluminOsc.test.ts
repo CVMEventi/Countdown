@@ -60,6 +60,7 @@ describe('MilluminTracker', () => {
       totalSeconds: 60,
       isRunning: true,
       isLooping: false,
+      media: {layer: 'Main', media_name: 'Package.mov'},
     });
   });
 

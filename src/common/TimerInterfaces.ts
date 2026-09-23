@@ -1,4 +1,5 @@
 import type {Timers} from "./config.ts";
+import type {PlaybackMedia} from "./playback.ts";
 
 export interface TimerEngineUpdate {
   setSeconds: number
@@ -12,8 +13,10 @@ export interface TimerEngineUpdate {
   isCountingUp: boolean
   timerEndsAt: string | null
   timerEndsAtEpochMs?: number | null
-  // Set while a playback source is painted over this timer: the provider id driving the display
+  // Set while a playback source is painted over this timer: the name of the source driving it
   source?: string | null
+  sourceTitle?: string | null
+  sourceMedia?: PlaybackMedia | null
   // The timer's OWN clock, which keeps running underneath an override. Without these the
   // operator loses sight of their own countdown the moment a playback source takes the display.
   timerIsReset?: boolean
@@ -74,6 +77,8 @@ export interface TimerEngineWebSocketUpdate {
   timerEndsAt?: string
   timerEndsAtEpochMs?: number | null
   source?: string | null
+  sourceTitle?: string | null
+  sourceMedia?: PlaybackMedia | null
   // The timer's OWN clock, which keeps running underneath an override
   timerState?: string
   timerCurrentTime?: number

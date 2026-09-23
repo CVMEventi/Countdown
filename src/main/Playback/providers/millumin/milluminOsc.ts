@@ -187,6 +187,10 @@ export class MilluminTracker {
       totalSeconds: Math.round(chosen.duration),
       isRunning: !chosen.paused,
       isLooping: false,
+      media: {
+        layer: chosen.layer,
+        media_name: chosen.name,
+      },
     }
   }
 

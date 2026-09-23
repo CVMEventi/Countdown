@@ -9,6 +9,7 @@ import {SetDefaultWebRtcSpaUrl} from "./SetDefaultWebRtcSpaUrl.ts";
 import {AddPlaybackSettings} from "./AddPlaybackSettings.ts";
 import {PlaybackProvidersToSources} from "./PlaybackProvidersToSources.ts";
 import {AddDiscoverySettings} from "./AddDiscoverySettings.ts";
+import {PlaybackSourceToSources} from "./PlaybackSourceToSources.ts";
 
 const migrations: BaseMigration[] = [
   new MergeOpacityToBackgroundColor,
@@ -21,6 +22,7 @@ const migrations: BaseMigration[] = [
   new AddPlaybackSettings,
   new PlaybackProvidersToSources,
   new AddDiscoverySettings,
+  new PlaybackSourceToSources,
 ];
 
 export function applyMigrations(oldConfig: {[key: string]: unknown}): {[key: string]: unknown} {

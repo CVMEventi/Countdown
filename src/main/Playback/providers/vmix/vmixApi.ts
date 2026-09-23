@@ -124,5 +124,10 @@ export function selectPlaybackState(
     totalSeconds: Math.round(input.duration / 1000),
     isRunning: input.state === 'Running',
     isLooping: input.loop,
+    media: {
+      input_number: Number.isFinite(input.number) ? input.number : null,
+      input_type: input.type || null,
+      input_key: input.key || null,
+    },
   }
 }

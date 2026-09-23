@@ -30,15 +30,43 @@
       </div>
       <div class="flex flex-col gap-1">
         <div class="flex items-center gap-1">
-          <label for="playbackSource" class="text-sm">Timer source</label>
-          <InfoTip text="While this source plays a clip, outputs show the clip's remaining time. This timer keeps counting underneath and comes back when the clip ends." />
+          <span class="text-sm">Timer sources</span>
+          <InfoTip text="While a source plays a clip, outputs show the clip's remaining time. This timer keeps counting underneath and comes back when the clip ends. When several play at once, the highest one in the list wins." />
         </div>
-        <select id="playbackSource" v-model="timer.playbackSource" class="input p-2 w-full">
-          <option :value="null">None</option>
-          <option v-for="(source, sourceId) in playbackSources" :key="sourceId" :value="sourceId">
-            {{ source.name || providerName(source.provider) }}
-          </option>
-        </select>
+        <div
+          v-for="(link, index) in sourceLinks"
+          :key="link.sourceId"
+          class="flex flex-col gap-1 rounded-lg bg-zinc-700/50 p-2">
+          <div class="flex items-center gap-1">
+            <select v-model="link.sourceId" class="input p-2 flex-1 min-w-0">
+              <option v-for="sourceId in selectableSources(link.sourceId)" :key="sourceId" :value="sourceId">
+                {{ sourceLabel(sourceId) }}
+              </option>
+            </select>
+            <SButton title="Move up" tiny type="info" :disabled="index === 0" @click="moveLink(index, -1)">
+              <ChevronUpIcon class="w-4" />
+            </SButton>
+            <SButton title="Move down" tiny type="info" :disabled="index === sourceLinks.length - 1" @click="moveLink(index, 1)">
+              <ChevronDownIcon class="w-4" />
+            </SButton>
+            <SButton title="Remove source" tiny type="danger" @click="removeLink(index)"><XMarkIcon class="w-4" /></SButton>
+          </div>
+          <input
+            v-model="link.message"
+            class="input rounded-lg px-2 py-1 text-sm w-full"
+            type="text"
+            placeholder="Message while playing, e.g. Video: {media_title}">
+          <p class="text-xs text-zinc-400">
+            <button
+              v-for="field in fieldsFor(link.sourceId)"
+              :key="field.key"
+              type="button"
+              :title="`Add ${field.label}`"
+              class="mr-2 font-mono hover:text-zinc-100 cursor-pointer"
+              @click="appendField(link, field.key)">{{ fieldToken(field.key) }}</button>
+          </p>
+        </div>
+        <SButton v-if="unlinkedSources.length > 0" class="self-start" tiny type="info" @click="addLink">Add source</SButton>
         <p v-if="Object.keys(playbackSources).length === 0" class="text-xs italic text-zinc-400">
           Add one under Remote settings → Timer sources first.
         </p>
@@ -101,9 +129,10 @@
 
 <script lang="ts" setup>
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
-import { CheckIcon, ClipboardDocumentIcon, MusicalNoteIcon, XMarkIcon } from '@heroicons/vue/20/solid'
-import { TimerSettings, Timers } from '@common/config.ts'
+import { CheckIcon, ChevronDownIcon, ChevronUpIcon, ClipboardDocumentIcon, MusicalNoteIcon, XMarkIcon } from '@heroicons/vue/20/solid'
+import { TimerSettings, TimerSourceLink, Timers } from '@common/config.ts'
 import { playbackProviderMeta } from '@common/playback.ts'
+import { templateFieldsFor } from '@common/messageTemplate.ts'
 import { useSettingsStore } from '../stores/settings.ts'
 import { copyText } from '@common/clipboard.ts'
 import Card from '@common/components/Card.vue'
@@ -125,6 +154,53 @@ const playbackSources = computed(() => settingsStore.settings.remote?.playback ?
 
 function providerName(providerId: string) {
   return playbackProviderMeta(providerId)?.displayName ?? providerId
+}
+
+const sourceLinks = computed(() => timer.value.playbackSources ?? [])
+
+const unlinkedSources = computed(() =>
+  Object.keys(playbackSources.value).filter(id => !sourceLinks.value.some(link => link.sourceId === id)))
+
+function selectableSources(current: string) {
+  return [current, ...unlinkedSources.value]
+}
+
+function sourceLabel(sourceId: string) {
+  const source = playbackSources.value[sourceId]
+  if (!source) return 'Deleted source'
+  return source.name || providerName(source.provider)
+}
+
+function fieldToken(key: string) {
+  return `{${key}}`
+}
+
+function appendField(link: TimerSourceLink, key: string) {
+  const message = link.message ?? ''
+  const separator = message && !/\s$/.test(message) ? ' ' : ''
+  link.message = message + separator + fieldToken(key)
+}
+
+function fieldsFor(sourceId: string) {
+  return templateFieldsFor(playbackSources.value[sourceId]?.provider)
+}
+
+function addLink() {
+  const sourceId = unlinkedSources.value[0]
+  if (!sourceId) return
+  // Push onto the stored array: copying its items would put reactive proxies in the raw settings,
+  // which cannot be cloned over IPC and silently breaks every save
+  if (!timer.value.playbackSources) timer.value.playbackSources = []
+  timer.value.playbackSources.push({ sourceId, message: '' })
+}
+
+function removeLink(index: number) {
+  sourceLinks.value.splice(index, 1)
+}
+
+function moveLink(index: number, offset: number) {
+  const [link] = sourceLinks.value.splice(index, 1)
+  sourceLinks.value.splice(index + offset, 0, link)
 }
 
 const otherTimers = computed(() => Object.keys(props.timers).filter((id) => id !== props.timerId))

@@ -19,6 +19,15 @@ export interface PlaybackState {
   totalSeconds: number
   isRunning: boolean
   isLooping: boolean
+  // Provider specific details about the item, keyed as the provider's mediaFields declare
+  media?: PlaybackMedia
+}
+
+export type PlaybackMedia = Record<string, string | number | null>
+
+export interface PlaybackMediaField {
+  key: string
+  label: string
 }
 
 export interface PlaybackProviderStatus {
@@ -50,6 +59,8 @@ export interface PlaybackProviderMeta {
   // A state not refreshed within this window is dropped, which is what lets one rule cover both a
   // poller falling silent and a push source going quiet
   staleAfterMs: number
+  // Template variables this provider fills in PlaybackState.media
+  mediaFields: PlaybackMediaField[]
 }
 
 export const VMIX_PROVIDER_ID = 'vmix'
@@ -81,6 +92,11 @@ export const VMIX_PROVIDER_META: PlaybackProviderMeta = {
   displayName: 'vMix',
   defaultConfig: DEFAULT_VMIX_CONFIG,
   staleAfterMs: 1000,
+  mediaFields: [
+    {key: 'input_number', label: 'Input number'},
+    {key: 'input_type', label: 'Input type'},
+    {key: 'input_key', label: 'Input key'},
+  ],
 }
 
 export const MILLUMIN_PROVIDER_ID = 'millumin'
@@ -112,6 +128,10 @@ export const MILLUMIN_PROVIDER_META: PlaybackProviderMeta = {
   displayName: 'Millumin',
   defaultConfig: DEFAULT_MILLUMIN_CONFIG,
   staleAfterMs: 1000,
+  mediaFields: [
+    {key: 'layer', label: 'Layer'},
+    {key: 'media_name', label: 'Media name'},
+  ],
 }
 
 export const QLAB_PROVIDER_ID = 'qlab'
@@ -146,6 +166,11 @@ export const QLAB_PROVIDER_META: PlaybackProviderMeta = {
   displayName: 'QLab',
   defaultConfig: DEFAULT_QLAB_CONFIG,
   staleAfterMs: 2000,
+  mediaFields: [
+    {key: 'cue_number', label: 'Cue number'},
+    {key: 'cue_name', label: 'Cue name'},
+    {key: 'cue_type', label: 'Cue type'},
+  ],
 }
 
 export const OSCPOINT_PROVIDER_ID = 'oscpoint'
@@ -172,6 +197,10 @@ export const OSCPOINT_PROVIDER_META: PlaybackProviderMeta = {
   displayName: 'OSCPoint',
   defaultConfig: DEFAULT_OSCPOINT_CONFIG,
   staleAfterMs: 1000,
+  mediaFields: [
+    {key: 'presentation', label: 'Presentation'},
+    {key: 'slide', label: 'Slide number'},
+  ],
 }
 
 export const GRANDSHOW_PROVIDER_ID = 'grandshow'
@@ -199,6 +228,11 @@ export const GRANDSHOW_PROVIDER_META: PlaybackProviderMeta = {
   displayName: 'GrandShow',
   defaultConfig: DEFAULT_GRANDSHOW_CONFIG,
   staleAfterMs: 1000,
+  mediaFields: [
+    {key: 'row', label: 'Row'},
+    {key: 'col', label: 'Column'},
+    {key: 'node_id', label: 'Node id'},
+  ],
 }
 
 // Adding a provider means adding its meta here, a factory in main/Playback/providers, and a
@@ -245,4 +279,13 @@ export function playbackStateEquals(a: PlaybackState | null, b: PlaybackState | 
     && a.remainingSeconds === b.remainingSeconds
     && a.totalSeconds === b.totalSeconds
     && a.isRunning === b.isRunning
+    && a.title === b.title
+    && playbackMediaEquals(a.media ?? null, b.media ?? null)
+}
+
+export function playbackMediaEquals(a: PlaybackMedia | null, b: PlaybackMedia | null): boolean {
+  if (a === null || b === null) return a === b
+  const keys = Object.keys(a)
+  if (keys.length !== Object.keys(b).length) return false
+  return keys.every(key => a[key] === b[key])
 }

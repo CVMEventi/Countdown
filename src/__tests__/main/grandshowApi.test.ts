@@ -99,6 +99,7 @@ describe('buildPlaybackState', () => {
       totalSeconds: 60,
       isRunning: true,
       isLooping: false,
+      media: {row: 1, col: 1, node_id: 1},
     });
   });
 

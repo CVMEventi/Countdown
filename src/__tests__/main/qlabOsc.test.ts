@@ -133,6 +133,7 @@ describe('buildPlaybackState', () => {
       totalSeconds: 60,
       isRunning: true,
       isLooping: false,
+      media: {cue_number: '1', cue_name: 'Package', cue_type: 'Video'},
     });
   });
 

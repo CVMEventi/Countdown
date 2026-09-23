@@ -50,6 +50,9 @@
             </div>
           </div>
           <TimeInput :modelValue="sourceSeconds" color="white" :disabled="true" />
+          <div v-if="playbackSourceTitle" class="text-sm text-zinc-400 truncate mt-1" :title="playbackSourceTitle">
+            {{ playbackSourceTitle }}
+          </div>
         </template>
       </Card>
 
@@ -179,6 +182,7 @@ const currentTimer = computed<TimerSettings | null>(() => {
 const timerIsReset = computed(() => currentUpdate.value.timerIsReset ?? currentUpdate.value.isReset)
 
 const playbackSourceName = computed<string | null>(() => currentUpdate.value.source ?? null)
+const playbackSourceTitle = computed<string | null>(() => currentUpdate.value.sourceTitle ?? null)
 
 
 const followingTimerId = computed<string | null>(() => {
