@@ -496,6 +496,18 @@ describe('TimerEngine', () => {
       expect(onPlaySound).toHaveBeenCalledTimes(1);
     });
 
+    it('plays sound once when timer stops at zero', () => {
+      const { engine, onPlaySound } = makeEngine({
+        audioFile: "test.wav",
+        stopTimerAtZero: true,
+      });
+      engine.set(1);
+      engine.start();
+      vi.advanceTimersByTime(5000);
+      expect(engine.timerIsRunning).toBe(false);
+      expect(onPlaySound).toHaveBeenCalledTimes(1);
+    });
+
     it('does not play sound when audioEnabled is false', () => {
       const { engine, onPlaySound } = makeEngine();
       engine.audioEnabled = false;

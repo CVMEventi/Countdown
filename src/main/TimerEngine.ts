@@ -375,8 +375,10 @@ export class TimerEngine {
 
   private _sendWebSocketUpdate() {
     // Bound to the internal state on purpose: the timer's own end sound keeps its own schedule
-    // even while a playback source is painted over the display
-    if (this._state() === 'Expired' && this.audioEnabled && !this._audioRun && this.options.audioFile) {
+    // even while a playback source is painted over the display. Not keyed on 'Expired': stop at
+    // zero pauses the timer before the zero tick lands, so the state reads 'Paused'
+    const reachedZero = !this.isReset() && this._currentSeconds <= 0;
+    if (reachedZero && this.audioEnabled && !this._audioRun && this.options.audioFile) {
       this.playSound?.(this.options.audioFile)
       this._audioRun = true;
     }
