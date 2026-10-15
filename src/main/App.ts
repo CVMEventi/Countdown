@@ -103,6 +103,7 @@ export class CountdownApp {
       setMenu(this.mainWindowHandler, this.timersOrchestrator);
 
       const screensUpdated = (browserWindow: BrowserWindow) => {
+        this.timersOrchestrator.refreshDisplays()
         browserWindow.webContents.send('screens-updated');
       }
 
