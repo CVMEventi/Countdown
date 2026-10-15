@@ -4,6 +4,7 @@ import Store from "electron-store";
 import {applyMigrations} from "../Migrations/applyMigrations.ts";
 // @ts-ignore
 import {getProperty, setProperty} from "dot-prop";
+import {getStartWithWindows} from './windowsStartup.ts';
 
 
 export class Config {
@@ -22,6 +23,8 @@ export class Config {
     this.store.set(newConfig)
 
     this._settings = this.store.get('settings')
+    // Read Windows' actual state, including changes made in Task Manager.
+    this._settings.startWithWindows = getStartWithWindows()
   }
 
   set(key: string, value: unknown) {

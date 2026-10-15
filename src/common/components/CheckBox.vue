@@ -4,6 +4,7 @@
       class="rounded-md border-0 bg-zinc-700 focus:ring-0"
       :id="id"
       :checked="modelValue"
+      :disabled="disabled"
       @input="$emit('update:modelValue', $event.target.checked)"
       type="checkbox" />
     <label
@@ -20,6 +21,7 @@ defineEmits(['update:modelValue']);
 export interface Props {
   modelValue: boolean
   id: string
+  disabled?: boolean
 }
 
 defineProps<Props>();

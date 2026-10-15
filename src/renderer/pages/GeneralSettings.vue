@@ -21,6 +21,10 @@
             <option v-for="action in CloseAction" :value="action">{{ getCloseActionLabel(action) }}</option>
           </select>
           <CheckBox class="mt-2" id="startHidden" v-model="settingsStore.settings.startHidden">Start hidden</CheckBox>
+          <template v-if="api.platform === 'win32'">
+            <CheckBox class="mt-2" :class="{'opacity-50': !startupAvailable}" id="startWithWindows" :disabled="!startupAvailable" v-model="settingsStore.settings.startWithWindows">Start with Windows</CheckBox>
+            <p v-if="!startupAvailable" class="text-xs text-zinc-400">Available in the packaged Windows app.</p>
+          </template>
         </div>
       </card>
     </div>
@@ -37,8 +41,15 @@ import {CloseAction} from "../../common/config.ts";
 import TopBar from '../components/TopBar.vue'
 import BaseContainer from '../components/BaseContainer.vue'
 import {useSettingsStore} from '../stores/settings.ts'
+import {onBeforeMount, ref} from 'vue'
 
 const settingsStore = useSettingsStore()
+const {api} = window
+const startupAvailable = ref(false)
+
+onBeforeMount(async () => {
+  startupAvailable.value = await api.canStartWithWindows()
+})
 
 function addPreset() {
   settingsStore.settings.presets.push(0)

@@ -221,6 +221,7 @@ export const DEFAULT_STORE: CountdownConfiguration = {
       setWindowAlwaysOnTop: DEFAULT_SET_WINDOW_ALWAYS_ON_TOP,
       closeAction: DEFAULT_CLOSE_ACTION,
       startHidden: DEFAULT_START_HIDDEN,
+      startWithWindows: false,
       timers: { [ulid()]: DEFAULT_TIMER_SETTINGS},
     },
     version: CURRENT_CONFIG_VERSION
@@ -347,6 +348,7 @@ export interface CountdownSettings {
   setWindowAlwaysOnTop: boolean
   closeAction: CloseAction,
   startHidden: boolean,
+  startWithWindows: boolean,
   timers: Timers
 }
 

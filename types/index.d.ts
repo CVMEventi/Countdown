@@ -26,6 +26,8 @@ interface WebServerStatus {
 }
 
 interface API {
+  platform: NodeJS.Platform
+  canStartWithWindows(): Promise<boolean>
   getSettings(key?: string): Promise<any>
   setSettings(key: string, value: any): Promise<any>
   command(command: any): Promise<any>

@@ -16,6 +16,7 @@ export const useSettingsStore = defineStore('settings', () => {
     setWindowAlwaysOnTop: false,
     closeAction: DEFAULT_CLOSE_ACTION,
     startHidden: DEFAULT_START_HIDDEN,
+    startWithWindows: false,
     timers: {},
   });
 

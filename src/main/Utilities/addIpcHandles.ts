@@ -1,4 +1,4 @@
-import {dialog, ipcMain, screen} from "electron";
+import {app as electronApp, dialog, ipcMain, screen} from "electron";
 import {CountdownApp} from "../App.ts";
 import {IpcGetWindowSettingsArgs} from "../../common/IpcInterfaces.ts";
 import {DEFAULT_WEBSERVER_ENABLED, DEFAULT_WEBSERVER_PORT, RemoteSettings} from "../../common/config.ts";
@@ -7,6 +7,7 @@ import type {WebRtcClient, WebRtcConnectionState} from "../Remotes/WebRtcRemote.
 import {promises as fs} from "node:fs";
 import mime from "mime/lite";
 import {listLocalIPv4Addresses} from "./network.ts";
+import {setStartWithWindows} from './windowsStartup.ts';
 
 // The web server toggle has to behave like the NDI/OMT/OSC ones: enabling it starts the
 // server right away and disabling it stops it, without a second manual action. Only the
@@ -30,6 +31,8 @@ async function applyWebServerState(app: CountdownApp, remote: RemoteSettings, wa
 
 export default function addIpcHandles(app: CountdownApp)
 {
+  ipcMain.handle('startup:available', () => process.platform === 'win32' && electronApp.isPackaged)
+
   ipcMain.handle('screens:get', () => {
     return screen.getAllDisplays()
   })
@@ -55,6 +58,10 @@ export default function addIpcHandles(app: CountdownApp)
   })
 
   ipcMain.handle('settings:set', async (event, key: string, value) => {
+    const startWithWindows = key === null ? value.startWithWindows : key === 'startWithWindows' ? value : undefined
+    if (typeof startWithWindows === 'boolean' && startWithWindows !== app.config.settings.startWithWindows) {
+      setStartWithWindows(startWithWindows)
+    }
     const wasWebServerEnabled = app.config.settings.remote?.webServerEnabled ?? DEFAULT_WEBSERVER_ENABLED
     const newSettings = app.config.set(key, value)
 
