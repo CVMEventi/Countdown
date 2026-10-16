@@ -3,6 +3,8 @@ import { contextBridge, ipcRenderer, clipboard } from 'electron'
 contextBridge.exposeInMainWorld(
   'api',
   {
+    windowReady: (): void => ipcRenderer.send('window:ready'),
+    onWindowVisibility: (callback: (event: Electron.IpcRendererEvent, visible: boolean) => void) => ipcRenderer.on('window:visibility', callback),
     getSettings: async (key: string|null) => await ipcRenderer.invoke('settings:get', key),
     getWindowSettings: async (args: any): Promise<any> => ipcRenderer.invoke('settings:get-window', args),
     setSettings: async (key: string, value: any) => await ipcRenderer.invoke('settings:set', key, value),

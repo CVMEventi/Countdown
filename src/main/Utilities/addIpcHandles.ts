@@ -1,4 +1,4 @@
-import {dialog, ipcMain, screen} from "electron";
+import {BrowserWindow, dialog, ipcMain, screen} from "electron";
 import {CountdownApp} from "../App.ts";
 import {IpcGetWindowSettingsArgs} from "../../common/IpcInterfaces.ts";
 import {DEFAULT_WEBSERVER_ENABLED, DEFAULT_WEBSERVER_PORT, RemoteSettings} from "../../common/config.ts";
@@ -30,6 +30,11 @@ async function applyWebServerState(app: CountdownApp, remote: RemoteSettings, wa
 
 export default function addIpcHandles(app: CountdownApp)
 {
+  ipcMain.on('window:ready', event => {
+    const window = BrowserWindow.fromWebContents(event.sender)
+    if (window && !window.isDestroyed()) window.emit('renderer-ready')
+  })
+
   ipcMain.handle('screens:get', () => {
     return screen.getAllDisplays()
   })

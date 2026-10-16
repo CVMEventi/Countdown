@@ -130,6 +130,7 @@ const playbackStore = usePlaybackStore()
     ignoreUpdates(() => {
       settingsStore.settings = newSettings
     })
+    emit('mounted')
 
     webServerStatusReceived(await api.isServerRunning())
     webRtcStore.apply(await api.webrtcStatus())

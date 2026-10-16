@@ -18,7 +18,7 @@ import {
   TimerSnapshot
 } from "../../common/TimerInterfaces.ts";
 import {CountdownApp} from "../App.ts";
-import {sleep} from "./utilities.ts";
+import {setFullScreen} from './setFullScreen.ts';
 import {promises as fs} from "node:fs";
 // @ts-ignore
 import mime from "mime/lite";
@@ -167,17 +167,24 @@ export class TimersOrchestrator {
   }
 
   private _createWindow(timerId: string, timerName: string, windowId: string, windowSettings: WindowSettings) {
-    const countdownWindowHandler = createCountdownWindow(timerId, timerName, windowId, {
-      x: windowSettings.bounds.x,
-      y: windowSettings.bounds.y,
-      height: windowSettings.bounds.height,
-      width: windowSettings.bounds.width,
-      frame: false,
-      enableLargerThanScreen: true,
-      transparent: true,
-      alwaysOnTop: windowSettings.bounds.alwaysOnTop,
-      show: !windowSettings.bounds.hidden
-    });
+    const countdownWindowHandler = createCountdownWindow(timerId, timerName, windowId, () => {
+      // Resolve after Electron is ready, before creating the native window.
+      const settings = this.app.config.settings.timers[timerId]?.windows[windowId] ?? windowSettings
+      const display = resolveFullscreenDisplay(settings.bounds, screen.getAllDisplays())
+      return {
+        x: settings.bounds.x,
+        y: settings.bounds.y,
+        height: settings.bounds.height,
+        width: settings.bounds.width,
+        ...(display ? display.bounds : {}),
+        fullscreen: !!display,
+        frame: false,
+        enableLargerThanScreen: true,
+        transparent: true,
+        alwaysOnTop: settings.bounds.alwaysOnTop,
+        show: false,
+      }
+    }, () => this.app.showMainWindow());
 
     countdownWindowHandler.onCreated(async function (browserWindow: BrowserWindow) {
       this._watchWindowBounds(timerId, windowId, countdownWindowHandler)
@@ -372,32 +379,39 @@ export class TimersOrchestrator {
     const browserWindow = countdownWindowHandler.browserWindow
     if (!browserWindow || browserWindow.isDestroyed()) return
     const fullscreenOn = windowSettings.bounds.fullscreenOn
+    browserWindow.setAlwaysOnTop(windowSettings.bounds.alwaysOnTop)
 
-    if (browserWindow.fullScreen && fullscreenOn === null) {
-      browserWindow.setFullScreen(false)
-      await sleep(1000);
-      if (!isCurrent() || browserWindow.isDestroyed()) return
-    }
     if (fullscreenOn !== null) {
-      await sleep(1000)
-      if (!isCurrent() || browserWindow.isDestroyed()) return
       let selectedScreen = resolveFullscreenDisplay(windowSettings.bounds, screen.getAllDisplays())
       // Keep the selection while a display is unavailable; display events retry it.
-      if (!selectedScreen) return
+      if (!selectedScreen) {
+        countdownWindowHandler.setVisibleWhenReady(false)
+        return
+      }
       if (browserWindow.isFullScreen()) {
         const currentScreen = screen.getDisplayMatching(browserWindow.getBounds())
-        if (currentScreen.id === selectedScreen.id) return
-        browserWindow.setFullScreen(false)
-        await sleep(1000)
-        if (!isCurrent() || browserWindow.isDestroyed()) return
-        selectedScreen = resolveFullscreenDisplay(windowSettings.bounds, screen.getAllDisplays())
-        if (!selectedScreen) return
+        if (currentScreen.id !== selectedScreen.id) {
+          countdownWindowHandler.setVisibleWhenReady(false)
+          await setFullScreen(browserWindow, false)
+          if (!isCurrent() || browserWindow.isDestroyed()) return
+          selectedScreen = resolveFullscreenDisplay(windowSettings.bounds, screen.getAllDisplays())
+          if (!selectedScreen) return
+        }
       }
-      browserWindow.setPosition(selectedScreen.bounds.x, selectedScreen.bounds.y)
-      browserWindow.setFullScreen(true)
+      if (!browserWindow.isFullScreen()) {
+        browserWindow.setPosition(selectedScreen.bounds.x, selectedScreen.bounds.y)
+        await setFullScreen(browserWindow, true)
+        if (!isCurrent() || browserWindow.isDestroyed()) return
+      }
+      countdownWindowHandler.setVisibleWhenReady(!windowSettings.bounds.hidden)
       return;
     }
 
+    if (browserWindow.isFullScreen()) {
+      countdownWindowHandler.setVisibleWhenReady(false)
+      await setFullScreen(browserWindow, false)
+      if (!isCurrent() || browserWindow.isDestroyed()) return
+    }
     browserWindow.setBounds({
       x: windowSettings.bounds.x,
       y: windowSettings.bounds.y,
@@ -405,12 +419,7 @@ export class TimersOrchestrator {
       width: windowSettings.bounds.width
     })
 
-    browserWindow.setAlwaysOnTop(windowSettings.bounds.alwaysOnTop)
-    if (windowSettings.bounds.hidden && browserWindow.isVisible()) {
-      browserWindow.hide()
-    } else if (!windowSettings.bounds.hidden && !browserWindow.isVisible()) {
-      browserWindow.show()
-    }
+    countdownWindowHandler.setVisibleWhenReady(!windowSettings.bounds.hidden)
   }
 
   destroyWindow(timerId: string, windowId: string) {

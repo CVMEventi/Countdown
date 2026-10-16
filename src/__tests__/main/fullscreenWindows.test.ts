@@ -7,6 +7,11 @@ import {TimersOrchestrator} from '../../main/Utilities/TimersOrchestrator.ts'
 import type {CountdownApp} from '../../main/App.ts'
 import type BrowserWinHandler from '../../main/Utilities/BrowserWinHandler.ts'
 
+const creation = vi.hoisted(() => ({options: null as (() => Electron.BrowserWindowConstructorOptions) | null}))
+vi.mock('../../main/countdownWindow.ts', () => ({default: vi.fn((_timer, _name, _window, options) => {
+  creation.options = options
+  return {onCreated: vi.fn()}
+})}))
 vi.mock('electron', () => ({
   BrowserWindow: class {}, powerMonitor: {on: vi.fn()},
   screen: {getAllDisplays: vi.fn(), getDisplayMatching: vi.fn()},
@@ -43,10 +48,11 @@ function setup() {
     setPosition: vi.fn(), setBounds: vi.fn(), setAlwaysOnTop: vi.fn(),
     getBounds: () => ({x: 0, y: 0, width: 1280, height: 720}),
   }
-  const handler = {browserWindow: window} as unknown as BrowserWinHandler
+  const visible = vi.fn()
+  const handler = {browserWindow: window, setVisibleWhenReady: visible} as unknown as BrowserWinHandler
   Object.assign(app.config.settings.timers, {timer: {windows: {window: settings}}})
   orchestrator.timers.timer = {settings: {windows: {window: settings}}, windows: {window: handler}} as never
-  return {app, orchestrator, settings, handler, window, destroy: () => { destroyed = true }}
+  return {app, orchestrator, settings, handler, window, visible, destroy: () => { destroyed = true }}
 }
 
 describe('fullscreen countdown windows', () => {
@@ -92,14 +98,13 @@ describe('fullscreen countdown windows', () => {
     expect(settings.bounds.fullscreenDisplay?.label).toBe('Projector')
   })
 
-  it('does not use a display that disconnected during the placement delay', async () => {
+  it('enters fullscreen immediately without a fixed startup delay', async () => {
     const {orchestrator, settings, handler, window} = setup()
     vi.mocked(screen.getAllDisplays).mockReturnValue([monitor(10)])
-    const pending = orchestrator._setCountdownWindowPosition(handler, settings)
-    vi.mocked(screen.getAllDisplays).mockReturnValue([])
-    await vi.runAllTimersAsync()
-    await pending
-    expect(window.setPosition).not.toHaveBeenCalled()
+    await orchestrator._setCountdownWindowPosition(handler, settings)
+    expect(window.setPosition).toHaveBeenCalledWith(1920, 0)
+    expect(window.isFullScreen()).toBe(true)
+    expect(vi.getTimerCount()).toBe(0)
   })
 
   it('ignores an old fullscreen request after switching to windowed mode', async () => {
@@ -110,17 +115,36 @@ describe('fullscreen countdown windows', () => {
     await orchestrator._setCountdownWindowPosition(handler, windowed)
     await vi.runAllTimersAsync()
     await oldRequest
-    expect(window.setFullScreen).not.toHaveBeenCalledWith(true)
+    expect(window.isFullScreen()).toBe(false)
     expect(window.setBounds).toHaveBeenCalledOnce()
   })
 
   it('ignores a window destroyed while waiting for fullscreen placement', async () => {
-    const {orchestrator, settings, handler, window, destroy} = setup()
+    const {orchestrator, settings, handler, visible, destroy} = setup()
     vi.mocked(screen.getAllDisplays).mockReturnValue([monitor(10)])
     const pending = orchestrator._setCountdownWindowPosition(handler, settings)
     destroy()
     await vi.runAllTimersAsync()
     await pending
-    expect(window.setPosition).not.toHaveBeenCalled()
+    expect(visible).not.toHaveBeenCalledWith(true)
+  })
+
+  it('constructs the native window fullscreen on its saved display before it is shown', () => {
+    const {orchestrator, settings} = setup()
+    const create = orchestrator as unknown as {
+      _createWindow(timerId: string, name: string, windowId: string, settings: WindowSettings): void
+    }
+    create._createWindow('timer', 'Timer', 'window', settings)
+    vi.mocked(screen.getAllDisplays).mockReturnValue([monitor(20)])
+    const options = creation.options()
+    expect(options).toMatchObject({fullscreen: true, show: false, x: 1920, y: 0, width: 1920, height: 1080})
+  })
+
+  it('keeps a hidden fullscreen output hidden', async () => {
+    const {orchestrator, settings, handler, visible} = setup()
+    settings.bounds.hidden = true
+    vi.mocked(screen.getAllDisplays).mockReturnValue([monitor(10)])
+    await orchestrator._setCountdownWindowPosition(handler, settings)
+    expect(visible).toHaveBeenLastCalledWith(false)
   })
 })
