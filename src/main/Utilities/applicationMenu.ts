@@ -4,6 +4,6 @@ export function applicationMenu(showMainWindow: () => void, label = 'Show main w
   return Menu.buildFromTemplate([
     {label, click: showMainWindow},
     {type: 'separator'},
-    {label: 'Quit', role: 'quit'},
+    {label: 'Quit', role: 'quit', accelerator: 'CommandOrControl+Q'},
   ])
 }

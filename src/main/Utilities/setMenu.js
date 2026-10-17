@@ -16,7 +16,7 @@ export default (mainWindowHandler, timersOrchestrator) => {
         { role: 'hideOthers' },
         { role: 'unhide' },
         { type: 'separator' },
-        { role: 'quit' }
+        { role: 'quit', accelerator: 'CommandOrControl+Q' }
       ]
     }] : []),
     // { role: 'fileMenu' }
@@ -46,7 +46,7 @@ export default (mainWindowHandler, timersOrchestrator) => {
     {
       label: 'File',
       submenu: [
-        isMac ? { role: 'close' } : { role: 'quit' }
+        isMac ? { role: 'close' } : { role: 'quit', accelerator: 'CommandOrControl+Q' }
       ]
     },
     // { role: 'editMenu' }
