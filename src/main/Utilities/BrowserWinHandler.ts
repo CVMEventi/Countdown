@@ -87,7 +87,12 @@ export default class BrowserWinHandler {
   private _showIfReady() {
     const window = this.browserWindow
     if (this._showRequested && this._readyToShow && this._rendererReady
-      && window && !window.isDestroyed() && !window.isVisible()) window.show()
+      && window && !window.isDestroyed()) {
+      if (!window.isVisible()) window.show()
+      // Some Linux window managers map fullscreen windows before emitting show.
+      // Their renderer still needs the visibility signal after settings are ready.
+      else window.webContents.send('window:visibility', true)
+    }
   }
 
   _recreate () {

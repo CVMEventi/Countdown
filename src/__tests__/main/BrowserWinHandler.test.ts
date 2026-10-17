@@ -10,7 +10,7 @@ vi.mock('electron', async () => {
     visible = false
     destroyed = false
     fullscreen = false
-    webContents = {setWindowOpenHandler: vi.fn()}
+    webContents = {setWindowOpenHandler: vi.fn(), send: vi.fn()}
     show = vi.fn(() => { this.visible = true })
     hide = vi.fn(() => { this.visible = false })
     isVisible = () => this.visible
@@ -28,6 +28,16 @@ vi.mock('electron', async () => {
 beforeEach(() => { state.ready = true; state.options = []; app.removeAllListeners() })
 
 describe('window startup visibility', () => {
+  it('reveals ready content when the window manager has already mapped the window', () => {
+    const handler = new BrowserWinHandler({show: true, fullscreen: true})
+    const window = handler.browserWindow
+    Object.assign(window, {visible: true})
+    window.emit('ready-to-show')
+    expect(window.webContents.send).not.toHaveBeenCalled()
+    window.emit('renderer-ready')
+    expect(window.webContents.send).toHaveBeenCalledWith('window:visibility', true)
+    expect(window.show).not.toHaveBeenCalled()
+  })
   it('shows the first frame only after native paint and saved renderer settings are ready', () => {
     const handler = new BrowserWinHandler({show: true})
     const window = handler.browserWindow
