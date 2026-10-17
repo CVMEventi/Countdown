@@ -27,6 +27,7 @@ import createWebRtcHostWindow from "./webRtcHostWindow.ts";
 import macosTrayIcon from "../icons/tray/TrayTemplate.png?no-inline"
 import macOsTrayIcon2x from "../icons/tray/TrayTemplate@2x.png?no-inline"
 import otherOsTrayIcon from "../icons/icon.ico?no-inline"
+import linuxTrayIcon from "../icons/icon.png?no-inline"
 import path from "path";
 import * as process from "node:process";
 import {Config} from "./Utilities/Config.ts";
@@ -82,7 +83,7 @@ export class CountdownApp {
 
         appIcon = new Tray(image)
       } else {
-        appIcon = new Tray(path.join(__dirname, otherOsTrayIcon))
+        appIcon = new Tray(path.join(__dirname, process.platform === 'linux' ? linuxTrayIcon : otherOsTrayIcon))
       }
 
       appIcon.on('right-click', () => {
