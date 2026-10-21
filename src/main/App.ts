@@ -33,6 +33,7 @@ import {Config} from "./Utilities/Config.ts";
 import {TimersOrchestrator} from "./Utilities/TimersOrchestrator.ts";
 import {applicationMenu} from './Utilities/applicationMenu.ts';
 import {showMainWindow} from './Utilities/showMainWindow.ts';
+import {registerGlobalShortcuts} from './Utilities/globalShortcuts.ts';
 
 // To be packaged, otherwise it doesn't work
 console.log(macOsTrayIcon2x)
@@ -73,6 +74,8 @@ export class CountdownApp {
     });
 
     this.mainWindowHandler.onCreated((browserWindow) => {
+
+      registerGlobalShortcuts(() => this.showMainWindow())
 
       let appIcon: Tray
       if (process.platform === 'darwin') {
