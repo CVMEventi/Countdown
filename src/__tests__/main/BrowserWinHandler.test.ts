@@ -22,7 +22,7 @@ vi.mock('electron', async () => {
       this.fullscreen = !!options.fullscreen
     }
   }
-  return {BrowserWindow: Window, app: Object.assign(new EventEmitter(), {isReady: () => state.ready}), shell: {openExternal: vi.fn()}}
+  return {BrowserWindow: Window, app: Object.assign(new EventEmitter(), {isReady: () => state.ready}), shell: {openExternal: vi.fn()}, nativeImage: {createFromPath: vi.fn(() => ({}))}}
 })
 
 beforeEach(() => { state.ready = true; state.options = []; app.removeAllListeners() })
