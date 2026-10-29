@@ -65,7 +65,13 @@ export default function addIpcHandles(app: CountdownApp)
   ipcMain.handle('settings:set', async (event, key: string, value) => {
     const startAtLogin = key === null ? value.startAtLogin : key === 'startAtLogin' ? value : undefined
     if (typeof startAtLogin === 'boolean' && startAtLogin !== app.config.settings.startAtLogin) {
-      setStartAtLogin(startAtLogin)
+      try {
+        setStartAtLogin(startAtLogin)
+      } catch (error) {
+        dialog.showErrorBox('Start at login',
+          `Countdown could not ${startAtLogin ? 'enable' : 'disable'} starting at login.\n\n${(error as Error).message}`)
+        throw error
+      }
     }
     const wasWebServerEnabled = app.config.settings.remote?.webServerEnabled ?? DEFAULT_WEBSERVER_ENABLED
     const wasShortcutEnabled = app.config.settings.showMainWindowShortcut ?? DEFAULT_SHOW_MAIN_WINDOW_SHORTCUT

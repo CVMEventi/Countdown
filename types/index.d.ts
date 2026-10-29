@@ -26,8 +26,7 @@ interface WebServerStatus {
 }
 
 interface API {
-  platform: NodeJS.Platform
-  canStartWithWindows(): Promise<boolean>
+  canStartAtLogin(): Promise<boolean>
   windowReady(): void
   onWindowVisibility(callback: (event: Electron.IpcRendererEvent, visible: boolean) => void): void
   getSettings(key?: string): Promise<any>

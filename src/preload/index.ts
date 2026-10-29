@@ -3,7 +3,6 @@ import { contextBridge, ipcRenderer, clipboard } from 'electron'
 contextBridge.exposeInMainWorld(
   'api',
   {
-    platform: process.platform,
     canStartAtLogin: async (): Promise<boolean> => ipcRenderer.invoke('startup:available'),
     windowReady: (): void => ipcRenderer.send('window:ready'),
     onWindowVisibility: (callback: (event: Electron.IpcRendererEvent, visible: boolean) => void) => ipcRenderer.on('window:visibility', callback),

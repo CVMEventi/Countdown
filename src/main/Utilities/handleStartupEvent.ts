@@ -2,6 +2,7 @@ import { execFile } from 'node:child_process';
 import { existsSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { promisify } from 'node:util';
+import { setStartAtLogin } from './startAtLogin.ts';
 
 const run = promisify(execFile);
 
@@ -60,6 +61,12 @@ export async function handleStartupEvent(): Promise<boolean> {
 
   if (command === '--squirrel-uninstall') {
     await run(updater, ['--removeShortcut', executable], options);
+    try {
+      // Otherwise Windows keeps a login entry pointing at the removed launcher.
+      setStartAtLogin(false);
+    } catch (error) {
+      console.error('Could not remove the login entry:', error);
+    }
     // Leave the entry alone if another installation replaced it.
     if ((await registeredPath(key))?.toLowerCase() === launcher.toLowerCase()) {
       await run(registry, ['delete', key, '/f'], options);

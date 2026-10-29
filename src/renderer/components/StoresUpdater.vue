@@ -94,7 +94,19 @@ const playbackStore = usePlaybackStore()
   })
 
   const save = useDebounceFn(async () => {
-    await api.setSettings(null, toRaw(settingsStore.settings))
+    try {
+      await api.setSettings(null, toRaw(settingsStore.settings))
+    } catch (error) {
+      // Main rejected the change (e.g. the OS refused the login item): show what is actually saved
+      console.error('Could not save settings:', error)
+      const savedSettings = await api.getSettings()
+      ignoreUpdates(() => {
+        ignoreBoundsUpdates(() => {
+          settingsStore.settings = savedSettings
+        })
+      })
+      return
+    }
     api.settingsUpdated()
   }, 200)
 

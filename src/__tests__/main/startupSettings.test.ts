@@ -1,12 +1,12 @@
 import {beforeEach, describe, expect, it, vi} from 'vitest'
-import {ipcMain} from 'electron'
+import {dialog, ipcMain} from 'electron'
 import addIpcHandles from '../../main/Utilities/addIpcHandles.ts'
 import {setStartAtLogin} from '../../main/Utilities/startAtLogin.ts'
 import {DEFAULT_STORE} from '../../common/config.ts'
 import type {CountdownApp} from '../../main/App.ts'
 
 vi.mock('electron', () => ({
-  app: {isPackaged: true}, ipcMain: {handle: vi.fn(), on: vi.fn()},
+  app: {isPackaged: true}, ipcMain: {handle: vi.fn(), on: vi.fn()}, dialog: {showErrorBox: vi.fn()},
 }))
 vi.mock('../../main/Utilities/startAtLogin.ts', () => ({setStartAtLogin: vi.fn(), canStartAtLogin: vi.fn(() => true)}))
 
@@ -61,6 +61,7 @@ describe('startup settings autosave', () => {
     const {config, save} = setup()
     vi.mocked(setStartAtLogin).mockImplementationOnce(() => { throw new Error('Registration failed') })
     await expect(save('startAtLogin', true)).rejects.toThrow('Registration failed')
+    expect(dialog.showErrorBox).toHaveBeenCalledWith('Start at login', expect.stringContaining('Registration failed'))
     expect(config.set).not.toHaveBeenCalled()
     expect(config.settings.startAtLogin).toBe(false)
   })
