@@ -1,6 +1,7 @@
 {
   "name": "countdown",
   "productName": "countdown",
+  "desktopName": "countdown.desktop",
   "version": "1.5.1",
   "description": "CVM Countdown",
   "main": ".vite/build/index.js",
@@ -70,6 +71,7 @@
     "@headlessui-float/vue": "^0.15.0",
     "@headlessui/vue": "^1.7.14",
     "@heroicons/vue": "^2.0.16",
+    "@homebridge/dbus-native": "^0.7.9",
     "@tailwindcss/forms": "^0.5.10",
     "@vueuse/core": "^14.2.1",
     "bonjour-service": "^1.4.4",

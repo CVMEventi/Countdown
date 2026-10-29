@@ -1,14 +1,16 @@
 <template>
-  <CountdownDisplay
-    :update="resolvedUpdate"
-    :settings="settings"
-    :timer-duration="timerSettings.timerDuration"
-    :message="messageUpdate.message"
-  />
+  <div class="timer-window h-full" :class="{'timer-window-visible': visible}">
+    <CountdownDisplay
+      :update="resolvedUpdate"
+      :settings="settings"
+      :timer-duration="timerSettings.timerDuration"
+      :message="messageUpdate.message"
+    />
+  </div>
 </template>
 
 <script lang="ts" setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, nextTick, onMounted, ref } from 'vue'
 const { api } = window
 import {
   DEFAULT_TIMER_SETTINGS,
@@ -21,6 +23,8 @@ import { IpcGetWindowSettingsArgs } from '@common/IpcInterfaces.ts'
 import CountdownDisplay from '@common/components/CountdownDisplay.vue'
 
 const updates = ref<TimerEngineUpdates>({})
+const visible = ref(false)
+api.onWindowVisibility((_event, shown) => { visible.value = shown })
 
 const defaultUpdate: TimerEngineUpdate = {
   setSeconds: 0,
@@ -59,8 +63,12 @@ onMounted(async () => {
     timerId: timerId.value,
     windowId: windowId.value,
   }
-  settings.value = await api.getWindowSettings(args)
-  timerSettings.value = await api.getSettings(`timers.${timerId.value}`)
+  const [savedSettings, savedTimer] = await Promise.all([
+    api.getWindowSettings(args),
+    api.getSettings(`timers.${timerId.value}`),
+  ])
+  settings.value = savedSettings
+  timerSettings.value = savedTimer
 
   api.onUpdate((event, id: string, update: TimerEngineUpdate) => {
     updates.value[id] = update
@@ -72,8 +80,25 @@ onMounted(async () => {
     settings.value = { ...settings.value, ...arg }
     timerSettings.value = await api.getSettings(`timers.${timerId.value}`)
   })
+  await nextTick()
+  await document.fonts.ready
+  api.windowReady()
 })
 </script>
 
 <style scoped>
+.timer-window {
+  opacity: 0;
+  transition: opacity 180ms ease-in;
+}
+
+.timer-window-visible {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .timer-window {
+    transition: none;
+  }
+}
 </style>

@@ -44,8 +44,8 @@ const config: ForgeConfig = {
       name: "countdown",
     }),
     new MakerZIP({}, ['darwin']),
-    new MakerRpm({}),
-    new MakerDeb({}),
+    new MakerRpm({options: {icon: path.resolve('src/icons/icon.png')}}),
+    new MakerDeb({options: {icon: path.resolve('src/icons/icon.png')}}),
     new MakerDMG(),
     new MakerFlatpak({
       options: {

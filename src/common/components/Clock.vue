@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {ClockIcon} from '@heroicons/vue/24/solid';
 import dayjs from "dayjs";
-import {onMounted, onUnmounted, ref} from "vue";
+import {computed, onMounted, onUnmounted, ref} from "vue";
 
 export interface Props {
   isBig: boolean
@@ -13,23 +13,18 @@ export interface Props {
 
 const props = defineProps<Props>();
 
-let currentTimeTimerId: NodeJS.Timer = null;
-let currentTime = ref(dayjs().format('HH:mm'));
-function updateTime() {
-  if (props.secondsOnClock && !props.use12HourClock) {
-    currentTime.value = dayjs().format('HH:mm:ss');
-  } else if (props.secondsOnClock && props.use12HourClock) {
-    currentTime.value = dayjs().format('hh:mm:ss a')
-  } else if (!props.secondsOnClock && props.use12HourClock) {
-    currentTime.value = dayjs().format('hh:mm a')
-  } else {
-    currentTime.value = dayjs().format('HH:mm');
-  }
-}
+let currentTimeTimerId: ReturnType<typeof setInterval> | null = null;
+const now = ref(Date.now());
+const currentTime = computed(() => {
+  const hours = props.use12HourClock ? 'hh' : 'HH';
+  const seconds = props.secondsOnClock ? ':ss' : '';
+  const period = props.use12HourClock ? ' a' : '';
+  return dayjs(now.value).format(`${hours}:mm${seconds}${period}`);
+});
 
 onMounted(() => {
   if (currentTimeTimerId === null) {
-    currentTimeTimerId = setInterval(updateTime, 1000)
+    currentTimeTimerId = setInterval(() => { now.value = Date.now() }, 1000)
   }
 })
 

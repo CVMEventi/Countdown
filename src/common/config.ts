@@ -125,6 +125,8 @@ export const DEFAULT_MESSAGE_BOX_FIXED_HEIGHT = false;
 
 export const DEFAULT_START_HIDDEN = false;
 
+export const DEFAULT_SHOW_MAIN_WINDOW_SHORTCUT = false;
+
 export enum CloseAction {
   Ask = "ASK",
   Hide = "HIDE",
@@ -221,6 +223,7 @@ export const DEFAULT_STORE: CountdownConfiguration = {
       setWindowAlwaysOnTop: DEFAULT_SET_WINDOW_ALWAYS_ON_TOP,
       closeAction: DEFAULT_CLOSE_ACTION,
       startHidden: DEFAULT_START_HIDDEN,
+      showMainWindowShortcut: DEFAULT_SHOW_MAIN_WINDOW_SHORTCUT,
       timers: { [ulid()]: DEFAULT_TIMER_SETTINGS},
     },
     version: CURRENT_CONFIG_VERSION
@@ -352,6 +355,7 @@ export interface CountdownSettings {
   setWindowAlwaysOnTop: boolean
   closeAction: CloseAction,
   startHidden: boolean,
+  showMainWindowShortcut?: boolean,
   timers: Timers
 }
 

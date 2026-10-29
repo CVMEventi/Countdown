@@ -1,26 +1,33 @@
 /* eslint-disable */
 import { EventEmitter } from 'events'
-import { BrowserWindow, app, shell } from 'electron'
+import { BrowserWindow, app, shell, nativeImage } from 'electron'
 import path from 'path'
+import linuxWindowIcon from '../../icons/icon.png?no-inline'
 import BrowserWindowConstructorOptions = Electron.BrowserWindowConstructorOptions;
-import { fileURLToPath } from 'url'
 
 declare const MAIN_WINDOW_VITE_DEV_SERVER_URL: string | undefined;
 declare const MAIN_WINDOW_VITE_NAME: string;
 
 const __dirname = import.meta.dirname;
 
+// Show the window anyway if the renderer never reports it is ready (e.g. a page error),
+// so the application cannot get stuck with an invisible window
+const RENDERER_READY_TIMEOUT = 10000
+
 export default class BrowserWinHandler {
   allowRecreate: boolean
   _eventEmitter: EventEmitter
-  options: BrowserWindowConstructorOptions
+  options: BrowserWindowConstructorOptions | (() => BrowserWindowConstructorOptions)
   browserWindow: BrowserWindow
+  private _readyToShow = false
+  private _rendererReady = false
+  private _showRequested = false
 
   /**
    * @param [options] {object} - browser window options
    * @param [allowRecreate] {boolean}
    */
-  constructor (options: BrowserWindowConstructorOptions, allowRecreate = true) {
+  constructor (options: BrowserWindowConstructorOptions | (() => BrowserWindowConstructorOptions), allowRecreate = true) {
     this._eventEmitter = new EventEmitter()
     this.allowRecreate = allowRecreate
     this.options = options
@@ -41,14 +48,39 @@ export default class BrowserWinHandler {
   }
 
   _create () {
+    const options = typeof this.options === 'function' ? this.options() : this.options
+    this._readyToShow = false
+    this._rendererReady = false
+    this._showRequested = options.show !== false
     this.browserWindow = new BrowserWindow({
-      ...this.options,
+      ...(process.platform === 'linux' ? {icon: nativeImage.createFromPath(path.join(__dirname, linuxWindowIcon))} : {}),
+      ...options,
+      show: false,
       webPreferences: {
-        ...this.options.webPreferences,
+        ...options.webPreferences,
         preload: path.join(__dirname, 'preload.js'),
         backgroundThrottling: false, // countdown will not run when window is behind other windows
       },
     })
+    this.browserWindow.once('ready-to-show', () => {
+      this._readyToShow = true
+      this._showIfReady()
+    })
+    const window = this.browserWindow
+    const rendererReady = () => {
+      clearTimeout(rendererReadyTimeout)
+      if (this._rendererReady || this.browserWindow !== window) return
+      this._rendererReady = true
+      this._showIfReady()
+    }
+    const rendererReadyTimeout = setTimeout(() => {
+      if (this._rendererReady || this.browserWindow !== window) return
+      console.warn(`Window "${options.title ?? ''}" did not report ready in time; showing it anyway`)
+      rendererReady()
+    }, RENDERER_READY_TIMEOUT)
+    const lifecycle = window as EventEmitter
+    lifecycle.once('renderer-ready', rendererReady)
+    window.once('closed', () => clearTimeout(rendererReadyTimeout))
     this.browserWindow.webContents.setWindowOpenHandler(({ url }) => {
       shell.openExternal(url)
       return { action: 'deny' }
@@ -58,6 +90,25 @@ export default class BrowserWinHandler {
       this.browserWindow = null
     })
     this._eventEmitter.emit('created')
+  }
+
+  setVisibleWhenReady(visible: boolean) {
+    this._showRequested = visible
+    const window = this.browserWindow
+    if (!window || window.isDestroyed()) return
+    if (!visible) window.hide()
+    else this._showIfReady()
+  }
+
+  private _showIfReady() {
+    const window = this.browserWindow
+    if (!this._readyToShow || !this._rendererReady || !window || window.isDestroyed()) return
+    // The 'show' event reveals the content
+    if (this._showRequested && !window.isVisible()) window.show()
+    // Hidden windows still feed NDI/OMT through capturePage, so their content must be
+    // revealed too. Some Linux window managers also map fullscreen windows before
+    // emitting show, and their renderer still needs the signal once settings are ready.
+    else window.webContents.send('window:visibility', true)
   }
 
   _recreate () {
