@@ -1,5 +1,5 @@
 import { execFile } from 'node:child_process';
-import { existsSync } from 'node:fs';
+import { existsSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { promisify } from 'node:util';
 
@@ -12,9 +12,23 @@ function installationPaths() {
     executable, installDirectory,
     updater: path.join(installDirectory, 'Update.exe'),
     launcher: path.join(installDirectory, executable),
+    // Lives in the install root, which updates keep and uninstall removes.
+    shortcutsMarker: path.join(installDirectory, '.shortcuts-created'),
     registry: path.join(process.env.SystemRoot || 'C:\\Windows', 'System32', 'reg.exe'),
     key: `HKLM\\Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\${executable}`,
   };
+}
+
+async function registeredPath(target: string): Promise<string | undefined> {
+  const { registry } = installationPaths();
+  try {
+    const { stdout } = await run(registry, ['query', target, '/ve'], { windowsHide: true });
+    return stdout.match(/REG_SZ\s+([^\r\n]+)/)?.[1].trim();
+  } catch (error) {
+    // Missing entries and inaccessible machine entries are reported as code 1.
+    if ((error as { code?: number }).code !== 1) throw error;
+    return undefined;
+  }
 }
 
 async function registerAppPath() {
@@ -34,15 +48,13 @@ async function registerAppPath() {
 
 export async function ensureInstalledAppPath(): Promise<void> {
   if (process.platform !== 'win32') return;
-  const { registry, key, updater, launcher } = installationPaths();
+  const { key, updater, launcher } = installationPaths();
   // Portable and development copies must not replace an installed app's entry.
   if (!/^app-/i.test(path.basename(path.dirname(process.execPath))) || !existsSync(updater) || !existsSync(launcher)) return;
-  try {
-    const { stdout } = await run(registry, ['query', key, '/ve'], { windowsHide: true });
-    const registered = stdout.match(/REG_SZ\s+([^\r\n]+)/)?.[1].trim();
-    if (registered?.toLowerCase() === launcher.toLowerCase()) return;
-  } catch (error) {
-    if ((error as { code?: number }).code !== 1) throw error;
+  // Standard user installations are registered under HKCU, so check both hives
+  // instead of registering again on every launch.
+  for (const target of [key, key.replace(/^HKLM/, 'HKCU')]) {
+    if ((await registeredPath(target))?.toLowerCase() === launcher.toLowerCase()) return;
   }
   await registerAppPath();
 }
@@ -54,27 +66,26 @@ export async function handleStartupEvent(): Promise<boolean> {
   if (!['--squirrel-install', '--squirrel-updated', '--squirrel-uninstall', '--squirrel-obsolete'].includes(command)) return false;
   if (command === '--squirrel-obsolete') return true;
 
-  const { executable, updater, registry, key, launcher } = installationPaths();
+  const { executable, updater, registry, key, launcher, shortcutsMarker } = installationPaths();
   const options = { windowsHide: true };
 
   if (command === '--squirrel-uninstall') {
     await run(updater, ['--removeShortcut', executable], options);
     for (const target of [key, key.replace(/^HKLM/, 'HKCU')]) {
-      try {
-        const { stdout } = await run(registry, ['query', target, '/ve'], options);
-        const registered = stdout.match(/REG_SZ\s+([^\r\n]+)/)?.[1].trim();
-        // Leave another user's installation registered if it replaced this one.
-        if (registered?.toLowerCase() === launcher.toLowerCase()) {
-          await run(registry, ['delete', target, '/f'], options);
-        }
-      } catch (error) {
-        // Missing entries and inaccessible machine entries need no cleanup.
-        if ((error as { code?: number }).code !== 1) throw error;
+      // Leave another user's installation registered if it replaced this one.
+      if ((await registeredPath(target))?.toLowerCase() === launcher.toLowerCase()) {
+        await run(registry, ['delete', target, '/f'], options);
       }
     }
   } else {
-    // Squirrel's default locations are Desktop and StartMenu.
-    await run(updater, ['--createShortcut', executable], options);
+    // Create shortcuts once: on install, or on the first update for copies installed
+    // before shortcuts were created. Later updates must not bring back shortcuts the
+    // user deleted; existing ones target the root launcher and survive updates.
+    if (command === '--squirrel-install' || !existsSync(shortcutsMarker)) {
+      // Squirrel's default locations are Desktop and StartMenu.
+      await run(updater, ['--createShortcut', executable], options);
+      writeFileSync(shortcutsMarker, '');
+    }
     // The root launcher survives replacement of versioned app directories.
     await registerAppPath();
   }

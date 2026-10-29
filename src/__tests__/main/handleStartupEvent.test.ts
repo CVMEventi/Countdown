@@ -1,16 +1,17 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import path from 'node:path';
-import { existsSync } from 'node:fs';
+import { existsSync, writeFileSync } from 'node:fs';
 import { ensureInstalledAppPath, handleStartupEvent } from '../../main/Utilities/handleStartupEvent.ts';
 
 const { run } = vi.hoisted(() => ({ run: vi.fn() }));
 vi.mock('node:child_process', () => ({ execFile: vi.fn() }));
-vi.mock('node:fs', () => ({ existsSync: vi.fn() }));
+vi.mock('node:fs', () => ({ existsSync: vi.fn(), writeFileSync: vi.fn() }));
 vi.mock('node:util', () => ({ promisify: () => run }));
 
 beforeEach(() => {
   run.mockReset().mockResolvedValue({ stdout: '', stderr: '' });
-  vi.mocked(existsSync).mockReturnValue(true);
+  vi.mocked(existsSync).mockReset().mockImplementation(file => !String(file).endsWith('.shortcuts-created'));
+  vi.mocked(writeFileSync).mockReset();
   vi.stubGlobal('process', {
     ...process, platform: 'win32',
     execPath: path.resolve('Countdown test', 'app-1.5.1', 'countdown.exe'),
@@ -21,15 +22,26 @@ afterEach(() => vi.unstubAllGlobals());
 
 describe('Windows installer integration', () => {
   it('repairs a missing registration when an installed copy starts', async () => {
-    run.mockRejectedValueOnce({ code: 1 });
+    run.mockRejectedValueOnce({ code: 1 }).mockRejectedValueOnce({ code: 1 });
     await ensureInstalledAppPath();
-    expect(run.mock.calls.map(call => call[1][0])).toEqual(['query', 'add', 'add']);
+    expect(run.mock.calls.map(call => call[1][0])).toEqual(['query', 'query', 'add', 'add']);
   });
 
   it('repairs a registration pointing at an old version', async () => {
-    run.mockResolvedValueOnce({ stdout: '    (Default)    REG_SZ    C:\\old\\countdown.exe\r\n' });
+    run.mockResolvedValueOnce({ stdout: '    (Default)    REG_SZ    C:\\old\\countdown.exe\r\n' })
+      .mockRejectedValueOnce({ code: 1 });
     await ensureInstalledAppPath();
-    expect(run).toHaveBeenCalledTimes(3);
+    expect(run).toHaveBeenCalledTimes(4);
+  });
+
+  it('does not register again when a per-user registration is correct', async () => {
+    run.mockRejectedValueOnce({ code: 1 })
+      .mockResolvedValueOnce({ stdout: `    (Default)    REG_SZ    ${path.resolve('Countdown test', 'countdown.exe')}\r\n` });
+    await ensureInstalledAppPath();
+    expect(run.mock.calls.map(call => call[1].slice(0, 2))).toEqual([
+      ['query', 'HKLM\\Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\countdown.exe'],
+      ['query', 'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\countdown.exe'],
+    ]);
   });
 
   it('leaves a correct registration alone', async () => {
@@ -54,6 +66,21 @@ describe('Windows installer integration', () => {
       [expect.stringMatching(/reg\.exe$/), ['add', key, '/ve', '/t', 'REG_SZ', '/d', path.join(root, 'countdown.exe'), '/f']],
       [expect.stringMatching(/reg\.exe$/), ['add', key, '/v', 'Path', '/t', 'REG_SZ', '/d', root, '/f']],
     ]);
+    expect(writeFileSync).toHaveBeenCalledWith(path.join(root, '.shortcuts-created'), '');
+  });
+
+  it('does not bring back deleted shortcuts on later updates', async () => {
+    process.argv[1] = '--squirrel-updated';
+    vi.mocked(existsSync).mockReturnValue(true);
+    expect(await handleStartupEvent()).toBe(true);
+    expect(run.mock.calls.some(call => call[1][0] === '--createShortcut')).toBe(false);
+    expect(run.mock.calls.map(call => call[1][0])).toEqual(['add', 'add']);
+  });
+
+  it('always creates shortcuts on a fresh install', async () => {
+    vi.mocked(existsSync).mockReturnValue(true);
+    await handleStartupEvent();
+    expect(run.mock.calls[0][1]).toEqual(['--createShortcut', 'countdown.exe']);
   });
 
   it('waits for shortcut creation before reporting completion', async () => {
