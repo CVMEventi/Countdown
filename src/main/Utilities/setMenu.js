@@ -1,4 +1,6 @@
 import {app, Menu, shell} from "electron";
+import {SHOW_MAIN_WINDOW_SHORTCUT} from './globalShortcuts.ts';
+import {showMainWindow} from './showMainWindow.ts';
 
 const isMac = process.platform === 'darwin'
 
@@ -16,7 +18,7 @@ export default (mainWindowHandler, timersOrchestrator) => {
         { role: 'hideOthers' },
         { role: 'unhide' },
         { type: 'separator' },
-        { role: 'quit' }
+        { role: 'quit', accelerator: 'CommandOrControl+Q' }
       ]
     }] : []),
     // { role: 'fileMenu' }
@@ -46,7 +48,7 @@ export default (mainWindowHandler, timersOrchestrator) => {
     {
       label: 'File',
       submenu: [
-        isMac ? { role: 'close' } : { role: 'quit' }
+        isMac ? { role: 'close' } : { role: 'quit', accelerator: 'CommandOrControl+Q' }
       ]
     },
     // { role: 'editMenu' }
@@ -97,6 +99,12 @@ export default (mainWindowHandler, timersOrchestrator) => {
     {
       label: 'Window',
       submenu: [
+        {
+          label: 'Show main window',
+          accelerator: SHOW_MAIN_WINDOW_SHORTCUT,
+          click: () => showMainWindow(mainWindowHandler.browserWindow),
+        },
+        { type: 'separator' },
         { role: 'minimize' },
         { role: 'zoom' },
         ...(isMac ? [

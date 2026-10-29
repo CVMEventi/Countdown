@@ -1,23 +1,23 @@
 import './index.css';
 import { createApp } from 'vue';
-import Control from './pages/Control.vue';
-import Countdown from './pages/Countdown.vue';
 import App from './App.vue';
 import { createRouter, createWebHashHistory } from 'vue-router';
+import type {RouteRecordRaw} from 'vue-router';
 import {createPinia} from "pinia";
-import TimersSettings from './pages/TimersSettings.vue'
-import RemoteSettings from './pages/RemoteSettings.vue'
-import GeneralSettings from './pages/GeneralSettings.vue'
-import WebRtcHost from './pages/WebRtcHost.vue';
 import { vNoWheel } from '../common/directives/noWheel.ts';
 
-const routes = [
-  { path: '/countdown', component: Countdown },
-  { path: '/control', component: Control },
-  { path: '/settings/timers', component: TimersSettings },
-  { path: '/settings/remote', component: RemoteSettings },
-  { path: '/settings/general', component: GeneralSettings },
-  { path: '/webrtc-host', component: WebRtcHost },
+const routes: RouteRecordRaw[] = [
+  { path: '/countdown', component: () => import('./pages/Countdown.vue').then(module => module.default) },
+  { path: '/webrtc-host', component: () => import('./pages/WebRtcHost.vue').then(module => module.default) },
+  {
+    path: '/', component: () => import('./components/ControlShell.vue').then(module => module.default),
+    children: [
+      { path: 'control', component: () => import('./pages/Control.vue').then(module => module.default) },
+      { path: 'settings/timers', component: () => import('./pages/TimersSettings.vue').then(module => module.default) },
+      { path: 'settings/remote', component: () => import('./pages/RemoteSettings.vue').then(module => module.default) },
+      { path: 'settings/general', component: () => import('./pages/GeneralSettings.vue').then(module => module.default) },
+    ],
+  },
 ]
 
 const router = createRouter({
@@ -30,4 +30,4 @@ const app = createApp(App)
 app.use(pinia)
 app.directive('no-wheel', vNoWheel);
 app.use(router)
-app.mount('#app')
+router.isReady().then(() => app.mount('#app'))

@@ -5,6 +5,7 @@ import {
   CountdownSettings,
   DEFAULT_CLOSE_ACTION,
   DEFAULT_REMOTE_SETTINGS,
+  DEFAULT_SHOW_MAIN_WINDOW_SHORTCUT,
   DEFAULT_START_HIDDEN
 } from '../../common/config.ts'
 
@@ -17,6 +18,7 @@ export const useSettingsStore = defineStore('settings', () => {
     closeAction: DEFAULT_CLOSE_ACTION,
     startHidden: DEFAULT_START_HIDDEN,
     startAtLogin: false,
+    showMainWindowShortcut: DEFAULT_SHOW_MAIN_WINDOW_SHORTCUT,
     timers: {},
   });
 

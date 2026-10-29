@@ -1,7 +1,8 @@
-import {dialog, ipcMain, screen} from "electron";
+import {BrowserWindow, dialog, ipcMain, screen} from "electron";
 import {CountdownApp} from "../App.ts";
 import {IpcGetWindowSettingsArgs} from "../../common/IpcInterfaces.ts";
-import {DEFAULT_WEBSERVER_ENABLED, DEFAULT_WEBSERVER_PORT, RemoteSettings} from "../../common/config.ts";
+import {DEFAULT_SHOW_MAIN_WINDOW_SHORTCUT, DEFAULT_WEBSERVER_ENABLED, DEFAULT_WEBSERVER_PORT, RemoteSettings} from "../../common/config.ts";
+import {registerGlobalShortcuts, unregisterGlobalShortcuts} from "./globalShortcuts.ts";
 import {validateCommand} from "../../common/protocol.ts";
 import type {WebRtcClient, WebRtcConnectionState} from "../Remotes/WebRtcRemote.ts";
 import {promises as fs} from "node:fs";
@@ -32,6 +33,10 @@ async function applyWebServerState(app: CountdownApp, remote: RemoteSettings, wa
 export default function addIpcHandles(app: CountdownApp)
 {
   ipcMain.handle('startup:available', () => canStartAtLogin())
+  ipcMain.on('window:ready', event => {
+    const window = BrowserWindow.fromWebContents(event.sender)
+    if (window && !window.isDestroyed()) window.emit('renderer-ready')
+  })
 
   ipcMain.handle('screens:get', () => {
     return screen.getAllDisplays()
@@ -63,7 +68,15 @@ export default function addIpcHandles(app: CountdownApp)
       setStartAtLogin(startAtLogin)
     }
     const wasWebServerEnabled = app.config.settings.remote?.webServerEnabled ?? DEFAULT_WEBSERVER_ENABLED
+    const wasShortcutEnabled = app.config.settings.showMainWindowShortcut ?? DEFAULT_SHOW_MAIN_WINDOW_SHORTCUT
     const newSettings = app.config.set(key, value)
+
+    // Only act on a change: on Wayland every registration may ask the user for permission
+    const shortcutEnabled = newSettings.showMainWindowShortcut ?? DEFAULT_SHOW_MAIN_WINDOW_SHORTCUT
+    if (shortcutEnabled !== wasShortcutEnabled) {
+      if (shortcutEnabled) void registerGlobalShortcuts(() => app.showMainWindow())
+      else unregisterGlobalShortcuts()
+    }
 
     app.timersOrchestrator.configUpdated()
 

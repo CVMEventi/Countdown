@@ -4,7 +4,7 @@ import {enableDevMode, isDev} from "./Utilities/dev.ts";
 import BrowserWinHandler from "./Utilities/BrowserWinHandler.ts";
 import createMainWindow from "./mainWindow.ts";
 import setMenu from "./Utilities/setMenu.js";
-import {app, BrowserWindow, screen, Tray, Menu, nativeImage, dialog, nativeTheme} from "electron";
+import {app, BrowserWindow, screen, Tray, nativeImage, dialog, nativeTheme} from "electron";
 import {
   CloseAction,
   DEFAULT_CLOSE_ACTION,
@@ -13,6 +13,7 @@ import {
   DEFAULT_OMT_ENABLED,
   DEFAULT_OSC_ENABLED,
   DEFAULT_OSC_PORT,
+  DEFAULT_SHOW_MAIN_WINDOW_SHORTCUT,
   DEFAULT_WEBSERVER_ENABLED,
   DEFAULT_WEBSERVER_PORT,
 } from "../common/config.ts";
@@ -32,6 +33,9 @@ import path from "path";
 import * as process from "node:process";
 import {Config} from "./Utilities/Config.ts";
 import {TimersOrchestrator} from "./Utilities/TimersOrchestrator.ts";
+import {applicationMenu} from './Utilities/applicationMenu.ts';
+import {showMainWindow} from './Utilities/showMainWindow.ts';
+import {registerGlobalShortcuts} from './Utilities/globalShortcuts.ts';
 
 // To be packaged, otherwise it doesn't work
 console.log(macOsTrayIcon2x)
@@ -51,6 +55,7 @@ export class CountdownApp {
   webRtcRemote: WebRtcRemote = null;
   playback: PlaybackManager = null;
   discovery = new Discovery();
+  tray: Tray = null;
 
   constructor() {
     addDefaultEvents();
@@ -72,6 +77,10 @@ export class CountdownApp {
 
     this.mainWindowHandler.onCreated((browserWindow) => {
 
+      if (this.config.settings.showMainWindowShortcut ?? DEFAULT_SHOW_MAIN_WINDOW_SHORTCUT) {
+        registerGlobalShortcuts(() => this.showMainWindow())
+      }
+
       let appIcon: Tray
       if (process.platform === 'darwin') {
         const image = nativeImage.createFromPath(path.join(
@@ -86,24 +95,22 @@ export class CountdownApp {
         appIcon = new Tray(path.join(__dirname, process.platform === 'linux' ? linuxTrayIcon : otherOsTrayIcon))
       }
 
-      appIcon.on('right-click', () => {
-        const contextMenu = Menu.buildFromTemplate([
-          {label: 'Quit', role: 'quit'}
-        ])
-
-        appIcon.popUpContextMenu(contextMenu);
-      })
-      appIcon.on('click', () => {
-        if (!this.mainWindowHandler.browserWindow.isVisible()) {
-          this.mainWindowHandler.browserWindow.show()
-        } else {
-          this.mainWindowHandler.browserWindow.focus()
-        }
-      })
+      this.tray = appIcon
+      const trayMenu = applicationMenu(() => this.showMainWindow())
+      if (process.platform === 'darwin') {
+        // A context menu set on a macOS tray also opens on left click, which
+        // would replace the existing "click to show the main window" behavior.
+        appIcon.on('right-click', () => appIcon.popUpContextMenu(trayMenu))
+      } else {
+        // Linux only shows tray menus set through setContextMenu.
+        appIcon.setContextMenu(trayMenu)
+      }
+      appIcon.on('click', () => this.showMainWindow())
 
       setMenu(this.mainWindowHandler, this.timersOrchestrator);
 
       const screensUpdated = (browserWindow: BrowserWindow) => {
+        this.timersOrchestrator.refreshDisplays()
         browserWindow.webContents.send('screens-updated');
       }
 
@@ -221,6 +228,10 @@ export class CountdownApp {
     if (this.config.settings.remote.omtEnabled ?? DEFAULT_OMT_ENABLED) {
       this.startOmtTimer();
     }
+  }
+
+  showMainWindow() {
+    showMainWindow(this.mainWindowHandler?.browserWindow)
   }
 
   startNdiTimer() {

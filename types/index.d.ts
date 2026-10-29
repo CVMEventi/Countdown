@@ -28,6 +28,8 @@ interface WebServerStatus {
 interface API {
   platform: NodeJS.Platform
   canStartWithWindows(): Promise<boolean>
+  windowReady(): void
+  onWindowVisibility(callback: (event: Electron.IpcRendererEvent, visible: boolean) => void): void
   getSettings(key?: string): Promise<any>
   setSettings(key: string, value: any): Promise<any>
   command(command: any): Promise<any>
