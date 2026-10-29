@@ -17,6 +17,7 @@ export const useSettingsStore = defineStore('settings', () => {
     setWindowAlwaysOnTop: false,
     closeAction: DEFAULT_CLOSE_ACTION,
     startHidden: DEFAULT_START_HIDDEN,
+    startAtLogin: false,
     showMainWindowShortcut: DEFAULT_SHOW_MAIN_WINDOW_SHORTCUT,
     timers: {},
   });

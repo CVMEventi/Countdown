@@ -26,6 +26,7 @@ interface WebServerStatus {
 }
 
 interface API {
+  canStartAtLogin(): Promise<boolean>
   windowReady(): void
   onWindowVisibility(callback: (event: Electron.IpcRendererEvent, visible: boolean) => void): void
   getSettings(key?: string): Promise<any>

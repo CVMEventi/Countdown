@@ -4,6 +4,7 @@ import Store from "electron-store";
 import {applyMigrations} from "../Migrations/applyMigrations.ts";
 // @ts-ignore
 import {getProperty, setProperty} from "dot-prop";
+import {getStartAtLogin} from './startAtLogin.ts';
 
 
 export class Config {
@@ -22,6 +23,8 @@ export class Config {
     this.store.set(newConfig)
 
     this._settings = this.store.get('settings')
+    // Read the OS state so externally disabled login items stay disabled.
+    this._settings.startAtLogin = getStartAtLogin()
   }
 
   set(key: string, value: unknown) {

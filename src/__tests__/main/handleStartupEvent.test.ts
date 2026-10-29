@@ -2,14 +2,17 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import path from 'node:path';
 import { existsSync, writeFileSync } from 'node:fs';
 import { ensureInstalledAppPath, handleStartupEvent } from '../../main/Utilities/handleStartupEvent.ts';
+import { setStartAtLogin } from '../../main/Utilities/startAtLogin.ts';
 
 const { run } = vi.hoisted(() => ({ run: vi.fn() }));
 vi.mock('node:child_process', () => ({ execFile: vi.fn() }));
 vi.mock('node:fs', () => ({ existsSync: vi.fn(), writeFileSync: vi.fn() }));
 vi.mock('node:util', () => ({ promisify: () => run }));
+vi.mock('../../main/Utilities/startAtLogin.ts', () => ({ setStartAtLogin: vi.fn() }));
 
 beforeEach(() => {
   run.mockReset().mockResolvedValue({ stdout: '', stderr: '' });
+  vi.mocked(setStartAtLogin).mockReset();
   vi.mocked(existsSync).mockReset().mockImplementation(file => !String(file).endsWith('.shortcuts-created'));
   vi.mocked(writeFileSync).mockReset();
   vi.stubGlobal('process', {
@@ -100,6 +103,26 @@ describe('Windows installer integration', () => {
   it('reports registry write failures', async () => {
     run.mockResolvedValueOnce({}).mockRejectedValueOnce(Object.assign(new Error('Access denied'), { code: 1 }));
     await expect(handleStartupEvent()).rejects.toThrow('Access denied');
+  });
+
+  it('removes the login entry on uninstall', async () => {
+    process.argv[1] = '--squirrel-uninstall';
+    await handleStartupEvent();
+    expect(setStartAtLogin).toHaveBeenCalledExactlyOnceWith(false);
+  });
+
+  it('finishes uninstalling when the login entry cannot be removed', async () => {
+    process.argv[1] = '--squirrel-uninstall';
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.mocked(setStartAtLogin).mockImplementationOnce(() => { throw new Error('Registry locked'); });
+    run.mockResolvedValueOnce({}).mockResolvedValueOnce({ stdout: `    (Default)    REG_SZ    ${path.resolve('Countdown test', 'countdown.exe')}\r\n` });
+    expect(await handleStartupEvent()).toBe(true);
+    expect(run.mock.calls.some(call => call[1][0] === 'delete')).toBe(true);
+  });
+
+  it('does not touch the login entry on install or update', async () => {
+    await handleStartupEvent();
+    expect(setStartAtLogin).not.toHaveBeenCalled();
   });
 
   it('preserves registrations owned by another installation on uninstall', async () => {

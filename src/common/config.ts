@@ -223,6 +223,7 @@ export const DEFAULT_STORE: CountdownConfiguration = {
       setWindowAlwaysOnTop: DEFAULT_SET_WINDOW_ALWAYS_ON_TOP,
       closeAction: DEFAULT_CLOSE_ACTION,
       startHidden: DEFAULT_START_HIDDEN,
+      startAtLogin: false,
       showMainWindowShortcut: DEFAULT_SHOW_MAIN_WINDOW_SHORTCUT,
       timers: { [ulid()]: DEFAULT_TIMER_SETTINGS},
     },
@@ -355,6 +356,7 @@ export interface CountdownSettings {
   setWindowAlwaysOnTop: boolean
   closeAction: CloseAction,
   startHidden: boolean,
+  startAtLogin: boolean,
   showMainWindowShortcut?: boolean,
   timers: Timers
 }

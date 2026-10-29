@@ -8,6 +8,7 @@ import type {WebRtcClient, WebRtcConnectionState} from "../Remotes/WebRtcRemote.
 import {promises as fs} from "node:fs";
 import mime from "mime/lite";
 import {listLocalIPv4Addresses} from "./network.ts";
+import {canStartAtLogin, setStartAtLogin} from './startAtLogin.ts';
 
 // The web server toggle has to behave like the NDI/OMT/OSC ones: enabling it starts the
 // server right away and disabling it stops it, without a second manual action. Only the
@@ -31,6 +32,7 @@ async function applyWebServerState(app: CountdownApp, remote: RemoteSettings, wa
 
 export default function addIpcHandles(app: CountdownApp)
 {
+  ipcMain.handle('startup:available', () => canStartAtLogin())
   ipcMain.on('window:ready', event => {
     const window = BrowserWindow.fromWebContents(event.sender)
     if (window && !window.isDestroyed()) window.emit('renderer-ready')
@@ -61,6 +63,16 @@ export default function addIpcHandles(app: CountdownApp)
   })
 
   ipcMain.handle('settings:set', async (event, key: string, value) => {
+    const startAtLogin = key === null ? value.startAtLogin : key === 'startAtLogin' ? value : undefined
+    if (typeof startAtLogin === 'boolean' && startAtLogin !== app.config.settings.startAtLogin) {
+      try {
+        setStartAtLogin(startAtLogin)
+      } catch (error) {
+        dialog.showErrorBox('Start at login',
+          `Countdown could not ${startAtLogin ? 'enable' : 'disable'} starting at login.\n\n${(error as Error).message}`)
+        throw error
+      }
+    }
     const wasWebServerEnabled = app.config.settings.remote?.webServerEnabled ?? DEFAULT_WEBSERVER_ENABLED
     const wasShortcutEnabled = app.config.settings.showMainWindowShortcut ?? DEFAULT_SHOW_MAIN_WINDOW_SHORTCUT
     const newSettings = app.config.set(key, value)

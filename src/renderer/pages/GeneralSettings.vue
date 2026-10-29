@@ -21,6 +21,8 @@
             <option v-for="action in CloseAction" :value="action">{{ getCloseActionLabel(action) }}</option>
           </select>
           <CheckBox class="mt-2" id="startHidden" v-model="settingsStore.settings.startHidden">Start hidden</CheckBox>
+          <CheckBox class="mt-2" :class="{'opacity-50': !startupAvailable}" id="startAtLogin" :disabled="!startupAvailable" v-model="settingsStore.settings.startAtLogin">Start at login</CheckBox>
+          <p v-if="!startupAvailable" class="text-xs text-zinc-400">Available in the packaged app.</p>
           <CheckBox class="mt-2" id="showMainWindowShortcut" v-model="settingsStore.settings.showMainWindowShortcut">Global shortcut to show main window ({{ showMainWindowShortcutLabel }})</CheckBox>
         </div>
       </card>
@@ -38,8 +40,15 @@ import {CloseAction} from "../../common/config.ts";
 import TopBar from '../components/TopBar.vue'
 import BaseContainer from '../components/BaseContainer.vue'
 import {useSettingsStore} from '../stores/settings.ts'
+import {onBeforeMount, ref} from 'vue'
 
 const settingsStore = useSettingsStore()
+const {api} = window
+const startupAvailable = ref(false)
+
+onBeforeMount(async () => {
+  startupAvailable.value = await api.canStartAtLogin()
+})
 const showMainWindowShortcutLabel = navigator.platform.startsWith('Mac') ? '⌘⇧M' : 'Ctrl+Shift+M'
 
 function addPreset() {
