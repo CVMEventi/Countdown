@@ -1,14 +1,80 @@
-export const handleStartupEvent = function(): boolean {
-  if (process.platform !== 'win32') {
-    return false;
-  }
+import { execFile } from 'node:child_process';
+import { existsSync, writeFileSync } from 'node:fs';
+import path from 'node:path';
+import { promisify } from 'node:util';
 
-  const squirrelCommand = process.argv[1];
-  switch (squirrelCommand) {
-    case '--squirrel-install':
-    case '--squirrel-updated':
-    case '--squirrel-uninstall':
-    case '--squirrel-obsolete':
-      return true;
+const run = promisify(execFile);
+
+function installationPaths() {
+  const executable = path.basename(process.execPath);
+  const installDirectory = path.resolve(path.dirname(process.execPath), '..');
+  return {
+    executable, installDirectory,
+    updater: path.join(installDirectory, 'Update.exe'),
+    launcher: path.join(installDirectory, executable),
+    // Lives in the install root, which updates keep and uninstall removes.
+    shortcutsMarker: path.join(installDirectory, '.shortcuts-created'),
+    registry: path.join(process.env.SystemRoot || 'C:\\Windows', 'System32', 'reg.exe'),
+    // Squirrel installs per user in %LocalAppData% without elevation, so the
+    // per-user App Paths key is the only one it can write; Win+R reads it too.
+    key: `HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\${executable}`,
+  };
+}
+
+async function registeredPath(target: string): Promise<string | undefined> {
+  const { registry } = installationPaths();
+  try {
+    const { stdout } = await run(registry, ['query', target, '/ve'], { windowsHide: true });
+    return stdout.match(/REG_SZ\s+([^\r\n]+)/)?.[1].trim();
+  } catch (error) {
+    // Missing entries are reported as code 1.
+    if ((error as { code?: number }).code !== 1) throw error;
+    return undefined;
   }
-};
+}
+
+async function registerAppPath() {
+  const { registry, key, launcher, installDirectory } = installationPaths();
+  await run(registry, ['add', key, '/ve', '/t', 'REG_SZ', '/d', launcher, '/f'], { windowsHide: true });
+  await run(registry, ['add', key, '/v', 'Path', '/t', 'REG_SZ', '/d', installDirectory, '/f'], { windowsHide: true });
+}
+
+export async function ensureInstalledAppPath(): Promise<void> {
+  if (process.platform !== 'win32') return;
+  const { key, updater, launcher } = installationPaths();
+  // Portable and development copies must not replace an installed app's entry.
+  if (!/^app-/i.test(path.basename(path.dirname(process.execPath))) || !existsSync(updater) || !existsSync(launcher)) return;
+  if ((await registeredPath(key))?.toLowerCase() === launcher.toLowerCase()) return;
+  await registerAppPath();
+}
+
+export async function handleStartupEvent(): Promise<boolean> {
+  if (process.platform !== 'win32') return false;
+
+  const command = process.argv[1];
+  if (!['--squirrel-install', '--squirrel-updated', '--squirrel-uninstall', '--squirrel-obsolete'].includes(command)) return false;
+  if (command === '--squirrel-obsolete') return true;
+
+  const { executable, updater, registry, key, launcher, shortcutsMarker } = installationPaths();
+  const options = { windowsHide: true };
+
+  if (command === '--squirrel-uninstall') {
+    await run(updater, ['--removeShortcut', executable], options);
+    // Leave the entry alone if another installation replaced it.
+    if ((await registeredPath(key))?.toLowerCase() === launcher.toLowerCase()) {
+      await run(registry, ['delete', key, '/f'], options);
+    }
+  } else {
+    // Create shortcuts once: on install, or on the first update for copies installed
+    // before shortcuts were created. Later updates must not bring back shortcuts the
+    // user deleted; existing ones target the root launcher and survive updates.
+    if (command === '--squirrel-install' || !existsSync(shortcutsMarker)) {
+      // Squirrel's default locations are Desktop and StartMenu.
+      await run(updater, ['--createShortcut', executable], options);
+      writeFileSync(shortcutsMarker, '');
+    }
+    // The root launcher survives replacement of versioned app directories.
+    await registerAppPath();
+  }
+  return true;
+}
