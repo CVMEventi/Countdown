@@ -15,7 +15,9 @@ function installationPaths() {
     // Lives in the install root, which updates keep and uninstall removes.
     shortcutsMarker: path.join(installDirectory, '.shortcuts-created'),
     registry: path.join(process.env.SystemRoot || 'C:\\Windows', 'System32', 'reg.exe'),
-    key: `HKLM\\Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\${executable}`,
+    // Squirrel installs per user in %LocalAppData% without elevation, so the
+    // per-user App Paths key is the only one it can write; Win+R reads it too.
+    key: `HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\${executable}`,
   };
 }
 
@@ -25,7 +27,7 @@ async function registeredPath(target: string): Promise<string | undefined> {
     const { stdout } = await run(registry, ['query', target, '/ve'], { windowsHide: true });
     return stdout.match(/REG_SZ\s+([^\r\n]+)/)?.[1].trim();
   } catch (error) {
-    // Missing entries and inaccessible machine entries are reported as code 1.
+    // Missing entries are reported as code 1.
     if ((error as { code?: number }).code !== 1) throw error;
     return undefined;
   }
@@ -33,17 +35,8 @@ async function registeredPath(target: string): Promise<string | undefined> {
 
 async function registerAppPath() {
   const { registry, key, launcher, installDirectory } = installationPaths();
-  async function write(target: string) {
-    await run(registry, ['add', target, '/ve', '/t', 'REG_SZ', '/d', launcher, '/f'], { windowsHide: true });
-    await run(registry, ['add', target, '/v', 'Path', '/t', 'REG_SZ', '/d', installDirectory, '/f'], { windowsHide: true });
-  }
-  try {
-    await write(key);
-  } catch (error) {
-    // Standard user installations do not have permission to write HKLM.
-    if ((error as { code?: number }).code !== 1) throw error;
-    await write(key.replace(/^HKLM/, 'HKCU'));
-  }
+  await run(registry, ['add', key, '/ve', '/t', 'REG_SZ', '/d', launcher, '/f'], { windowsHide: true });
+  await run(registry, ['add', key, '/v', 'Path', '/t', 'REG_SZ', '/d', installDirectory, '/f'], { windowsHide: true });
 }
 
 export async function ensureInstalledAppPath(): Promise<void> {
@@ -51,11 +44,7 @@ export async function ensureInstalledAppPath(): Promise<void> {
   const { key, updater, launcher } = installationPaths();
   // Portable and development copies must not replace an installed app's entry.
   if (!/^app-/i.test(path.basename(path.dirname(process.execPath))) || !existsSync(updater) || !existsSync(launcher)) return;
-  // Standard user installations are registered under HKCU, so check both hives
-  // instead of registering again on every launch.
-  for (const target of [key, key.replace(/^HKLM/, 'HKCU')]) {
-    if ((await registeredPath(target))?.toLowerCase() === launcher.toLowerCase()) return;
-  }
+  if ((await registeredPath(key))?.toLowerCase() === launcher.toLowerCase()) return;
   await registerAppPath();
 }
 
@@ -71,11 +60,9 @@ export async function handleStartupEvent(): Promise<boolean> {
 
   if (command === '--squirrel-uninstall') {
     await run(updater, ['--removeShortcut', executable], options);
-    for (const target of [key, key.replace(/^HKLM/, 'HKCU')]) {
-      // Leave another user's installation registered if it replaced this one.
-      if ((await registeredPath(target))?.toLowerCase() === launcher.toLowerCase()) {
-        await run(registry, ['delete', target, '/f'], options);
-      }
+    // Leave the entry alone if another installation replaced it.
+    if ((await registeredPath(key))?.toLowerCase() === launcher.toLowerCase()) {
+      await run(registry, ['delete', key, '/f'], options);
     }
   } else {
     // Create shortcuts once: on install, or on the first update for copies installed

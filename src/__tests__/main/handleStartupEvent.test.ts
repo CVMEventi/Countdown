@@ -22,32 +22,23 @@ afterEach(() => vi.unstubAllGlobals());
 
 describe('Windows installer integration', () => {
   it('repairs a missing registration when an installed copy starts', async () => {
-    run.mockRejectedValueOnce({ code: 1 }).mockRejectedValueOnce({ code: 1 });
+    run.mockRejectedValueOnce({ code: 1 });
     await ensureInstalledAppPath();
-    expect(run.mock.calls.map(call => call[1][0])).toEqual(['query', 'query', 'add', 'add']);
+    expect(run.mock.calls.map(call => call[1][0])).toEqual(['query', 'add', 'add']);
   });
 
   it('repairs a registration pointing at an old version', async () => {
-    run.mockResolvedValueOnce({ stdout: '    (Default)    REG_SZ    C:\\old\\countdown.exe\r\n' })
-      .mockRejectedValueOnce({ code: 1 });
+    run.mockResolvedValueOnce({ stdout: '    (Default)    REG_SZ    C:\\old\\countdown.exe\r\n' });
     await ensureInstalledAppPath();
-    expect(run).toHaveBeenCalledTimes(4);
-  });
-
-  it('does not register again when a per-user registration is correct', async () => {
-    run.mockRejectedValueOnce({ code: 1 })
-      .mockResolvedValueOnce({ stdout: `    (Default)    REG_SZ    ${path.resolve('Countdown test', 'countdown.exe')}\r\n` });
-    await ensureInstalledAppPath();
-    expect(run.mock.calls.map(call => call[1].slice(0, 2))).toEqual([
-      ['query', 'HKLM\\Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\countdown.exe'],
-      ['query', 'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\countdown.exe'],
-    ]);
+    expect(run).toHaveBeenCalledTimes(3);
   });
 
   it('leaves a correct registration alone', async () => {
     run.mockResolvedValueOnce({ stdout: `    (Default)    REG_SZ    ${path.resolve('Countdown test', 'countdown.exe')}\r\n` });
     await ensureInstalledAppPath();
-    expect(run).toHaveBeenCalledTimes(1);
+    expect(run.mock.calls.map(call => call[1].slice(0, 2))).toEqual([
+      ['query', 'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\countdown.exe'],
+    ]);
   });
 
   it('does not register a portable copy', async () => {
@@ -60,7 +51,7 @@ describe('Windows installer integration', () => {
     process.argv[1] = command;
     expect(await handleStartupEvent()).toBe(true);
     const root = path.resolve('Countdown test');
-    const key = 'HKLM\\Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\countdown.exe';
+    const key = 'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\countdown.exe';
     expect(run.mock.calls.map(call => call.slice(0, 2))).toEqual([
       [path.join(root, 'Update.exe'), ['--createShortcut', 'countdown.exe']],
       [expect.stringMatching(/reg\.exe$/), ['add', key, '/ve', '/t', 'REG_SZ', '/d', path.join(root, 'countdown.exe'), '/f']],
@@ -98,14 +89,17 @@ describe('Windows installer integration', () => {
     run.mockResolvedValueOnce({}).mockResolvedValueOnce({ stdout: `    (Default)    REG_SZ    ${path.resolve('Countdown test', 'countdown.exe')}\r\n` });
     expect(await handleStartupEvent()).toBe(true);
     expect(run.mock.calls[0][1]).toEqual(['--removeShortcut', 'countdown.exe']);
-    expect(run.mock.calls[2][1]).toEqual(['delete', 'HKLM\\Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\countdown.exe', '/f']);
+    expect(run.mock.calls[2][1]).toEqual(['delete', 'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\countdown.exe', '/f']);
   });
 
-  it('falls back to per-user registration without administrator rights', async () => {
-    run.mockResolvedValueOnce({}).mockRejectedValueOnce({ code: 1 });
-    expect(await handleStartupEvent()).toBe(true);
-    expect(run.mock.calls[2][1][1]).toBe('HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\countdown.exe');
-    expect(run.mock.calls[3][1][1]).toBe('HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\countdown.exe');
+  it('never writes machine-wide registration', async () => {
+    await handleStartupEvent();
+    expect(run.mock.calls.some(call => call[1].some((arg: string) => arg.startsWith('HKLM')))).toBe(false);
+  });
+
+  it('reports registry write failures', async () => {
+    run.mockResolvedValueOnce({}).mockRejectedValueOnce(Object.assign(new Error('Access denied'), { code: 1 }));
+    await expect(handleStartupEvent()).rejects.toThrow('Access denied');
   });
 
   it('preserves registrations owned by another installation on uninstall', async () => {
