@@ -240,6 +240,11 @@ export interface WindowBounds {
   alwaysOnTop: boolean
   hidden: boolean
   fullscreenOn: number | null
+  fullscreenDisplay?: {
+    label: string
+    internal: boolean
+    bounds: {x: number, y: number, width: number, height: number}
+  }
   x: number
   y: number
   width: number

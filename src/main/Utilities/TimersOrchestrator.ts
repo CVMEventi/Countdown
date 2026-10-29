@@ -27,6 +27,7 @@ import OMTManager from "../Remotes/OMT.ts";
 import {TransportRegistry} from "../Remotes/TransportRegistry.ts";
 import {sanitizeTimersForWire} from "../../common/protocol.ts";
 import type {TimerTransport} from "../Remotes/TimerTransport.ts";
+import {rememberFullscreenDisplay, resolveFullscreenDisplay} from '../../common/fullscreenDisplay.ts';
 
 interface WindowsKV {
   [key: string]: BrowserWinHandler;
@@ -63,6 +64,7 @@ export class TimersOrchestrator {
   playingSounds = new Set<string>()
   // Windows being placed from settings: their bounds change on purpose and must not be saved back
   private _positioningWindows = new WeakSet<BrowserWinHandler>()
+  private _positionRequests = new WeakMap<BrowserWinHandler, number>()
   // Remotes that broadcast state to clients. Empty until App builds them once the main window
   // exists, so broadcasts before that are harmlessly dropped rather than throwing
   private _transports = new TransportRegistry()
@@ -179,7 +181,10 @@ export class TimersOrchestrator {
 
     countdownWindowHandler.onCreated(async function (browserWindow: BrowserWindow) {
       this._watchWindowBounds(timerId, windowId, countdownWindowHandler)
-      await this._setCountdownWindowPosition(countdownWindowHandler, windowSettings);
+      // A newly created timer must be registered before persisting display metadata.
+      await Promise.resolve()
+      const restoredSettings = this._restoreWindowDisplay(timerId, windowId) ?? windowSettings
+      await this._setCountdownWindowPosition(countdownWindowHandler, restoredSettings);
     }.bind(this))
 
     return countdownWindowHandler
@@ -352,26 +357,43 @@ export class TimersOrchestrator {
   }
 
   async _setCountdownWindowPosition(countdownWindowHandler: BrowserWinHandler, windowSettings: WindowSettings) {
+    const request = (this._positionRequests.get(countdownWindowHandler) ?? 0) + 1
+    this._positionRequests.set(countdownWindowHandler, request)
+    const isCurrent = () => this._positionRequests.get(countdownWindowHandler) === request
     this._positioningWindows.add(countdownWindowHandler)
     try {
-      await this._applyCountdownWindowPosition(countdownWindowHandler, windowSettings)
+      await this._applyCountdownWindowPosition(countdownWindowHandler, windowSettings, isCurrent)
     } finally {
-      this._positioningWindows.delete(countdownWindowHandler)
+      if (isCurrent()) this._positioningWindows.delete(countdownWindowHandler)
     }
   }
 
-  private async _applyCountdownWindowPosition(countdownWindowHandler: BrowserWinHandler, windowSettings: WindowSettings) {
+  private async _applyCountdownWindowPosition(countdownWindowHandler: BrowserWinHandler, windowSettings: WindowSettings, isCurrent: () => boolean) {
     const browserWindow = countdownWindowHandler.browserWindow
+    if (!browserWindow || browserWindow.isDestroyed()) return
     const fullscreenOn = windowSettings.bounds.fullscreenOn
-    const selectedScreen = screen.getAllDisplays().find((display) => display.id === fullscreenOn)
 
     if (browserWindow.fullScreen && fullscreenOn === null) {
       browserWindow.setFullScreen(false)
       await sleep(1000);
+      if (!isCurrent() || browserWindow.isDestroyed()) return
     }
     if (fullscreenOn !== null) {
       await sleep(1000)
-      browserWindow.setPosition(selectedScreen.bounds.x + 100, selectedScreen.bounds.y + 100)
+      if (!isCurrent() || browserWindow.isDestroyed()) return
+      let selectedScreen = resolveFullscreenDisplay(windowSettings.bounds, screen.getAllDisplays())
+      // Keep the selection while a display is unavailable; display events retry it.
+      if (!selectedScreen) return
+      if (browserWindow.isFullScreen()) {
+        const currentScreen = screen.getDisplayMatching(browserWindow.getBounds())
+        if (currentScreen.id === selectedScreen.id) return
+        browserWindow.setFullScreen(false)
+        await sleep(1000)
+        if (!isCurrent() || browserWindow.isDestroyed()) return
+        selectedScreen = resolveFullscreenDisplay(windowSettings.bounds, screen.getAllDisplays())
+        if (!selectedScreen) return
+      }
+      browserWindow.setPosition(selectedScreen.bounds.x, selectedScreen.bounds.y)
       browserWindow.setFullScreen(true)
       return;
     }
@@ -477,9 +499,36 @@ export class TimersOrchestrator {
     this._configWebSocketUpdate()
   }
 
-  windowUpdated(timerId: string, windowId: number): void {
-    const windowHandler = this.timers[timerId].windows[windowId]
-    const windowSettings = this.timers[timerId].settings.windows[windowId];
+  private _restoreWindowDisplay(timerId: string, windowId: string): WindowSettings | undefined {
+    const settings = this.app.config.settings.timers[timerId]?.windows[windowId]
+    if (!settings) return
+    const display = resolveFullscreenDisplay(settings.bounds, screen.getAllDisplays())
+    if (!display) return settings
+    const bounds = rememberFullscreenDisplay(settings.bounds, display)
+    if (JSON.stringify(bounds) !== JSON.stringify(settings.bounds)) {
+      this.app.config.set(`timers.${timerId}.windows.${windowId}.bounds`, bounds)
+      const mainWindow = this.app.mainWindowHandler?.browserWindow
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('window-bounds:updated', timerId, windowId, bounds)
+      }
+    }
+    return settings
+  }
+
+  refreshDisplays(): void {
+    Object.entries(this.timers).forEach(([timerId, timer]) => {
+      Object.keys(timer.windows).forEach(windowId => {
+        if (this.app.config.settings.timers[timerId]?.windows[windowId]?.bounds.fullscreenOn !== null) {
+          this.windowUpdated(timerId, windowId)
+        }
+      })
+    })
+  }
+
+  windowUpdated(timerId: string, windowId: string): void {
+    const windowHandler = this.timers[timerId]?.windows[windowId]
+    const windowSettings = this._restoreWindowDisplay(timerId, windowId)
+    if (!windowHandler || !windowSettings) return
 
     this._setCountdownWindowPosition(windowHandler, windowSettings)
   }
