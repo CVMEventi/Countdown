@@ -1,7 +1,8 @@
 /* eslint-disable */
 import { EventEmitter } from 'events'
-import { BrowserWindow, app, shell } from 'electron'
+import { BrowserWindow, app, shell, nativeImage } from 'electron'
 import path from 'path'
+import linuxWindowIcon from '../../icons/icon.png?no-inline'
 import BrowserWindowConstructorOptions = Electron.BrowserWindowConstructorOptions;
 
 declare const MAIN_WINDOW_VITE_DEV_SERVER_URL: string | undefined;
@@ -52,6 +53,7 @@ export default class BrowserWinHandler {
     this._rendererReady = false
     this._showRequested = options.show !== false
     this.browserWindow = new BrowserWindow({
+      ...(process.platform === 'linux' ? {icon: nativeImage.createFromPath(path.join(__dirname, linuxWindowIcon))} : {}),
       ...options,
       show: false,
       webPreferences: {
