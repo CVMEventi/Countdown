@@ -9,6 +9,10 @@ declare const MAIN_WINDOW_VITE_NAME: string;
 
 const __dirname = import.meta.dirname;
 
+// Show the window anyway if the renderer never reports it is ready (e.g. a page error),
+// so the application cannot get stuck with an invisible window
+const RENDERER_READY_TIMEOUT = 10000
+
 export default class BrowserWinHandler {
   allowRecreate: boolean
   _eventEmitter: EventEmitter
@@ -60,11 +64,21 @@ export default class BrowserWinHandler {
       this._readyToShow = true
       this._showIfReady()
     })
-    const lifecycle = this.browserWindow as EventEmitter
-    lifecycle.once('renderer-ready', () => {
+    const window = this.browserWindow
+    const rendererReady = () => {
+      clearTimeout(rendererReadyTimeout)
+      if (this._rendererReady || this.browserWindow !== window) return
       this._rendererReady = true
       this._showIfReady()
-    })
+    }
+    const rendererReadyTimeout = setTimeout(() => {
+      if (this._rendererReady || this.browserWindow !== window) return
+      console.warn(`Window "${options.title ?? ''}" did not report ready in time; showing it anyway`)
+      rendererReady()
+    }, RENDERER_READY_TIMEOUT)
+    const lifecycle = window as EventEmitter
+    lifecycle.once('renderer-ready', rendererReady)
+    window.once('closed', () => clearTimeout(rendererReadyTimeout))
     this.browserWindow.webContents.setWindowOpenHandler(({ url }) => {
       shell.openExternal(url)
       return { action: 'deny' }
@@ -86,13 +100,13 @@ export default class BrowserWinHandler {
 
   private _showIfReady() {
     const window = this.browserWindow
-    if (this._showRequested && this._readyToShow && this._rendererReady
-      && window && !window.isDestroyed()) {
-      if (!window.isVisible()) window.show()
-      // Some Linux window managers map fullscreen windows before emitting show.
-      // Their renderer still needs the visibility signal after settings are ready.
-      else window.webContents.send('window:visibility', true)
-    }
+    if (!this._readyToShow || !this._rendererReady || !window || window.isDestroyed()) return
+    // The 'show' event reveals the content
+    if (this._showRequested && !window.isVisible()) window.show()
+    // Hidden windows still feed NDI/OMT through capturePage, so their content must be
+    // revealed too. Some Linux window managers also map fullscreen windows before
+    // emitting show, and their renderer still needs the signal once settings are ready.
+    else window.webContents.send('window:visibility', true)
   }
 
   _recreate () {

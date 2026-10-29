@@ -104,4 +104,16 @@ describe('Wayland global Show main window shortcut', () => {
     expect(state.bus.connection.stream.destroy).toHaveBeenCalledOnce()
     expect(app.listenerCount('will-quit')).toBe(0)
   })
+
+  it('releases the session when the shortcut is turned off', async () => {
+    const controller = new AbortController()
+    const show = vi.fn()
+    expect(await registerWaylandShortcut(show, controller.signal)).toBe(true)
+    controller.abort()
+    expect(state.bus.connection.stream.destroy).toHaveBeenCalledOnce()
+    expect(app.listenerCount('will-quit')).toBe(0)
+    state.bus.connection.emit('message', {type: 4, sender: ':1.10', interface: IFACE,
+      member: 'Activated', body: [session, 'show-main-window']})
+    expect(show).not.toHaveBeenCalled()
+  })
 })

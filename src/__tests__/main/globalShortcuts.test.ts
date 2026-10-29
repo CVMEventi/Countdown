@@ -1,6 +1,6 @@
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest'
 import {app, globalShortcut, Menu} from 'electron'
-import {registerGlobalShortcuts, SHOW_MAIN_WINDOW_SHORTCUT} from '../../main/Utilities/globalShortcuts.ts'
+import {registerGlobalShortcuts, SHOW_MAIN_WINDOW_SHORTCUT, unregisterGlobalShortcuts} from '../../main/Utilities/globalShortcuts.ts'
 import {applicationMenu} from '../../main/Utilities/applicationMenu.ts'
 
 vi.mock('../../main/Utilities/waylandShortcut.ts', () => ({registerWaylandShortcut: vi.fn(async () => true)}))
@@ -12,6 +12,7 @@ vi.mock('electron', () => ({
 }))
 
 beforeEach(() => {
+  unregisterGlobalShortcuts()
   vi.clearAllMocks()
   vi.stubGlobal('process', {...process, platform: 'win32'})
   vi.mocked(globalShortcut.register).mockReturnValue(true)
@@ -37,6 +38,30 @@ describe('Show main window global shortcut', () => {
     expect(app.once).toHaveBeenCalledWith('will-quit', expect.any(Function))
     vi.mocked(app.once).mock.calls[0][1]()
     expect(globalShortcut.unregister).toHaveBeenCalledExactlyOnceWith(SHOW_MAIN_WINDOW_SHORTCUT)
+  })
+
+  it('releases the shortcut when the setting is turned off', async () => {
+    await registerGlobalShortcuts(vi.fn())
+    unregisterGlobalShortcuts()
+    expect(globalShortcut.unregister).toHaveBeenCalledExactlyOnceWith(SHOW_MAIN_WINDOW_SHORTCUT)
+    // Quitting afterwards does not release it a second time
+    vi.mocked(app.once).mock.calls[0][1]()
+    expect(globalShortcut.unregister).toHaveBeenCalledOnce()
+  })
+
+  it('registers only once while enabled and again after being turned off', async () => {
+    await registerGlobalShortcuts(vi.fn())
+    expect(await registerGlobalShortcuts(vi.fn())).toBe(true)
+    expect(globalShortcut.register).toHaveBeenCalledOnce()
+    unregisterGlobalShortcuts()
+    await registerGlobalShortcuts(vi.fn())
+    expect(globalShortcut.register).toHaveBeenCalledTimes(2)
+  })
+
+  it('can retry after the shortcut was unavailable', async () => {
+    vi.mocked(globalShortcut.register).mockReturnValueOnce(false)
+    expect(await registerGlobalShortcuts(vi.fn())).toBe(false)
+    expect(await registerGlobalShortcuts(vi.fn())).toBe(true)
   })
 
   it('keeps the app usable when another app owns the shortcut', async () => {
@@ -69,7 +94,7 @@ describe('Linux shortcut backend', () => {
     const show = vi.fn()
     expect(await registerGlobalShortcuts(show)).toBe(true)
     const {registerWaylandShortcut} = await import('../../main/Utilities/waylandShortcut.ts')
-    expect(registerWaylandShortcut).toHaveBeenCalledWith(show)
+    expect(registerWaylandShortcut).toHaveBeenCalledWith(show, expect.any(AbortSignal))
     expect(globalShortcut.register).not.toHaveBeenCalled()
   })
 })

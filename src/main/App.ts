@@ -13,6 +13,7 @@ import {
   DEFAULT_OMT_ENABLED,
   DEFAULT_OSC_ENABLED,
   DEFAULT_OSC_PORT,
+  DEFAULT_SHOW_MAIN_WINDOW_SHORTCUT,
   DEFAULT_WEBSERVER_ENABLED,
   DEFAULT_WEBSERVER_PORT,
 } from "../common/config.ts";
@@ -75,7 +76,9 @@ export class CountdownApp {
 
     this.mainWindowHandler.onCreated((browserWindow) => {
 
-      registerGlobalShortcuts(() => this.showMainWindow())
+      if (this.config.settings.showMainWindowShortcut ?? DEFAULT_SHOW_MAIN_WINDOW_SHORTCUT) {
+        registerGlobalShortcuts(() => this.showMainWindow())
+      }
 
       let appIcon: Tray
       if (process.platform === 'darwin') {
@@ -92,7 +95,15 @@ export class CountdownApp {
       }
 
       this.tray = appIcon
-      appIcon.setContextMenu(applicationMenu(() => this.showMainWindow()))
+      const trayMenu = applicationMenu(() => this.showMainWindow())
+      if (process.platform === 'darwin') {
+        // A context menu set on a macOS tray also opens on left click, which
+        // would replace the existing "click to show the main window" behavior.
+        appIcon.on('right-click', () => appIcon.popUpContextMenu(trayMenu))
+      } else {
+        // Linux only shows tray menus set through setContextMenu.
+        appIcon.setContextMenu(trayMenu)
+      }
       appIcon.on('click', () => this.showMainWindow())
 
       setMenu(this.mainWindowHandler, this.timersOrchestrator);

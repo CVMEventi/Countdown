@@ -16,7 +16,7 @@ const value = (values: Values, key: string) => values.find(entry => entry[0] ===
 // The package's runtime API includes sessionBus/name, which its typings omit.
 const sessionBus = (dbus as typeof dbus & {sessionBus(): MessageBus & {name: string}}).sessionBus
 
-export async function registerWaylandShortcut(showMainWindow: () => void): Promise<boolean> {
+export async function registerWaylandShortcut(showMainWindow: () => void, signal?: AbortSignal): Promise<boolean> {
   const bus = sessionBus()
   let closed = false
   let owner: string
@@ -31,6 +31,7 @@ export async function registerWaylandShortcut(showMainWindow: () => void): Promi
     // Disconnecting closes the portal session and releases its shortcut.
     bus.connection.stream.destroy()
     app.removeListener('will-quit', close)
+    signal?.removeEventListener('abort', close)
   }
   const onMessage = (message: Message) => {
     if (closed || message.type !== 4 || message.sender !== owner) return
@@ -52,6 +53,9 @@ export async function registerWaylandShortcut(showMainWindow: () => void): Promi
     close()
   })
   app.once('will-quit', close)
+  // Turning the setting off closes the session, which releases the shortcut.
+  signal?.addEventListener('abort', close)
+  if (signal?.aborted) close()
 
   const call = (message: Message): Promise<unknown> => new Promise((resolve, reject) => {
     const timeout = setTimeout(() => reject(new Error('Desktop shortcut service did not respond')), 10000)

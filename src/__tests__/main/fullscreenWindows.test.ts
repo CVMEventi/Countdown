@@ -23,8 +23,12 @@ const monitor = (id: number) => ({
   id, label: 'Projector', internal: false, bounds: {x: 1920, y: 0, width: 1920, height: 1080},
 } as Electron.Display)
 
-beforeEach(() => { vi.useFakeTimers(); vi.clearAllMocks(); vi.mocked(screen.getAllDisplays).mockReturnValue([]) })
-afterEach(() => vi.useRealTimers())
+beforeEach(() => {
+  vi.useFakeTimers(); vi.clearAllMocks(); vi.mocked(screen.getAllDisplays).mockReturnValue([])
+  // macOS waits for native fullscreen events, covered separately in setFullScreen.test.ts
+  vi.stubGlobal('process', {...process, platform: 'win32'})
+})
+afterEach(() => { vi.useRealTimers(); vi.unstubAllGlobals() })
 
 function setup() {
   const app = {

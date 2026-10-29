@@ -21,6 +21,7 @@
             <option v-for="action in CloseAction" :value="action">{{ getCloseActionLabel(action) }}</option>
           </select>
           <CheckBox class="mt-2" id="startHidden" v-model="settingsStore.settings.startHidden">Start hidden</CheckBox>
+          <CheckBox class="mt-2" id="showMainWindowShortcut" v-model="settingsStore.settings.showMainWindowShortcut">Global shortcut to show main window ({{ showMainWindowShortcutLabel }})</CheckBox>
         </div>
       </card>
     </div>
@@ -39,6 +40,7 @@ import BaseContainer from '../components/BaseContainer.vue'
 import {useSettingsStore} from '../stores/settings.ts'
 
 const settingsStore = useSettingsStore()
+const showMainWindowShortcutLabel = navigator.platform.startsWith('Mac') ? '⌘⇧M' : 'Ctrl+Shift+M'
 
 function addPreset() {
   settingsStore.settings.presets.push(0)

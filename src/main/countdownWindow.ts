@@ -6,8 +6,8 @@ export default function createCountdownWindow (timerId: string, timerName: strin
   const winHandler = new BrowserWinHandler(() => ({...options(), title: `Countdown ${timerName} - ${windowId}`}));
 
   winHandler.onCreated(window => {
+    // Content stays revealed once ready, even while the window is hidden: NDI/OMT capture it
     window.on('show', () => window.webContents.send('window:visibility', true))
-    window.on('hide', () => window.webContents.send('window:visibility', false))
     const menu = applicationMenu(showMainWindow)
     // Drag regions use the native system menu rather than webContents' event.
     window.on('system-context-menu', event => {

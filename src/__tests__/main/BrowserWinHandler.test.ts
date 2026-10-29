@@ -1,4 +1,4 @@
-import {beforeEach, describe, expect, it, vi} from 'vitest'
+import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest'
 import {app} from 'electron'
 import BrowserWinHandler from '../../main/Utilities/BrowserWinHandler.ts'
 
@@ -26,6 +26,7 @@ vi.mock('electron', async () => {
 })
 
 beforeEach(() => { state.ready = true; state.options = []; app.removeAllListeners() })
+afterEach(() => { vi.useRealTimers(); vi.restoreAllMocks() })
 
 describe('window startup visibility', () => {
   it('reveals ready content when the window manager has already mapped the window', () => {
@@ -85,6 +86,37 @@ describe('window startup visibility', () => {
     window.emit('ready-to-show')
     window.emit('renderer-ready')
     expect(window.isVisible()).toBe(false)
+  })
+
+  it('reveals the content of hidden windows so NDI and OMT do not capture a blank frame', () => {
+    const handler = new BrowserWinHandler({show: false})
+    const window = handler.browserWindow
+    window.emit('ready-to-show')
+    window.emit('renderer-ready')
+    expect(window.show).not.toHaveBeenCalled()
+    expect(window.webContents.send).toHaveBeenCalledWith('window:visibility', true)
+  })
+
+  it('shows the window anyway when the renderer never reports ready', () => {
+    vi.useFakeTimers()
+    vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const handler = new BrowserWinHandler({show: true})
+    const window = handler.browserWindow
+    window.emit('ready-to-show')
+    vi.advanceTimersByTime(9999)
+    expect(window.isVisible()).toBe(false)
+    vi.advanceTimersByTime(1)
+    expect(window.isVisible()).toBe(true)
+    expect(console.warn).toHaveBeenCalledOnce()
+  })
+
+  it('does not warn when the renderer reports ready in time', () => {
+    vi.useFakeTimers()
+    vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const handler = new BrowserWinHandler({show: true})
+    handler.browserWindow.emit('renderer-ready')
+    vi.advanceTimersByTime(20000)
+    expect(console.warn).not.toHaveBeenCalled()
   })
 
   it('resolves startup options after Electron is ready', () => {

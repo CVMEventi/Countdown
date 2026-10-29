@@ -1,5 +1,10 @@
 # Show main window shortcut
 
+The shortcut is off by default, because it is taken system-wide and would
+otherwise override the same keys in other applications (for example, Microsoft
+Teams uses Ctrl+Shift+M to mute). Enable **Global shortcut to show main
+window** in General Settings; turning it off releases the shortcut immediately.
+
 Use **Ctrl+Shift+M** on Windows/Linux or **Command+Shift+M** on macOS
 to show the control window. Countdown must remain running, including when
 hidden in the tray. The shortcut also restores a minimized control window.
