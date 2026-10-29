@@ -66,7 +66,9 @@ const playbackStore = usePlaybackStore()
         const window = windows[windowId]
         if (!oldTimers[timerId]) return
         if (JSON.stringify(window) !== JSON.stringify(oldTimers[timerId][windowId])) {
-          await api.setSettings(`timers.${timerId}.windows.${windowId}.bounds`, window)
+          // Saved display metadata contains nested Vue proxies. Electron IPC
+          // needs a plain snapshot of these JSON settings before applying them.
+          await api.setSettings(`timers.${timerId}.windows.${windowId}.bounds`, JSON.parse(JSON.stringify(window)))
           api.windowUpdated(timerId, windowId)
         }
       })
