@@ -20,6 +20,12 @@ Simple countdown for live events
 
 You can download latest release from [releases](https://github.com/CVMEventi/Countdown/releases)
 
+On Windows you can also install it with [WinGet](https://learn.microsoft.com/windows/package-manager/winget/):
+
+```powershell
+winget install CVMEventi.Countdown
+```
+
 ### APIs
 
 - [HTTP APIs](https://github.com/CVMEventi/Countdown/wiki/HTTP-APIs)

@@ -1,0 +1,28 @@
+# yaml-language-server: $schema=https://aka.ms/winget-manifest.defaultLocale.1.9.0.schema.json
+
+PackageIdentifier: CVMEventi.Countdown
+PackageVersion: 1.5.0
+PackageLocale: en-US
+Publisher: CVM Eventi
+PublisherUrl: https://github.com/CVMEventi
+PublisherSupportUrl: https://github.com/CVMEventi/Countdown/issues
+Author: Matteo Piccina
+PackageName: Countdown
+PackageUrl: https://github.com/CVMEventi/Countdown
+License: MIT
+LicenseUrl: https://github.com/CVMEventi/Countdown/blob/master/LICENSE
+ShortDescription: Simple countdown for live events
+Description: |-
+  Countdown timer for live events with NDI, OSC and HTTP/Companion control,
+  multiple concurrent timers, multiple windows per timer, custom messages and
+  remote control through the browser.
+Tags:
+- countdown
+- timer
+- live-events
+- ndi
+- osc
+- companion
+ReleaseNotesUrl: https://github.com/CVMEventi/Countdown/releases/tag/v1.5.0
+ManifestType: defaultLocale
+ManifestVersion: 1.9.0
