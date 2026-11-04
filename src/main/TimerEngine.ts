@@ -247,7 +247,7 @@ export class TimerEngine {
   }
 
   toggleTimer() {
-    this._timer.toggle();
+    this.startResumePause();
     this._sendWebSocketUpdate();
     this._sendUpdate();
   }

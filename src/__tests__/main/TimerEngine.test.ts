@@ -204,6 +204,79 @@ describe('TimerEngine', () => {
   });
 
   describe('toggleTimer()', () => {
+    it('starts a selected five-minute duration from reset and counts down', () => {
+      const { engine } = makeEngine();
+      engine.set(300);
+      engine.toggleTimer();
+      expect(engine.webSocketState()).toMatchObject({state: 'Running', currentTime: 300, timeSetOnCurrentTimer: 300});
+      vi.advanceTimersByTime(2000);
+      expect(engine.countSeconds()).toBe(298);
+      expect(engine.extraSeconds()).toBe(0);
+    });
+
+    it('freezes remaining time when toggled while running', () => {
+      const { engine } = makeEngine();
+      engine.set(300);
+      engine.start();
+      vi.advanceTimersByTime(3000);
+      engine.toggleTimer();
+      vi.advanceTimersByTime(5000);
+      expect(engine.webSocketState()).toMatchObject({state: 'Paused', currentTime: 297, timeSetOnCurrentTimer: 300});
+    });
+
+    it('resumes remaining time without loading a newly selected duration', () => {
+      const { engine } = makeEngine();
+      engine.set(300);
+      engine.start();
+      vi.advanceTimersByTime(3000);
+      engine.toggleTimer();
+      engine.set(600);
+      engine.toggleTimer();
+      expect(engine.countSeconds()).toBe(297);
+      vi.advanceTimersByTime(2000);
+      expect(engine.webSocketState()).toMatchObject({state: 'Running', currentTime: 295, timeSetOnCurrentTimer: 300, setTime: 600});
+    });
+
+    it('loads the new selected duration after resetting', () => {
+      const { engine } = makeEngine();
+      engine.set(300);
+      engine.start();
+      vi.advanceTimersByTime(1000);
+      engine.reset();
+      engine.set(120);
+      engine.toggleTimer();
+      expect(engine.webSocketState()).toMatchObject({state: 'Running', currentTime: 120, timeSetOnCurrentTimer: 120});
+      vi.advanceTimersByTime(1000);
+      expect(engine.countSeconds()).toBe(119);
+    });
+
+    it('notifies WebSocket and renderer clients of start, pause and resume with the active duration', () => {
+      const { engine, onUpdate, onWebSocketUpdate } = makeEngine();
+      engine.set(300);
+      for (const [state, currentTime] of [['Running', 300], ['Paused', 298], ['Running', 298]] as const) {
+        onUpdate.mockClear();
+        onWebSocketUpdate.mockClear();
+        engine.toggleTimer();
+        expect(onWebSocketUpdate).toHaveBeenLastCalledWith(expect.objectContaining({state, currentTime, timeSetOnCurrentTimer: 300}));
+        expect(onUpdate).toHaveBeenLastCalledWith(expect.objectContaining({currentSeconds: currentTime, isRunning: state === 'Running', secondsSetOnCurrentTimer: 300}));
+        if (currentTime === 300) vi.advanceTimersByTime(2000);
+      }
+    });
+
+    it('pauses and resumes overtime without restarting the selected duration', () => {
+      const { engine } = makeEngine();
+      engine.set(1);
+      engine.start();
+      vi.advanceTimersByTime(2000);
+      engine.toggleTimer();
+      vi.advanceTimersByTime(3000);
+      expect(engine.webSocketState()).toMatchObject({state: 'Paused', currentTime: -1, timeSetOnCurrentTimer: 1});
+      engine.set(300);
+      engine.toggleTimer();
+      vi.advanceTimersByTime(1000);
+      expect(engine.webSocketState()).toMatchObject({state: 'Expired', currentTime: -2, timeSetOnCurrentTimer: 1});
+    });
+
     it('pauses a running timer', () => {
       const { engine } = makeEngine();
       engine.set(60);
