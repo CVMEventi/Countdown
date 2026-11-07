@@ -35,7 +35,8 @@ import {Config} from "./Utilities/Config.ts";
 import {TimersOrchestrator} from "./Utilities/TimersOrchestrator.ts";
 import {applicationMenu} from './Utilities/applicationMenu.ts';
 import {showMainWindow} from './Utilities/showMainWindow.ts';
-import {registerGlobalShortcuts} from './Utilities/globalShortcuts.ts';
+import {onGlobalShortcutStatusChange, registerGlobalShortcuts} from './Utilities/globalShortcuts.ts';
+import type {Menu} from 'electron';
 
 // To be packaged, otherwise it doesn't work
 console.log(macOsTrayIcon2x)
@@ -56,6 +57,8 @@ export class CountdownApp {
   playback: PlaybackManager = null;
   discovery = new Discovery();
   tray: Tray = null;
+  private _trayMenu: Menu = null;
+  private _trayShortcutEnabled: boolean;
 
   constructor() {
     addDefaultEvents();
@@ -76,6 +79,10 @@ export class CountdownApp {
     });
 
     this.mainWindowHandler.onCreated((browserWindow) => {
+      const unsubscribe = onGlobalShortcutStatusChange(status => {
+        if (!browserWindow.isDestroyed()) browserWindow.webContents.send('shortcut:status', status)
+      })
+      browserWindow.once('closed', unsubscribe)
 
       if (this.config.settings.showMainWindowShortcut ?? DEFAULT_SHOW_MAIN_WINDOW_SHORTCUT) {
         registerGlobalShortcuts(() => this.showMainWindow())
@@ -96,18 +103,13 @@ export class CountdownApp {
       }
 
       this.tray = appIcon
-      const trayMenu = applicationMenu(() => this.showMainWindow())
+      this._updateTrayMenu()
       if (process.platform === 'darwin') {
         // A context menu set on a macOS tray also opens on left click, which
         // would replace the existing "click to show the main window" behavior.
-        appIcon.on('right-click', () => appIcon.popUpContextMenu(trayMenu))
-      } else {
-        // Linux only shows tray menus set through setContextMenu.
-        appIcon.setContextMenu(trayMenu)
+        appIcon.on('right-click', () => appIcon.popUpContextMenu(this._trayMenu))
       }
       appIcon.on('click', () => this.showMainWindow())
-
-      setMenu(this.mainWindowHandler, this.timersOrchestrator);
 
       const screensUpdated = (browserWindow: BrowserWindow) => {
         this.timersOrchestrator.refreshDisplays()
@@ -276,5 +278,17 @@ export class CountdownApp {
 
   _configUpdated() {
     this.timersOrchestrator.configUpdated()
+    this._updateTrayMenu()
+  }
+
+  private _updateTrayMenu() {
+    if (!this.tray) return
+    const enabled = this.config.settings.showMainWindowShortcut ?? DEFAULT_SHOW_MAIN_WINDOW_SHORTCUT
+    if (this._trayMenu && enabled === this._trayShortcutEnabled) return
+    this._trayMenu = applicationMenu(() => this.showMainWindow(), enabled)
+    this._trayShortcutEnabled = enabled
+    setMenu(this.mainWindowHandler, this.timersOrchestrator, enabled)
+    // Linux tray menus need setContextMenu; macOS keeps left-click restoration.
+    if (process.platform !== 'darwin') this.tray.setContextMenu(this._trayMenu)
   }
 }

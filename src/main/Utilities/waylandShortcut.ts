@@ -16,7 +16,7 @@ const value = (values: Values, key: string) => values.find(entry => entry[0] ===
 // The package's runtime API includes sessionBus/name, which its typings omit.
 const sessionBus = (dbus as typeof dbus & {sessionBus(): MessageBus & {name: string}}).sessionBus
 
-export async function registerWaylandShortcut(showMainWindow: () => void, signal?: AbortSignal): Promise<boolean> {
+export async function registerWaylandShortcut(showMainWindow: () => void, signal?: AbortSignal, onUnavailable?: () => void): Promise<boolean> {
   const bus = sessionBus()
   let closed = false
   let owner: string
@@ -49,8 +49,10 @@ export async function registerWaylandShortcut(showMainWindow: () => void, signal
   }
   bus.connection.on('message', onMessage)
   bus.connection.on('error', error => {
-    if (!closed) console.warn('Global shortcut desktop service disconnected:', error)
+    if (closed) return
+    console.warn('Global shortcut desktop service disconnected:', error)
     close()
+    onUnavailable?.()
   })
   app.once('will-quit', close)
   // Turning the setting off closes the session, which releases the shortcut.

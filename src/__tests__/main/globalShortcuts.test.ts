@@ -1,6 +1,6 @@
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest'
 import {app, globalShortcut, Menu} from 'electron'
-import {registerGlobalShortcuts, SHOW_MAIN_WINDOW_SHORTCUT, unregisterGlobalShortcuts} from '../../main/Utilities/globalShortcuts.ts'
+import {getGlobalShortcutStatus, onGlobalShortcutStatusChange, registerGlobalShortcuts, SHOW_MAIN_WINDOW_SHORTCUT, unregisterGlobalShortcuts} from '../../main/Utilities/globalShortcuts.ts'
 import {applicationMenu} from '../../main/Utilities/applicationMenu.ts'
 
 vi.mock('../../main/Utilities/waylandShortcut.ts', () => ({registerWaylandShortcut: vi.fn(async () => true)}))
@@ -24,13 +24,23 @@ describe('Show main window global shortcut', () => {
   it('restores the window through the same callback as the menu', async () => {
     const show = vi.fn()
     expect(await registerGlobalShortcuts(show)).toBe(true)
-    expect(globalShortcut.register).toHaveBeenCalledWith('CommandOrControl+Shift+M', show)
+    expect(globalShortcut.register).toHaveBeenCalledWith('CommandOrControl+Shift+M', expect.any(Function))
     vi.mocked(globalShortcut.register).mock.calls[0][1]()
     expect(show).toHaveBeenCalledOnce()
-    applicationMenu(show)
+    applicationMenu(show, true)
     expect(Menu.buildFromTemplate).toHaveBeenCalledWith(expect.arrayContaining([
       expect.objectContaining({label: 'Show main window', accelerator: SHOW_MAIN_WINDOW_SHORTCUT, click: show}),
     ]))
+  })
+
+  it('keeps Show main window and Quit available without advertising a disabled shortcut', () => {
+    const show = vi.fn()
+    applicationMenu(show, false)
+    const template = vi.mocked(Menu.buildFromTemplate).mock.calls[0][0]
+    expect(template[0]).toEqual({label: 'Show main window', accelerator: undefined, click: show})
+    expect(template[2]).toMatchObject({label: 'Quit', accelerator: 'CommandOrControl+Q'})
+    ;(template[0].click as () => void)()
+    expect(show).toHaveBeenCalledOnce()
   })
 
   it('releases only its own shortcut on quit', async () => {
@@ -70,6 +80,30 @@ describe('Show main window global shortcut', () => {
     expect(console.warn).toHaveBeenCalledOnce()
     expect(app.once).not.toHaveBeenCalled()
     expect(globalShortcut.unregister).not.toHaveBeenCalled()
+    expect(getGlobalShortcutStatus()).toBe('unavailable')
+  })
+
+  it('reports registration and releases it immediately when disabled', async () => {
+    const states: string[] = []
+    const unsubscribe = onGlobalShortcutStatusChange(value => states.push(value))
+    await registerGlobalShortcuts(vi.fn())
+    unregisterGlobalShortcuts()
+    unsubscribe()
+    expect(states).toEqual(['registering', 'active', 'disabled'])
+    expect(getGlobalShortcutStatus()).toBe('disabled')
+  })
+
+  it('ignores callbacks retained from disabled and replaced registrations', async () => {
+    const show = vi.fn()
+    await registerGlobalShortcuts(show)
+    const oldCallback = vi.mocked(globalShortcut.register).mock.calls[0][1]
+    unregisterGlobalShortcuts()
+    oldCallback()
+    await registerGlobalShortcuts(show)
+    oldCallback()
+    expect(show).not.toHaveBeenCalled()
+    vi.mocked(globalShortcut.register).mock.calls[1][1]()
+    expect(show).toHaveBeenCalledOnce()
   })
 
   it('handles an unavailable system shortcut service without aborting startup', async () => {
@@ -94,7 +128,32 @@ describe('Linux shortcut backend', () => {
     const show = vi.fn()
     expect(await registerGlobalShortcuts(show)).toBe(true)
     const {registerWaylandShortcut} = await import('../../main/Utilities/waylandShortcut.ts')
-    expect(registerWaylandShortcut).toHaveBeenCalledWith(show, expect.any(AbortSignal))
+    expect(registerWaylandShortcut).toHaveBeenCalledWith(expect.any(Function), expect.any(AbortSignal), expect.any(Function))
+    vi.mocked(registerWaylandShortcut).mock.calls[0][0]()
+    expect(show).toHaveBeenCalledOnce()
     expect(globalShortcut.register).not.toHaveBeenCalled()
+  })
+
+  it('does not report a late Wayland registration as active after disabling it', async () => {
+    vi.stubGlobal('process', {...process, platform: 'linux'})
+    vi.stubEnv('WAYLAND_DISPLAY', 'wayland-0')
+    const {registerWaylandShortcut} = await import('../../main/Utilities/waylandShortcut.ts')
+    let finish: (value: boolean) => void
+    vi.mocked(registerWaylandShortcut).mockImplementationOnce(() => new Promise(resolve => {finish = resolve}))
+    const pending = registerGlobalShortcuts(vi.fn())
+    await vi.waitFor(() => expect(finish).toBeTypeOf('function'))
+    unregisterGlobalShortcuts()
+    finish(true)
+    expect(await pending).toBe(false)
+    expect(getGlobalShortcutStatus()).toBe('disabled')
+  })
+
+  it('reports an unavailable Wayland service after its connection closes', async () => {
+    vi.stubGlobal('process', {...process, platform: 'linux'})
+    vi.stubEnv('WAYLAND_DISPLAY', 'wayland-0')
+    const {registerWaylandShortcut} = await import('../../main/Utilities/waylandShortcut.ts')
+    await registerGlobalShortcuts(vi.fn())
+    vi.mocked(registerWaylandShortcut).mock.calls[0][2]()
+    expect(getGlobalShortcutStatus()).toBe('unavailable')
   })
 })

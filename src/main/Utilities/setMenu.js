@@ -4,7 +4,7 @@ import {showMainWindow} from './showMainWindow.ts';
 
 const isMac = process.platform === 'darwin'
 
-export default (mainWindowHandler, timersOrchestrator) => {
+export default (mainWindowHandler, timersOrchestrator, shortcutEnabled = false) => {
   const template = [
     // { role: 'appMenu' }
     ...(isMac ? [{
@@ -101,7 +101,7 @@ export default (mainWindowHandler, timersOrchestrator) => {
       submenu: [
         {
           label: 'Show main window',
-          accelerator: SHOW_MAIN_WINDOW_SHORTCUT,
+          accelerator: shortcutEnabled ? SHOW_MAIN_WINDOW_SHORTCUT : undefined,
           click: () => showMainWindow(mainWindowHandler.browserWindow),
         },
         { type: 'separator' },
