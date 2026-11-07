@@ -2,7 +2,7 @@ import {BrowserWindow, dialog, ipcMain, screen} from "electron";
 import {CountdownApp} from "../App.ts";
 import {IpcGetWindowSettingsArgs} from "../../common/IpcInterfaces.ts";
 import {DEFAULT_SHOW_MAIN_WINDOW_SHORTCUT, DEFAULT_WEBSERVER_ENABLED, DEFAULT_WEBSERVER_PORT, RemoteSettings} from "../../common/config.ts";
-import {registerGlobalShortcuts, unregisterGlobalShortcuts} from "./globalShortcuts.ts";
+import {getGlobalShortcutStatus, registerGlobalShortcuts, unregisterGlobalShortcuts} from "./globalShortcuts.ts";
 import {validateCommand} from "../../common/protocol.ts";
 import type {WebRtcClient, WebRtcConnectionState} from "../Remotes/WebRtcRemote.ts";
 import {promises as fs} from "node:fs";
@@ -33,6 +33,7 @@ async function applyWebServerState(app: CountdownApp, remote: RemoteSettings, wa
 export default function addIpcHandles(app: CountdownApp)
 {
   ipcMain.handle('startup:available', () => canStartAtLogin())
+  ipcMain.handle('shortcut:status', () => getGlobalShortcutStatus())
   ipcMain.on('window:ready', event => {
     const window = BrowserWindow.fromWebContents(event.sender)
     if (window && !window.isDestroyed()) window.emit('renderer-ready')

@@ -1,5 +1,6 @@
 import {
   ColorThreshold,
+  DEFAULT_SHOW_MAIN_WINDOW_SHORTCUT,
   TimerSettings,
   WindowSettings
 } from "../../common/config.ts";
@@ -184,7 +185,7 @@ export class TimersOrchestrator {
         alwaysOnTop: settings.bounds.alwaysOnTop,
         show: false,
       }
-    }, () => this.app.showMainWindow());
+    }, () => this.app.showMainWindow(), () => this.app.config.settings.showMainWindowShortcut ?? DEFAULT_SHOW_MAIN_WINDOW_SHORTCUT);
 
     countdownWindowHandler.onCreated(async function (browserWindow: BrowserWindow) {
       this._watchWindowBounds(timerId, windowId, countdownWindowHandler)

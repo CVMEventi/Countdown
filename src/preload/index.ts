@@ -1,9 +1,16 @@
 import { contextBridge, ipcRenderer, clipboard } from 'electron'
+import type {GlobalShortcutStatus} from '../common/shortcutStatus.ts'
 
 contextBridge.exposeInMainWorld(
   'api',
   {
     canStartAtLogin: async (): Promise<boolean> => ipcRenderer.invoke('startup:available'),
+    getGlobalShortcutStatus: async (): Promise<GlobalShortcutStatus> => ipcRenderer.invoke('shortcut:status'),
+    onGlobalShortcutStatus: (callback: (status: GlobalShortcutStatus) => void) => {
+      const listener = (_event: Electron.IpcRendererEvent, status: GlobalShortcutStatus) => callback(status)
+      ipcRenderer.on('shortcut:status', listener)
+      return () => {ipcRenderer.removeListener('shortcut:status', listener)}
+    },
     windowReady: (): void => ipcRenderer.send('window:ready'),
     onWindowVisibility: (callback: (event: Electron.IpcRendererEvent, visible: boolean) => void) => ipcRenderer.on('window:visibility', callback),
     getSettings: async (key: string|null) => await ipcRenderer.invoke('settings:get', key),

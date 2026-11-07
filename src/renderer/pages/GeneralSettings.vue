@@ -24,6 +24,12 @@
           <CheckBox class="mt-2" :class="{'opacity-50': !startupAvailable}" id="startAtLogin" :disabled="!startupAvailable" v-model="settingsStore.settings.startAtLogin">Start at login</CheckBox>
           <p v-if="!startupAvailable" class="text-xs text-zinc-400">Available in the packaged app.</p>
           <CheckBox class="mt-2" id="showMainWindowShortcut" v-model="settingsStore.settings.showMainWindowShortcut">Global shortcut to show main window ({{ showMainWindowShortcutLabel }})</CheckBox>
+          <p id="globalShortcutStatus" class="mt-1 text-xs" role="status"
+             :class="{'text-green-400': shortcutStatus === 'active' && settingsStore.settings.showMainWindowShortcut,
+                       'text-amber-300': shortcutStatus === 'unavailable' && settingsStore.settings.showMainWindowShortcut,
+                       'text-zinc-400': !settingsStore.settings.showMainWindowShortcut || shortcutStatus === 'registering'}">
+            {{ shortcutStatusText }}
+          </p>
         </div>
       </card>
     </div>
@@ -40,15 +46,27 @@ import {CloseAction} from "../../common/config.ts";
 import TopBar from '../components/TopBar.vue'
 import BaseContainer from '../components/BaseContainer.vue'
 import {useSettingsStore} from '../stores/settings.ts'
-import {onBeforeMount, ref} from 'vue'
+import {computed, onBeforeMount, onUnmounted, ref} from 'vue'
+import type {GlobalShortcutStatus} from '../../common/shortcutStatus.ts'
 
 const settingsStore = useSettingsStore()
 const {api} = window
 const startupAvailable = ref(false)
+const shortcutStatus = ref<GlobalShortcutStatus>('disabled')
+let unsubscribe = () => {}
+const shortcutStatusText = computed(() => {
+  if (!settingsStore.settings.showMainWindowShortcut) return 'Disabled'
+  if (shortcutStatus.value === 'active') return 'Active'
+  if (shortcutStatus.value === 'unavailable') return 'Unavailable: another app may be using this shortcut, or the desktop denied it. Turn it off and on to retry.'
+  return 'Registering…'
+})
 
 onBeforeMount(async () => {
+  unsubscribe = api.onGlobalShortcutStatus(status => {shortcutStatus.value = status})
+  shortcutStatus.value = await api.getGlobalShortcutStatus()
   startupAvailable.value = await api.canStartAtLogin()
 })
+onUnmounted(() => unsubscribe())
 const showMainWindowShortcutLabel = navigator.platform.startsWith('Mac') ? '⌘⇧M' : 'Ctrl+Shift+M'
 
 function addPreset() {
