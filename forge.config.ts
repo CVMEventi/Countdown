@@ -97,6 +97,18 @@ const config: ForgeConfig = {
     })
   ],
   hooks: {
+    postPackage: async (forgeConfig, { outputPaths, platform }) => {
+      if (platform !== 'win32') return;
+
+      // OMT loads its codec dynamically using the Windows executable search path.
+      for (const outputPath of outputPaths) {
+        await fs.promises.copyFile(
+          path.join(outputPath, 'resources', 'app.asar.unpacked', 'node_modules',
+            'openmediatransport', 'build', 'Release', 'libvmx.dll'),
+          path.join(outputPath, 'libvmx.dll'),
+        );
+      }
+    },
     packageAfterPrune: async (config, buildPath, electronVersion, platform) => {
       if (platform !== 'win32') {
         const binsPath = 'node_modules/grandiose/build/node_gyp_bins/python3'
