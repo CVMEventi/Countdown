@@ -118,20 +118,9 @@ const config: ForgeConfig = {
           }
 
           result.artifacts = result.artifacts.map((artifact) => {
-            if (artifact.includes('RELEASES')) {
-              const newName = `${appName}-Windows-${currentArch}-${version}.nupkg`;
-
-              fs.readFile(artifact, 'utf8', function (err,data) {
-                if (err) {
-                  return console.log(err);
-                }
-                const result = data.replace(/(\S+)\s\S+\s(\S+)/g, `$1 ${newName} $2`);
-
-                fs.writeFile(artifact, result, 'utf8', function (err) {
-                  if (err) return console.log(err);
-                });
-              });
-
+            // Squirrel parses package filenames to determine versions and update
+            // types. Keep its generated names and matching manifest intact.
+            if (path.basename(artifact) === 'RELEASES' || path.extname(artifact) === '.nupkg') {
               return artifact;
             }
 
